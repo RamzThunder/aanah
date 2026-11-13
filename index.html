@@ -4,12 +4,12 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#f7faff" />
-  <meta name="description" content="아나! 내가 쓸라고 만들었는데, 니도 쓰라. 수업·평가·학교 업무에 쓰는 웹 도구와 데스크톱 앱 모음." />
+  <meta name="description" content="아나! 제가 쓸라고 만들었는데, 같이 쓰이소. 수업·평가·학교 업무에 쓰는 웹 도구와 데스크톱 앱 모음." />
   <link rel="icon" href="favicon.ico" sizes="any" />
   <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png" />
   <link rel="icon" type="image/png" sizes="512x512" href="assets/icon-512.png" />
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
-  <title>아나! — 니도 함 써봐라.</title>
+  <title>아나! — 함 써 보이소.</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
   <style>
     :root{--navy:#193f7c;--ink:#203a60;--muted:#74849e;--blue:#4c91eb;--pale:#f6faff;--line:#e0eaf4;--shadow:0 12px 36px rgba(33,79,138,.07)}
@@ -52,17 +52,17 @@
 
   <main id="top">
     <section class="hero"><div class="shell hero-inner">
-      <span class="eyebrow">✦ 교실에서 쓸 만한 것들, 한데 모아!</span>
+      <span class="eyebrow">✦ 교실에서 쓸 만한 것들, 한데 모았어요!</span>
       <div class="hero-logo"><img src="assets/logo.png" alt="아나! aanah.fyi 로고" width="520" height="529"></div>
-      <h1>아나! <em>니도 함 써봐라.</em></h1>
-      <p>내가 쓸라고 만들었는데, 니도 쓰라.<br><b>수업 · 평가 · 학교 업무</b>에 쓰는 도구들을 모아놨어.</p>
+      <h1>아나! <em>함 써 보이소.</em></h1>
+      <p>제가 쓸라고 만들었는데, 같이 쓰이소.<br><b>수업 · 평가 · 학교 업무</b>에 쓰는 도구들을 모아 놨어요.</p>
       <div class="stats"><span class="stat">🌐 바로 쓰는 웹 도구<b id="statWeb">0</b></span><span class="stat">💾 설치하는 앱<b id="statApp">0</b></span></div>
-      <label class="search" for="searchInput"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="10.7" cy="10.7" r="6.7"/><path d="m16 16 5 5"/></svg><input id="searchInput" type="search" placeholder="채점, 시간표, 빈칸… 필요한 거 검색해 봐!" autocomplete="off"/><span class="kbd">/</span></label>
+      <label class="search" for="searchInput"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="10.7" cy="10.7" r="6.7"/><path d="m16 16 5 5"/></svg><input id="searchInput" type="search" placeholder="채점, 시간표, 빈칸… 필요한 걸 검색해 보세요!" autocomplete="off"/><span class="kbd">/</span></label>
     </div></section>
 
     <section class="catalog" id="tools"><div class="shell">
       <div class="catalog-top">
-        <div><div class="section-kicker">THE TOOLBOX</div><h2>이런 거 있다! <span id="totalCount">00</span></h2><p class="catalog-lead">웹 도구는 바로 열리고, 앱은 맥·윈도우용으로 받을 수 있어.</p></div>
+        <div><div class="section-kicker">THE TOOLBOX</div><h2>이런 거 있어요! <span id="totalCount">00</span></h2><p class="catalog-lead">웹 도구는 바로 열리고, 앱은 맥·윈도우용으로 받을 수 있어요.</p></div>
         <div class="controls">
           <div class="seg" role="group" aria-label="형태 필터"><button type="button" class="active" data-kind="all" aria-pressed="true">전체</button><button type="button" data-kind="web" aria-pressed="false">웹</button><button type="button" data-kind="app" aria-pressed="false">설치 앱</button></div>
           <select id="sortSelect" class="sort" aria-label="정렬"><option value="recommended">추천순</option><option value="new">최근 업데이트순</option><option value="name">이름순</option></select>
@@ -70,16 +70,16 @@
       </div>
       <div class="tabs" id="tabs" role="group" aria-label="카테고리 필터"></div>
       <div id="cards" class="cards" aria-live="polite"></div>
-      <div class="empty" id="empty"><strong>어라, 아직 그런 도구는 없다!</strong><span>다른 단어로 검색하거나 필터를 바꿔봐.</span><br><button id="resetFilter">전체 도구 보기</button></div>
+      <div class="empty" id="empty"><strong>어라, 아직 그런 도구는 없어요!</strong><span>다른 단어로 검색하거나 필터를 바꿔 보세요.</span><br><button id="resetFilter">전체 도구 보기</button></div>
     </div></section>
 
     <section class="about" id="about"><div class="shell about-inner">
-      <div><div class="section-kicker">ABOUT AANAH!</div><h2>좋은 건 같이 쓰면 더 좋으니까!</h2><p>아나!는 학교에서 직접 필요해서 만든 프로그램들을 모아두는 곳이야.<br>거창한 서비스보다, 오늘 당장 편한 도구 하나를 건네고 싶었어.<br>쓰다가 불편한 거 있으면 GitHub에 편하게 남겨 줘.</p></div>
-      <div class="howto"><b>설치 앱 받는 법</b><ol><li>앱 카드의 <b>다운로드</b>를 누르고 내 컴퓨터(맥/윈도우)에 맞는 파일을 받아.</li><li>설치하고 나면 새 버전은 앱이 알아서 업데이트해.</li><li>맥에서 “손상되었다”고 뜨면 앱 상세에 있는 터미널 명령어를 한 번 붙여 넣어 봐.</li></ol></div>
+      <div><div class="section-kicker">ABOUT AANAH!</div><h2>좋은 건 같이 쓰면 더 좋으니까요!</h2><p>아나!는 학교에서 직접 필요해서 만든 프로그램들을 모아 두는 곳이에요.<br>거창한 서비스보다, 오늘 당장 편한 도구 하나를 건네고 싶었어요.<br>쓰다가 불편한 거 있으면 GitHub에 편하게 남겨 주세요.</p></div>
+      <div class="howto"><b>설치 앱 받는 법</b><ol><li>앱 카드의 <b>다운로드</b>를 누르고 내 컴퓨터(맥/윈도우)에 맞는 파일을 받으세요.</li><li>설치하고 나면 새 버전은 앱이 알아서 업데이트해요.</li><li>맥에서 “손상되었다”고 뜨면 앱 상세에 있는 터미널 명령어를 한 번 붙여 넣어 보세요.</li></ol></div>
     </div></section>
   </main>
 
-  <footer class="footer"><div class="shell footer-inner"><span><b>아나! aanah.fyi</b> · 니도 함 써봐라.</span><span>평가 도구 <a href="https://ramzthunder.github.io/forClass/privacy.html" target="_blank" rel="noopener">개인정보처리방침</a> · <a href="https://ramzthunder.github.io/forClass/terms.html" target="_blank" rel="noopener">약관</a></span><span>Made with a little bit of 경상도 말맛 ✳</span></div></footer>
+  <footer class="footer"><div class="shell footer-inner"><span><b>아나! aanah.fyi</b> · 함 써 보이소.</span><span>평가 도구 <a href="https://ramzthunder.github.io/forClass/privacy.html" target="_blank" rel="noopener">개인정보처리방침</a> · <a href="https://ramzthunder.github.io/forClass/terms.html" target="_blank" rel="noopener">약관</a></span><span>Made with a little bit of 경상도 말맛 ✳</span></div></footer>
 
   <dialog id="detailDialog" aria-labelledby="detailTitle"><div class="modal">
     <div class="modal-top"><span class="modal-kicker" id="modalKicker">AANAH! / TOOL</span><button class="close" id="closeDialog" aria-label="닫기">×</button></div>
@@ -107,53 +107,53 @@ const CATEGORIES = ['수업 도구','평가·채점','학교 업무','일상·�
 
 const apps = [
  {id:'whattime',name:'지금 몇교시야',kind:'app',category:'학교 업무',icon:'clock',tint:'#e7f6f8',
-  desc:'지금 몇 교시고? 남은 시간이랑 내 시간표를 바탕화면에 띄워 두는 위젯.',
-  detail:'현재 교시, 다음 일정까지 남은 시간, 개인 시간표를 한눈에 보여주는 데스크톱 위젯이야.',
+  desc:'지금 몇 교시고? 남은 시간과 내 시간표를 바탕화면에 띄워 두는 위젯.',
+  detail:'현재 교시, 다음 일정까지 남은 시간, 개인 시간표를 한눈에 보여 주는 데스크톱 위젯이에요.',
   features:['현재 교시와 다음 일정까지 남은 시간 표시','일반 시정·HWPX 특별 시간표·쉬는 날 관리','컴시간 알리미 시간표 불러오기, 월요일 자동 갱신','반별 진도 메모 저장, 다음 수업 때 자동 안내','미니 모드·항상 위 고정·색상/글꼴 설정, 자동 업데이트'],
   tags:['시정표','위젯','진도'],release:'RamzThunder/whattime-releases',repo:`${GH}/whattime`,version:'3.1.6',updated:'2026-11-08',order:1},
  {id:'omr',name:'OMR 서술형 채점 도구',kind:'web',category:'평가·채점',icon:'omr',tint:'#eaf6ee',
-  desc:'PDF 답안 영역을 보면서 문항별 점수와 메모를 착착 기록해.',
-  detail:'지필평가 서술형 채점용 도구야. 구글로 로그인하면 채점 기록이 내 드라이브에 자동 저장돼.',
+  desc:'PDF 답안 영역을 보면서 문항별 점수와 메모를 착착 기록해요.',
+  detail:'지필평가 서술형 채점용 도구예요. 구글로 로그인하면 채점 기록이 내 드라이브에 자동 저장돼요.',
   features:['PDF 답안을 보며 문항별 점수·메모 기록','루브릭과 검토 보조','메모·논의·키워드별 모아보기','학생용 점수 확인 화면'],
   tags:['지필','서술형','루브릭'],url:`${PAGES}/forClass/omr-grader.html`,repo:`${GH}/forClass`,version:'2.3.0',updated:'2026-11-01',order:2},
  {id:'pandecki',name:'판떼기 PanDeckI',kind:'app',category:'수업 도구',icon:'screen',tint:'#e5f1ff',
-  desc:'교실 TV에 켜두는 판(보드) 앱. 판 만들고 자유 캔버스로 꾸며.',
-  detail:'대시보드에서 판을 여러 개 만들고, 판마다 자유 캔버스처럼 꾸며서 수업 화면으로 쓰는 데스크톱 앱이야.',
+  desc:'교실 TV에 켜두는 판(보드) 앱. 판을 만들고 자유 캔버스로 꾸며요.',
+  detail:'대시보드에서 판을 여러 개 만들고, 판마다 자유 캔버스처럼 꾸며서 수업 화면으로 쓰는 데스크톱 앱이에요.',
   features:['대시보드에서 판 만들기·관리','판마다 자유 캔버스 꾸미기','맥·윈도우 지원, 자동 업데이트'],
   tags:['수업 화면','교실'],release:'RamzThunder/PanDeckI',repo:`${GH}/PanDeckI`,macApp:'PanDeckI',version:'1.0.29',updated:'2026-10-26',order:3},
  {id:'blanking',name:'BLANKing',kind:'app',category:'수업 도구',icon:'blank',tint:'#f0ecff',
   desc:'HWPX·PDF 수업자료로 빈칸 자료를 만드는 메이커.',
-  detail:'HWPX / PDF 기반으로 빈칸 수업자료를 만드는 데스크톱 앱이야.',
+  detail:'HWPX / PDF 기반으로 빈칸 수업자료를 만드는 데스크톱 앱이에요.',
   features:['HWPX·PDF 수업자료 불러오기','빈칸 수업자료 만들기','맥(Intel·Apple Silicon)·윈도우 지원'],
   tags:['빈칸','학습지','HWPX'],release:'RamzThunder/BLANKing_releases',repo:`${GH}/BLANKing_releases`,macApp:'BLANKing',version:'0.1.3',updated:'2026-06-08',order:4},
  {id:'writing',name:'글쓰기 채점표',kind:'web',category:'평가·채점',icon:'pencil',tint:'#f3eefc',
   desc:'글쓰기 수행평가 채점할 때 쓰기 좋은 채점표 템플릿.',
-  detail:'주장하는 글쓰기 같은 쓰기 수행평가를 채점하기 위한 템플릿이야. 평가 도구 모음의 명렬표와 함께 쓸 수 있어.',
+  detail:'주장하는 글쓰기 같은 쓰기 수행평가를 채점하기 위한 템플릿이에요. 평가 도구 모음의 명렬표와 함께 쓸 수 있어요.',
   features:['학생별 기준 충족 여부 기록','구글 로그인 시 드라이브 자동 저장'],
   tags:['수행평가','쓰기'],url:`${PAGES}/forClass/argument-writing-grader.html`,repo:`${GH}/forClass`,updated:'2026-11-01',order:5},
  {id:'speaking',name:'말하기 채점표',kind:'web',category:'평가·채점',icon:'check',tint:'#e9f5ef',
-  desc:'발표 들으면서 구술형 수행평가를 바로 채점해.',
-  detail:'논리적인 말하기 같은 구술형 수행평가 채점용 템플릿이야.',
+  desc:'발표 들으면서 구술형 수행평가를 바로 채점해요.',
+  detail:'논리적인 말하기 같은 구술형 수행평가 채점용 템플릿이에요.',
   features:['발표 타이머','학생별 전사본 기록','학생용 점수표 만들기'],
   tags:['수행평가','말하기','타이머'],url:`${PAGES}/forClass/logical-speaking-grader.html`,repo:`${GH}/forClass`,updated:'2026-11-01',order:6},
  {id:'roulette',name:'발표 순서 돌림판',kind:'web',category:'수업 도구',icon:'shuffle',tint:'#fff3df',
-  desc:'두근두근! 말하기 수행평가 발표 순서를 돌림판으로 뽑아.',
-  detail:'말하기 수행평가 발표 순서를 돌려돌려 돌림판으로 정하는 도구야.',
+  desc:'두근두근! 말하기 수행평가 발표 순서를 돌림판으로 뽑아요.',
+  detail:'말하기 수행평가 발표 순서를 돌려돌려 돌림판으로 정하는 도구예요.',
   features:['돌림판으로 발표 순서 뽑기'],
   tags:['랜덤','발표'],url:`${PAGES}/forClass/${encodeURIComponent('논리적인 말하기 수행평가 돌려돌려돌림판')}.html`,repo:`${GH}/forClass`,updated:'2026-11-01',order:7},
  {id:'escape',name:'검열국을 탈출하라',kind:'web',category:'수업 도구',icon:'key',tint:'#fbefe3',
   desc:'일제강점기 문학 1차시 방탈출. 드라마 「100일의 거짓말」 연계.',
-  detail:'일제강점기 문학 수업을 위한 HTML 방탈출 게임이야. 학생용 게임 화면과 교실 TV용 화면이 따로 있어.',
+  detail:'일제강점기 문학 수업을 위한 HTML 방탈출 게임이에요. 학생용 게임 화면과 교실 TV용 화면이 따로 있어요.',
   features:['학생용 방탈출 게임','교실 TV 진행 화면','단계별 힌트·미니게임'],
   tags:['국어','방탈출','문학'],url:`${PAGES}/gugeo/`,repo:`${GH}/gugeo`,updated:'2026-11-13',order:8},
  {id:'dida',name:'디다',kind:'app',category:'일상·재미',icon:'diary',tint:'#fff0ee',
   desc:'디지털 다이어리. 경상도 말로는 “디다(고되다)”. 제가 고됩니다 막이래.',
-  detail:'나의 소중한 순간들을 기록하는 일상 아카이빙 앱이야.',
+  detail:'나의 소중한 순간들을 기록하는 일상 아카이빙 앱이에요.',
   features:['트위터·유튜브 링크 붙여넣어 아카이빙','iCloud(맥끼리) 또는 Google Drive 동기화','Alt(Opt)+드래그로 창 이동, 자동 업데이트'],
   tags:['다이어리','기록'],release:'RamzThunder/dida-releases',repo:`${GH}/dida-releases`,macApp:'dida',version:'2.1.2',updated:'2026-11-08',order:9},
  {id:'jjirashy',name:'찌라시 스티커 생성기',kind:'web',category:'일상·재미',icon:'sticker',tint:'#fff7cc',
   desc:'속보·전단지 느낌 찌라시 스티커를 틀 골라서 뚝딱.',
-  detail:'여러 가지 찌라시 틀에 문구를 넣어 스티커 이미지를 만드는 생성기야.',
+  detail:'여러 가지 찌라시 틀에 문구를 넣어 스티커 이미지를 만드는 생성기예요.',
   features:['속보·간판·전단지 등 다양한 틀','랜덤 찌라시·문구 랜덤 뽑기','잉크색·종이색·크기 조절'],
   tags:['스티커','재미'],url:`${PAGES}/jjirashy/jjirasi_sticker_maker.html`,repo:`${GH}/jjirashy`,version:'0.9.0',updated:'2026-11-10',order:10}
 ];
@@ -222,7 +222,7 @@ function downloadsHtml(a){
   const mac=r&&r.mac, win=r&&r.win, fallback=releasePage(a);
   const box=(os,label,asset)=>`<a class="dl${OS===os?' mine':''}" href="${esc(asset?asset.url:fallback)}" ${asset?'':'target="_blank" rel="noopener noreferrer"'}><b>${label}${OS===os?' · 내 컴퓨터':''}</b><small>${asset?esc(asset.name):'릴리즈 페이지에서 받기 ↗'}</small></a>`;
   let html=`<div class="downloads">${box('mac','🍎 macOS',mac)}${box('win','🪟 Windows',win)}</div>`;
-  if(a.macApp)html+=`<div class="tip">맥에서 “손상되었기 때문에 열 수 없습니다”라고 뜨면, 터미널에 아래를 붙여 넣고 엔터! (반응 없으면 성공)<br><code>xattr -dr com.apple.quarantine "/Applications/${esc(a.macApp)}.app"</code></div>`;
+  if(a.macApp)html+=`<div class="tip">맥에서 “손상되었기 때문에 열 수 없습니다”라고 뜨면, 터미널에 아래를 붙여 넣고 엔터를 누르세요! (반응 없으면 성공)<br><code>xattr -dr com.apple.quarantine "/Applications/${esc(a.macApp)}.app"</code></div>`;
   return html;
 }
 
