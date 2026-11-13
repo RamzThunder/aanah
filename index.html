@@ -26,7 +26,7 @@
     .controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.seg{display:flex;background:#fff;border:1px solid var(--line);border-radius:11px;padding:3px}.seg button{border:0;background:transparent;color:#6c81a0;font-size:12px;font-weight:800;padding:8px 12px;border-radius:8px}.seg button.active{background:#eaf3ff;color:#214d8d}.sort{border:1px solid var(--line);border-radius:10px;background:white;color:#657b9a;font-size:12px;font-weight:700;padding:10px 13px}
     .tabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 24px}.tab{border:1px solid #e0e9f3;color:#6c81a0;background:#fff;border-radius:12px;padding:11px 17px;font-size:13px;font-weight:800;transition:.17s}.tab:hover{background:#f0f7ff}.tab.active{background:#214d8d;color:#fff;border-color:#214d8d;box-shadow:0 4px 0 #c6dbf5}.tab span{opacity:.65;margin-left:5px;font-size:11px}
     .cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}.card{display:flex;flex-direction:column;overflow:hidden;background:white;border:1px solid var(--line);border-radius:19px;box-shadow:0 7px 22px rgba(44,89,145,.035);transition:transform .2s,box-shadow .2s,border-color .2s}.card:hover{transform:translateY(-4px);box-shadow:var(--shadow);border-color:#bdd7f3}
-    .card-art{height:150px;display:grid;place-items:center;position:relative;overflow:hidden;background:var(--tint);border:0;width:100%;padding:0}.card-art:before{content:"";width:170px;height:170px;border:1px dashed rgba(46,102,160,.14);border-radius:50%;position:absolute}.card-art:after{content:"";width:232px;height:232px;border:1px dashed rgba(46,102,160,.11);border-radius:50%;position:absolute}.app-icon{width:86px;height:86px;display:grid;place-items:center;position:relative;z-index:2;filter:drop-shadow(4px 6px 0 rgba(41,84,129,.09))}.app-icon svg{width:84px;height:84px}
+    .card-art{height:150px;display:grid;place-items:center;position:relative;overflow:hidden;background:var(--tint);border:0;width:100%;padding:0}.card-art:before{content:"";width:170px;height:170px;border:1px dashed rgba(46,102,160,.14);border-radius:50%;position:absolute}.card-art:after{content:"";width:232px;height:232px;border:1px dashed rgba(46,102,160,.11);border-radius:50%;position:absolute}.app-icon{width:86px;height:86px;display:grid;place-items:center;position:relative;z-index:2;filter:drop-shadow(4px 6px 0 rgba(41,84,129,.09))}.app-icon svg{width:84px;height:84px}.app-icon .real-icon{width:86px;height:86px;object-fit:contain;border-radius:20px}.modal-visual .real-icon{width:72%;height:72%;object-fit:contain;border-radius:18%}
     .platform{position:absolute;z-index:4;left:13px;top:13px;border-radius:8px;padding:5px 8px;font-size:10px;font-weight:850;letter-spacing:.02em;background:rgba(255,255,255,.78);color:#54739a}.platform.app{background:#214d8d;color:#fff}.ver{position:absolute;z-index:4;right:13px;top:13px;border-radius:8px;padding:5px 8px;font-size:10px;font-weight:800;background:rgba(255,255,255,.6);color:#6a83a4;letter-spacing:0}
     .card-content{padding:20px 21px 18px;display:flex;flex-direction:column;flex:1}.card-type{font-size:11px;color:#6197ce;font-weight:850;margin-bottom:7px;display:flex;justify-content:space-between;gap:8px}.card-type time{color:#a2b2c6;font-weight:700}.card h3{font-size:19px;letter-spacing:-.05em;margin:0 0 8px;font-weight:900;color:#243e69}.card p{font-size:13px;line-height:1.75;color:#8191aa;margin:0 0 14px}.tags{display:flex;gap:5px;flex-wrap:wrap}.tag{font-size:10px;padding:5px 7px;border-radius:7px;background:#f2f7fc;color:#7f92ac;font-weight:700}
     .card-actions{margin-top:auto;padding-top:16px;display:flex;gap:8px}.btn{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;border-radius:11px;padding:11px 12px;font-size:13px;font-weight:850;border:1px solid #245a9f;background:#245a9f;color:#fff;white-space:nowrap}.btn:hover{background:#1d4c88}.btn.ghost{flex:0 0 auto;background:#fff;border-color:#d7e5f4;color:#557494}.btn.ghost:hover{background:#f3f8ff}.btn[aria-disabled="true"]{opacity:.5;pointer-events:none}
@@ -106,7 +106,7 @@ const PAGES = 'https://ramzthunder.github.io';
 const CATEGORIES = ['수업 도구','평가·채점','학교 업무','일상·재미'];
 
 const apps = [
- {id:'whattime',name:'지금 몇교시야',kind:'app',category:'학교 업무',icon:'clock',tint:'#e7f6f8',
+ {id:'whattime',name:'지금 몇교시야',kind:'app',category:'학교 업무',icon:'clock',img:'assets/icons/whattime.png',tint:'#e7f6f8',
   desc:'지금 몇 교시고? 남은 시간과 내 시간표를 바탕화면에 띄워 두는 위젯.',
   detail:'현재 교시, 다음 일정까지 남은 시간, 개인 시간표를 한눈에 보여 주는 데스크톱 위젯이에요.',
   features:['현재 교시와 다음 일정까지 남은 시간 표시','일반 시정·HWPX 특별 시간표·쉬는 날 관리','컴시간 알리미 시간표 불러오기, 월요일 자동 갱신','반별 진도 메모 저장, 다음 수업 때 자동 안내','미니 모드·항상 위 고정·색상/글꼴 설정, 자동 업데이트'],
@@ -121,12 +121,12 @@ const apps = [
   detail:'지필평가 서술형 채점용 도구예요. 구글로 로그인하면 채점 기록이 내 드라이브에 자동 저장돼요.',
   features:['PDF 답안을 보며 문항별 점수·메모 기록','루브릭과 검토 보조','메모·논의·키워드별 모아보기','학생용 점수 확인 화면'],
   tags:['지필','서술형','루브릭'],url:`${PAGES}/forClass/omr-grader.html`,repo:`${GH}/forClass`,version:'2.3.0',updated:'2026-11-01',order:2},
- {id:'pandecki',name:'판떼기 PanDeckI',kind:'app',category:'수업 도구',icon:'screen',tint:'#e5f1ff',
+ {id:'pandecki',name:'판떼기 PanDeckI',kind:'app',category:'수업 도구',icon:'screen',img:'assets/icons/pandecki.png',tint:'#e5f1ff',
   desc:'교실 TV에 켜두는 판(보드) 앱. 판을 만들고 자유 캔버스로 꾸며요.',
   detail:'대시보드에서 판을 여러 개 만들고, 판마다 자유 캔버스처럼 꾸며서 수업 화면으로 쓰는 데스크톱 앱이에요.',
   features:['대시보드에서 판 만들기·관리','판마다 자유 캔버스 꾸미기','맥·윈도우 지원, 자동 업데이트'],
   tags:['수업 화면','교실'],release:'RamzThunder/PanDeckI',repo:`${GH}/PanDeckI`,macApp:'PanDeckI',version:'1.0.29',updated:'2026-10-26',order:3},
- {id:'blanking',name:'BLANKing',kind:'app',category:'수업 도구',icon:'blank',tint:'#f0ecff',
+ {id:'blanking',name:'BLANKing',kind:'app',category:'수업 도구',icon:'blank',img:'assets/icons/blanking.png',tint:'#f0ecff',
   desc:'HWPX·PDF 수업자료로 빈칸 자료를 만드는 메이커.',
   detail:'HWPX / PDF 기반으로 빈칸 수업자료를 만드는 데스크톱 앱이에요.',
   features:['HWPX·PDF 수업자료 불러오기','빈칸 수업자료 만들기','맥(Intel·Apple Silicon)·윈도우 지원'],
@@ -151,7 +151,7 @@ const apps = [
   detail:'일제강점기 문학 수업을 위한 HTML 방탈출 게임이에요. 학생용 게임 화면과 교실 TV용 화면이 따로 있어요.',
   features:['학생용 방탈출 게임','교실 TV 진행 화면','단계별 힌트·미니게임'],
   tags:['국어','방탈출','문학'],url:`${PAGES}/gugeo/`,repo:`${GH}/gugeo`,updated:'2026-11-13',order:8},
- {id:'dida',name:'디다',kind:'app',category:'일상·재미',icon:'diary',tint:'#fff0ee',
+ {id:'dida',name:'디다',kind:'app',category:'일상·재미',icon:'diary',img:'assets/icons/dida.png',tint:'#fff0ee',
   desc:'디지털 다이어리. 경상도 말로는 “디다(고되다)”. 제가 고됩니다 막이래.',
   detail:'나의 소중한 순간들을 기록하는 일상 아카이빙 앱이에요.',
   features:['트위터·유튜브 링크 붙여넣어 아카이빙','iCloud(맥끼리) 또는 Google Drive 동기화','Alt(Opt)+드래그로 창 이동, 자동 업데이트'],
@@ -182,6 +182,7 @@ const cardsEl=$('#cards'),emptyEl=$('#empty'),dialog=$('#detailDialog');
 let category='전체',kind='all',search='';
 const OS=(()=>{const p=(navigator.userAgentData&&navigator.userAgentData.platform)||navigator.platform||navigator.userAgent;return /mac/i.test(p)?'mac':/win/i.test(p)?'win':''})();
 
+function iconHtml(a){return a.img?`<img src="${esc(a.img)}" alt="" class="real-icon" loading="lazy">`:iconSvg(a.icon)}
 function iconSvg(t){return `<svg viewBox="0 0 100 100" fill="none" aria-hidden="true">${icons[t]||icons.screen}</svg>`}
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function fmtDate(d){if(!d)return '';const [,m,day]=d.split('-');return `${+m}.${day} 업데이트`}
@@ -210,7 +211,7 @@ function render(){
       <button type="button" class="card-art" style="--tint:${esc(a.tint)}" data-open="${esc(a.id)}" aria-label="${esc(a.name)} 자세히 보기">
         <span class="platform${isApp?' app':''}">${isApp?'macOS · Windows':'WEB · 바로 실행'}</span>
         ${a.version?`<span class="ver" data-ver="${esc(a.id)}">v${esc(a.version)}</span>`:''}
-        <span class="app-icon">${iconSvg(a.icon)}</span>
+        <span class="app-icon">${iconHtml(a)}</span>
       </button>
       <div class="card-content">
         <div class="card-type"><span>${esc(a.category)}</span><time data-upd="${esc(a.id)}">${esc(fmtDate(a.updated))}</time></div>
@@ -239,7 +240,7 @@ function openDetail(id){
   $('#detailTitle').textContent=a.name;
   $('#modalMeta').textContent=[a.category,a.version&&`v${a.version}`,fmtDate(a.updated)].filter(Boolean).join(' · ');
   $('#detailDescription').textContent=a.detail;
-  $('#modalVisual').style.background=a.tint;$('#modalVisual').innerHTML=iconSvg(a.icon);
+  $('#modalVisual').style.background=a.tint;$('#modalVisual').innerHTML=iconHtml(a);
   $('#modalFeatures').innerHTML=a.features.map(f=>`<li>${esc(f)}</li>`).join('');
   $('#modalDownloads').innerHTML=isApp?downloadsHtml(a):'';
   const acts=[];
