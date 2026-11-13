@@ -1,5 +1,5 @@
 {
   "version": 1,
-  "include": ["/forClass", "/forClass/*", "/jjirashy", "/jjirashy/*", "/dida-releases", "/dida-releases/*"],
+  "include": ["/forClass", "/forClass/*", "/jjirashy", "/jjirashy/*", "/dida-releases", "/dida-releases/*", "/download/*"],
   "exclude": []
 }

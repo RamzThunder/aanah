@@ -262,18 +262,30 @@ function openDetail(id){
   dialog.showModal();
 }
 
-/* 설치 앱: GitHub 최신 릴리즈에서 버전과 다운로드 파일을 자동으로 가져옴 (실패하면 기본값 유지) */
+/* 설치 앱: 최신 릴리즈에서 버전과 다운로드 파일을 자동으로 가져옴 (실패하면 기본값 유지)
+   학교 업무망에서 GitHub가 막히거나 느린 경우가 있어서, 버전 확인과 파일 받기 모두 aanah.fyi/download/ 를 먼저 거친다.
+   (functions/download/[[path]].js) 그게 안 되면 GitHub API를 직접 한 번 더 시도한다. */
+function timeoutSignal(ms){try{return AbortSignal.timeout(ms)}catch{return undefined}}
+async function fetchRelease(a){
+  const repo=a.release.split('/')[1];
+  try{
+    const res=await fetch(`/download/${repo}/latest.json`,{signal:timeoutSignal(8000)});
+    if(res.ok){const r=await res.json();if(r.assets)return {tag:r.tag,published:r.published,assets:r.assets};}
+  }catch(e){}
+  const res=await fetch(`https://api.github.com/repos/${a.release}/releases/latest`,{headers:{Accept:'application/vnd.github+json'},signal:timeoutSignal(8000)});
+  if(!res.ok)throw new Error('release');
+  const r=await res.json();
+  return {tag:r.tag_name,published:r.published_at,assets:(r.assets||[]).map(x=>({name:x.name,url:x.browser_download_url}))};
+}
 async function loadReleases(){
   await Promise.all(apps.filter(a=>a.kind==='app'&&a.release).map(async a=>{
     try{
-      const res=await fetch(`https://api.github.com/repos/${a.release}/releases/latest`,{headers:{Accept:'application/vnd.github+json'}});
-      if(!res.ok)return;
-      const r=await res.json();
-      const assets=(r.assets||[]).map(x=>({name:x.name,url:x.browser_download_url}));
-      const pick=re=>assets.find(x=>re.test(x.name));
+      const r=await fetchRelease(a);
+      const pick=re=>r.assets.find(x=>re.test(x.name));
       a.latest={mac:pick(/\.dmg$/i),win:pick(/\.exe$/i)||pick(/\.msi$/i)};
-      if(r.tag_name)a.version=r.tag_name.replace(/^v/i,'');
-      if(r.published_at)a.updated=r.published_at.slice(0,10);
+      if(r.tag)a.version=r.tag.replace(/^v/i,'');
+      if(r.published)a.updated=r.published.slice(0,10);
+      if(dialog.open&&$('#detailTitle').textContent===a.name)$('#modalDownloads').innerHTML=downloadsHtml(a);
       const v=document.querySelector(`[data-ver="${a.id}"]`);if(v)v.textContent=`v${a.version}`;
       const u=document.querySelector(`[data-upd="${a.id}"]`);if(u)u.textContent=fmtDate(a.updated);
     }catch(e){/* 오프라인·요청 제한 시 기본값 사용 */}
