@@ -38,16 +38,17 @@
     dialog{border:none;padding:0;background:transparent;max-width:560px;width:calc(100% - 30px);border-radius:22px;box-shadow:0 28px 85px rgba(21,49,84,.25)}dialog::backdrop{background:rgba(20,39,69,.46);backdrop-filter:blur(3px)}.modal{background:#fff;padding:26px;max-height:calc(100vh - 40px);overflow:auto}.modal-top{display:flex;justify-content:space-between;align-items:center}.modal-kicker{font-size:11px;color:#5391d7;font-weight:850}.close{border:0;background:#edf4fc;color:#6c87a8;border-radius:9px;width:33px;height:33px;font-size:20px}.modal-head{display:flex;gap:16px;align-items:center;margin:16px 0 4px}.modal-visual{flex:0 0 78px;height:78px;display:grid;place-items:center;border-radius:16px}.modal-visual svg{width:60px;height:60px}.modal-shot{margin:18px 0 0;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#f3f7fc;aspect-ratio:16/10}.modal-shot img{display:block;width:100%;height:100%;object-fit:cover;object-position:top}.modal h2{font-size:25px;letter-spacing:-.06em;margin:0 0 4px;color:#234271}.modal-meta{font-size:12px;color:#8ea0b8;font-weight:700}.modal p{font-size:14px;color:#6c809c;line-height:1.8;margin:14px 0 0}.features{margin:14px 0 0;padding:0;list-style:none;display:grid;gap:7px}.features li{font-size:13px;color:#4f6687;line-height:1.6;padding-left:20px;position:relative}.features li:before{content:"✦";position:absolute;left:2px;color:#7fb0ea;font-size:11px;top:1px}
     .downloads{margin-top:20px;display:grid;grid-template-columns:1fr 1fr;gap:8px}.dl{display:flex;flex-direction:column;gap:2px;border:1px solid #d7e5f4;border-radius:12px;padding:12px 14px;color:#3d5d86;background:#fff}.dl:hover{border-color:#8cb8f0;background:#f7fbff}.dl b{font-size:14px}.dl small{font-size:11px;color:#8ea0b8;font-weight:700}.dl.mine{background:#245a9f;border-color:#245a9f;color:#fff}.dl.mine small{color:#c9dcf5}.dl.mine:hover{background:#1d4c88}
     .tip{font-size:12px;color:#8a6a2d;background:#fff8e6;border:1px solid #f4e2b6;padding:11px 13px;border-radius:10px;margin-top:14px;line-height:1.7}.tip code{background:#fff;border:1px solid #f0dfb3;padding:2px 6px;border-radius:5px;font-size:11px;word-break:break-all;user-select:all}
-    .modal-actions{display:flex;gap:8px;margin-top:20px}
+    .modal-actions{display:flex;gap:8px;margin-top:20px;flex-wrap:wrap}
     @media(max-width:880px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}.links{gap:14px}.about-inner{grid-template-columns:1fr}}
     @media(max-width:600px){.shell{padding:0 16px}.nav{height:62px}.brand{font-size:20px}.links a:not(.github){display:none}.github span{display:none}.hero{padding:44px 0 40px}.hero-logo{width:min(180px,55vw)}.hero h1{font-size:32px}.hero p{font-size:14px}.search{height:54px}.kbd{display:none}.catalog h2{font-size:22px}.tabs{flex-wrap:nowrap;overflow-x:auto;padding-bottom:6px;scrollbar-width:none}.tab{white-space:nowrap;padding:10px 13px}.cards{grid-template-columns:1fr;gap:15px}.footer-inner{flex-direction:column}.modal{padding:20px}.downloads{grid-template-columns:1fr}}
     @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.card,.tab,.search{transition:none}}
+    .links a.fb{background:#245a9f;border-color:#245a9f;color:#fff!important}.links a.fb:hover{background:#1d4c88;border-color:#1d4c88}@media(max-width:600px){.links a.fb{display:inline-flex}.links a.fb span{display:inline}}
   </style>
 </head>
 <body>
   <header class="nav-wrap"><div class="shell nav">
     <a class="brand" href="#top" aria-label="아나 홈"><span class="brand-mark" aria-hidden="true"><img src="assets/logo-mark.png" alt="" width="43" height="40"></span>아나! <small>aanah.fyi</small></a>
-    <nav class="links" aria-label="주 메뉴"><a href="#tools">도구 둘러보기</a><a href="#about">아나 소개</a><a class="github" href="https://github.com/RamzThunder" target="_blank" rel="noopener noreferrer" aria-label="GitHub 열기"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .9A11.1 11.1 0 0 0 8.5 22.55c.55.1.75-.23.75-.53v-2.1c-3.06.67-3.7-1.3-3.7-1.3-.5-1.26-1.22-1.6-1.22-1.6-1-.68.08-.67.08-.67 1.1.08 1.68 1.13 1.68 1.13.98 1.67 2.57 1.18 3.2.9.1-.72.39-1.2.7-1.48-2.45-.28-5.02-1.22-5.02-5.43 0-1.2.43-2.18 1.13-2.95-.11-.28-.49-1.4.1-2.91 0 0 .92-.3 3.05 1.13A10.5 10.5 0 0 1 12 6.95c.94 0 1.88.13 2.76.38 2.12-1.44 3.04-1.13 3.04-1.13.6 1.5.22 2.63.11 2.91.7.77 1.12 1.76 1.12 2.95 0 4.22-2.58 5.14-5.04 5.42.4.35.75 1.04.75 2.1v2.44c0 .3.2.64.76.53A11.1 11.1 0 0 0 12 .9Z"/></svg><span>GitHub</span></a></nav>
+    <nav class="links" aria-label="주 메뉴"><a href="#tools">도구 둘러보기</a><a href="#about">아나 소개</a><a class="github fb" href="https://docs.google.com/forms/d/e/1FAIpQLSf3LzumGBb5t9QskyB-CtbIGP41AC6S4h2uGFizKO3KOKcw4w/viewform" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">💬</span><span>의견 보내기</span></a><a class="github" href="https://github.com/RamzThunder" target="_blank" rel="noopener noreferrer" aria-label="GitHub 열기"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .9A11.1 11.1 0 0 0 8.5 22.55c.55.1.75-.23.75-.53v-2.1c-3.06.67-3.7-1.3-3.7-1.3-.5-1.26-1.22-1.6-1.22-1.6-1-.68.08-.67.08-.67 1.1.08 1.68 1.13 1.68 1.13.98 1.67 2.57 1.18 3.2.9.1-.72.39-1.2.7-1.48-2.45-.28-5.02-1.22-5.02-5.43 0-1.2.43-2.18 1.13-2.95-.11-.28-.49-1.4.1-2.91 0 0 .92-.3 3.05 1.13A10.5 10.5 0 0 1 12 6.95c.94 0 1.88.13 2.76.38 2.12-1.44 3.04-1.13 3.04-1.13.6 1.5.22 2.63.11 2.91.7.77 1.12 1.76 1.12 2.95 0 4.22-2.58 5.14-5.04 5.42.4.35.75 1.04.75 2.1v2.44c0 .3.2.64.76.53A11.1 11.1 0 0 0 12 .9Z"/></svg><span>GitHub</span></a></nav>
   </div></header>
 
   <main id="top">
@@ -74,12 +75,12 @@
     </div></section>
 
     <section class="about" id="about"><div class="shell about-inner">
-      <div><div class="section-kicker">ABOUT AANAH!</div><h2>좋은 건 같이 쓰면 더 좋으니까요!</h2><p>아나!는 학교에서 직접 필요해서 만든 프로그램들을 모아 두는 곳이에요.<br>거창한 서비스보다, 오늘 당장 편한 도구 하나를 건네고 싶었어요.<br>쓰다가 불편한 거 있으면 GitHub에 편하게 남겨 주세요.</p></div>
+      <div><div class="section-kicker">ABOUT AANAH!</div><h2>좋은 건 같이 쓰면 더 좋으니까요!</h2><p>아나!는 학교에서 직접 필요해서 만든 프로그램들을 모아 두는 곳이에요.<br>거창한 서비스보다, 오늘 당장 편한 도구 하나를 건네고 싶었어요.<br>쓰다가 불편한 점이나 아이디어가 있으면 <a href="https://docs.google.com/forms/d/e/1FAIpQLSf3LzumGBb5t9QskyB-CtbIGP41AC6S4h2uGFizKO3KOKcw4w/viewform" target="_blank" rel="noopener noreferrer" style="color:#2d70bd;font-weight:800;text-decoration:underline">의견 보내기</a>로 편하게 알려 주세요.</p></div>
       <div class="howto"><b>설치 앱 받는 법</b><ol><li>앱 카드의 <b>다운로드</b>를 누르고 내 컴퓨터(맥/윈도우)에 맞는 파일을 받으세요.</li><li>설치하고 나면 새 버전은 앱이 알아서 업데이트해요.</li><li>맥에서 “손상되었다”고 뜨면 앱 상세에 있는 터미널 명령어를 한 번 붙여 넣어 보세요.</li></ol></div>
     </div></section>
   </main>
 
-  <footer class="footer"><div class="shell footer-inner"><span><b>아나! aanah.fyi</b> · 함 써 보이소.</span><span>평가 도구 <a href="https://aanah.fyi/forClass/privacy.html" target="_blank" rel="noopener">개인정보처리방침</a> · <a href="https://aanah.fyi/forClass/terms.html" target="_blank" rel="noopener">약관</a></span><span>Made with a little bit of 경상도 말맛 ✳</span></div></footer>
+  <footer class="footer"><div class="shell footer-inner"><span><b>아나! aanah.fyi</b> · 함 써 보이소.</span><span><a href="https://docs.google.com/forms/d/e/1FAIpQLSf3LzumGBb5t9QskyB-CtbIGP41AC6S4h2uGFizKO3KOKcw4w/viewform" target="_blank" rel="noopener noreferrer">의견 보내기</a> · 평가 도구 <a href="https://aanah.fyi/forClass/privacy.html" target="_blank" rel="noopener">개인정보처리방침</a> · <a href="https://aanah.fyi/forClass/terms.html" target="_blank" rel="noopener">약관</a></span><span>Made with a little bit of 경상도 말맛 ✳</span></div></footer>
 
   <dialog id="detailDialog" aria-labelledby="detailTitle"><div class="modal">
     <div class="modal-top"><span class="modal-kicker" id="modalKicker">AANAH! / TOOL</span><button class="close" id="closeDialog" aria-label="닫기">×</button></div>
@@ -105,6 +106,13 @@
 const GH = 'https://github.com/RamzThunder';
 const PAGES = 'https://aanah.fyi';
 const CATEGORIES = ['수업 도구','평가·채점','학교 업무','일상·재미'];
+
+/* 의견 보내기 구글 폼. 도구 자세히 보기에서 열면 '어느 도구 관련인가요?'가 미리 선택된다.
+   폼의 선택지 이름이 도구 이름과 다르면 FEEDBACK_NAMES에 적어 둔다. 폼에 없는 도구는 미리 선택 없이 열린다. */
+const FEEDBACK_FORM = 'https://docs.google.com/forms/d/e/1FAIpQLSf3LzumGBb5t9QskyB-CtbIGP41AC6S4h2uGFizKO3KOKcw4w/viewform';
+const FEEDBACK_TOOL_ENTRY = 'entry.1162952170';
+const FEEDBACK_NAMES = {forclass:'평가 도구 모음 (메인)'};
+function feedbackUrl(a){return a?`${FEEDBACK_FORM}?usp=pp_url&${FEEDBACK_TOOL_ENTRY}=${encodeURIComponent(FEEDBACK_NAMES[a.id]||a.name)}`:FEEDBACK_FORM}
 
 const apps = [
  {id:'whattime',name:'지금 몇교시야',kind:'app',category:'학교 업무',icon:'clock',img:'assets/icons/whattime.png',tint:'#e7f6f8',
@@ -249,6 +257,7 @@ function openDetail(id){
   if(!isApp)acts.push(`<a class="btn" href="${esc(a.url)}" target="_blank" rel="noopener noreferrer">바로 열기 ↗</a>`);
   if(isApp)acts.push(`<a class="btn ghost" href="${esc(releasePage(a))}" target="_blank" rel="noopener noreferrer">모든 릴리즈 ↗</a>`);
   if(a.repo&&!(isApp&&a.repo.endsWith(a.release.split('/')[1])))acts.push(`<a class="btn ghost" href="${esc(a.repo)}" target="_blank" rel="noopener noreferrer">GitHub ↗</a>`);
+  acts.push(`<a class="btn ghost" href="${esc(feedbackUrl(a))}" target="_blank" rel="noopener noreferrer">💬 의견 보내기</a>`);
   $('#modalActions').innerHTML=acts.join('');
   dialog.showModal();
 }
