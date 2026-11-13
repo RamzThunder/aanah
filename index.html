@@ -39,6 +39,7 @@
     .downloads{margin-top:20px;display:grid;grid-template-columns:1fr 1fr;gap:8px}.dl{display:flex;flex-direction:column;gap:2px;border:1px solid #d7e5f4;border-radius:12px;padding:12px 14px;color:#3d5d86;background:#fff}.dl:hover{border-color:#8cb8f0;background:#f7fbff}.dl b{font-size:14px}.dl small{font-size:11px;color:#8ea0b8;font-weight:700}.dl.mine{background:#245a9f;border-color:#245a9f;color:#fff}.dl.mine small{color:#c9dcf5}.dl.mine:hover{background:#1d4c88}
     .tip{font-size:12px;color:#8a6a2d;background:#fff8e6;border:1px solid #f4e2b6;padding:11px 13px;border-radius:10px;margin-top:14px;line-height:1.7}.tip code{background:#fff;border:1px solid #f0dfb3;padding:2px 6px;border-radius:5px;font-size:11px;word-break:break-all;user-select:all}
     .modal-actions{display:flex;gap:8px;margin-top:20px;flex-wrap:wrap}
+    .alt-dl{margin-top:8px;font-size:12px;color:#8ea0b8;text-align:right}.alt-dl a{color:#557494;text-decoration:underline;font-weight:700}
     @media(max-width:880px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}.links{gap:14px}.about-inner{grid-template-columns:1fr}}
     @media(max-width:600px){.shell{padding:0 16px}.nav{height:62px}.brand{font-size:20px}.links a:not(.github){display:none}.github span{display:none}.hero{padding:44px 0 40px}.hero-logo{width:min(180px,55vw)}.hero h1{font-size:32px}.hero p{font-size:14px}.search{height:54px}.kbd{display:none}.catalog h2{font-size:22px}.tabs{flex-wrap:nowrap;overflow-x:auto;padding-bottom:6px;scrollbar-width:none}.tab{white-space:nowrap;padding:10px 13px}.cards{grid-template-columns:1fr;gap:15px}.footer-inner{flex-direction:column}.modal{padding:20px}.downloads{grid-template-columns:1fr}}
     @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.card,.tab,.search{transition:none}}
@@ -238,6 +239,10 @@ function downloadsHtml(a){
   const mac=r&&r.mac, win=r&&r.win, fallback=releasePage(a);
   const box=(os,label,asset)=>`<a class="dl${OS===os?' mine':''}" href="${esc(asset?asset.url:fallback)}" ${asset?'':'target="_blank" rel="noopener noreferrer"'}><b>${label}${OS===os?' · 내 컴퓨터':''}</b><small>${asset?esc(asset.name):'릴리즈 페이지에서 받기 ↗'}</small></a>`;
   let html=`<div class="downloads">${box('mac','🍎 macOS',mac)}${box('win','🪟 Windows',win)}</div>`;
+  // aanah.fyi 다운로드는 학교망에서 해외(LAX 등) 서버를 거쳐 느릴 수 있어서, GitHub에서 바로 받는 길도 같이 둔다.
+  const direct=x=>x&&r.tag&&x.url.startsWith('/download/')?`https://github.com/${a.release}/releases/download/${encodeURIComponent(r.tag)}/${encodeURIComponent(x.name)}`:'';
+  const dm=direct(mac),dw=direct(win);
+  if(dm||dw)html+=`<div class="alt-dl">느리면 GitHub에서 직접 받기: ${[dm&&`<a href="${esc(dm)}">macOS</a>`,dw&&`<a href="${esc(dw)}">Windows</a>`].filter(Boolean).join(' · ')}</div>`;
   if(a.macApp)html+=`<div class="tip">맥에서 “손상되었기 때문에 열 수 없습니다”라고 뜨면, 터미널에 아래를 붙여 넣고 엔터를 누르세요! (반응 없으면 성공)<br><code>xattr -dr com.apple.quarantine "/Applications/${esc(a.macApp)}.app"</code></div>`;
   return html;
 }
@@ -282,7 +287,7 @@ async function loadReleases(){
     try{
       const r=await fetchRelease(a);
       const pick=re=>r.assets.find(x=>re.test(x.name));
-      a.latest={mac:pick(/\.dmg$/i),win:pick(/\.exe$/i)||pick(/\.msi$/i)};
+      a.latest={mac:pick(/\.dmg$/i),win:pick(/\.exe$/i)||pick(/\.msi$/i),tag:r.tag};
       if(r.tag)a.version=r.tag.replace(/^v/i,'');
       if(r.published)a.updated=r.published.slice(0,10);
       if(dialog.open&&$('#detailTitle').textContent===a.name)$('#modalDownloads').innerHTML=downloadsHtml(a);
