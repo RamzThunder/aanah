@@ -1,0 +1,4 @@
+/forclass /forClass/ 301
+/forclass/* /forClass/:splat 301
+/FORCLASS /forClass/ 301
+/FORCLASS/* /forClass/:splat 301
