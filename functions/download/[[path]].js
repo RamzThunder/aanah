@@ -16,24 +16,54 @@ const json = (body, status = 200, maxAge = TEN_MIN) => new Response(JSON.stringi
   status, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': `public, max-age=${maxAge}` },
 });
 
-async function latestRelease(repo, env) {
-  const headers = { 'User-Agent': 'aanah.fyi-download', Accept: 'application/vnd.github+json' };
-  // Cloudflare 환경 변수에 GITHUB_TOKEN을 넣어 두면 GitHub API 요청 한도가 넉넉해진다(없어도 동작).
+const UA = { 'User-Agent': 'aanah.fyi-download' };
+
+function shape(repo, tag, published, assets) {
+  return {
+    tag,
+    version: String(tag || '').replace(/^v/i, ''),
+    published: published || null,
+    assets: assets.filter(a => INSTALLER.test(a.name)).map(a => ({
+      name: a.name,
+      size: a.size || null,
+      url: `/download/${repo}/${encodeURIComponent(tag)}/${encodeURIComponent(a.name)}`,
+    })),
+  };
+}
+
+// 1순위: GitHub API. 로그인 없이 쓰면 Cloudflare 서버 IP끼리 한도(시간당 60회)를 나눠 써서 자주 막힌다.
+// Cloudflare 환경 변수에 GITHUB_TOKEN을 넣어 두면 한도가 넉넉해진다(없어도 아래 2순위로 동작).
+async function fromApi(repo, env) {
+  const headers = { ...UA, Accept: 'application/vnd.github+json' };
   if (env && env.GITHUB_TOKEN) headers.Authorization = `Bearer ${env.GITHUB_TOKEN}`;
   const res = await fetch(`https://api.github.com/repos/${OWNER}/${repo}/releases/latest`, { headers });
   if (!res.ok) throw new Error(`GitHub API ${res.status}`);
   const r = await res.json();
-  const tag = r.tag_name;
-  return {
-    tag,
-    version: String(tag || '').replace(/^v/i, ''),
-    published: r.published_at || null,
-    assets: (r.assets || []).filter(a => INSTALLER.test(a.name)).map(a => ({
-      name: a.name,
-      size: a.size,
-      url: `/download/${repo}/${encodeURIComponent(tag)}/${encodeURIComponent(a.name)}`,
-    })),
-  };
+  return shape(repo, r.tag_name, r.published_at, r.assets || []);
+}
+
+// 2순위: 릴리즈 웹페이지에서 직접 읽기(횟수 제한 없음).
+// /releases/latest 가 /releases/tag/<태그> 로 넘겨주는 걸로 태그를 알아내고, 파일 목록 조각에서 파일 이름을 뽑는다.
+async function fromPages(repo) {
+  const head = await fetch(`https://github.com/${OWNER}/${repo}/releases/latest`, { headers: UA, redirect: 'manual' });
+  const m = (head.headers.get('location') || '').match(/\/releases\/tag\/([^/?#]+)/);
+  if (!m) throw new Error('latest tag not found');
+  const tag = decodeURIComponent(m[1]);
+  const res = await fetch(`https://github.com/${OWNER}/${repo}/releases/expanded_assets/${encodeURIComponent(tag)}`, { headers: UA });
+  if (!res.ok) throw new Error(`assets page ${res.status}`);
+  const html = await res.text();
+  const prefix = `/${OWNER}/${repo}/releases/download/${tag}/`;
+  const names = new Set();
+  for (const m2 of html.matchAll(/href="([^"]+)"/g)) {
+    const href = m2[1].replace(/&amp;/g, '&');
+    if (href.startsWith(prefix)) names.add(decodeURIComponent(href.slice(prefix.length)));
+  }
+  if (!names.size) throw new Error('no assets found');
+  return shape(repo, tag, null, [...names].map(name => ({ name })));
+}
+
+async function latestRelease(repo, env) {
+  try { return await fromApi(repo, env); } catch { return await fromPages(repo); }
 }
 
 export async function onRequest({ request, env, waitUntil, params }) {
@@ -51,12 +81,17 @@ export async function onRequest({ request, env, waitUntil, params }) {
   if (parts.length === 2 && parts[1] === 'latest.json') {
     const hit = await cache.match(cacheKey);
     if (hit) return hit;
+    // 마지막으로 성공한 결과를 하루 동안 따로 보관해 두고, GitHub가 둘 다 안 될 때 그걸 내준다.
+    const staleKey = new Request(cacheKey.url + '?stale=1', { method: 'GET' });
     try {
-      const res = json(await latestRelease(repo, env));
-      waitUntil(cache.put(cacheKey, res.clone()));
+      const data = await latestRelease(repo, env);
+      const res = json(data);
+      waitUntil(Promise.all([cache.put(cacheKey, res.clone()), cache.put(staleKey, json(data, 200, 86400))]));
       return res;
     } catch (e) {
-      return json({ error: '최신 버전을 확인하지 못했습니다.' }, 502, 60);
+      const stale = await cache.match(staleKey);
+      if (stale) return new Response(stale.body, { headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'public, max-age=60' } });
+      return json({ error: '최신 버전을 확인하지 못했습니다.' }, 503, 60);
     }
   }
 
