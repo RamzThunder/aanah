@@ -34,8 +34,11 @@ export async function onRequest({ request, next }) {
     return new Response('Method Not Allowed', { status: 405, headers: { Allow: 'GET, HEAD' } });
   }
 
+  const spot = AANAH_LINK_PAGES[url.pathname];
   const headers = new Headers();
   for (const name of PASS_REQUEST_HEADERS) {
+    // 링크를 붙이는 페이지는 브라우저 캐시 확인(304)을 넘기지 않는다. 넘기면 링크 없는 옛 사본이 계속 쓰인다.
+    if (spot && (name === 'if-none-match' || name === 'if-modified-since' || name === 'range')) continue;
     const value = request.headers.get(name);
     if (value) headers.set(name, value);
   }
@@ -57,9 +60,9 @@ export async function onRequest({ request, next }) {
     if (target.origin === UPSTREAM) response.headers.set('location', target.pathname + target.search + target.hash);
   }
 
-  const spot = AANAH_LINK_PAGES[url.pathname];
   if (spot && response.status === 200 && (response.headers.get('content-type') || '').includes('text/html')) {
     response.headers.delete('etag');
+    response.headers.delete('last-modified');
     response.headers.delete('content-length');
     let done = false;
     const rewriter = new HTMLRewriter();
