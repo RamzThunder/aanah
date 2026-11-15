@@ -6,21 +6,24 @@
 // 레포의 커밋 Atom 피드(github.com/.../commits/<브랜치>/<파일>.atom)를 읽기 때문에 GitHub API 횟수 제한에 걸리지 않는다.
 // 새 웹 도구를 추가하면 TOOLS에 index.html의 id와 같은 이름으로 한 줄 추가하면 된다.
 // paths를 비워 두면 레포 전체의 마지막 커밋 날짜를 쓴다.
-// version: 도구 화면에 적힌 버전 표시를 찾는 정규식. paths의 첫 파일(raw.githubusercontent.com)에서 찾는다.
-//          괄호 안이 버전 숫자. 화면의 버전 표시 모양을 바꾸면 여기도 같이 고쳐야 한다.
+//
+// 버전: 도구 HTML <head>의 <meta name="aanah:version" content="X.Y.Z">를 읽는다(모든 레포 공통 규칙).
+//       page에 적은 파일, 없으면 paths의 첫 파일, 그것도 없으면 index.html에서 찾는다.
+//       meta가 없으면 legacy 정규식(예전 화면 버전 표시)으로 한 번 더 찾고, 둘 다 없으면 버전은 비워 둔다.
 
 const OWNER = 'RamzThunder';
 const TOOLS = {
   forclass: { repo: 'forClass', paths: ['index.html', 'shared-roster.js', 'roster-manager.js', 'google-drive-sync.js'] },
-  omr: { repo: 'forClass', paths: ['omr-grader.html'], version: /id="appVersionText">v(\d+(?:\.\d+)+)</ },
+  omr: { repo: 'forClass', paths: ['omr-grader.html'], legacy: /id="appVersionText">v(\d+(?:\.\d+)+)</ },
   writing: { repo: 'forClass', paths: ['argument-writing-grader.html'] },
-  speaking: { repo: 'forClass', paths: ['logical-speaking-grader.html'], version: /id="appVersion">v(\d+(?:\.\d+)+)</ },
+  speaking: { repo: 'forClass', paths: ['logical-speaking-grader.html'], legacy: /id="appVersion">v(\d+(?:\.\d+)+)</ },
   roulette: { repo: 'forClass', paths: ['논리적인 말하기 수행평가 돌려돌려돌림판.html'] },
-  escape: { repo: 'gugeo', paths: [] },
-  jjirashy: { repo: 'jjirashy', paths: ['jjirasi_sticker_maker.html'], version: /class="ver">v(\d+(?:\.\d+)+)</ },
+  escape: { repo: 'gugeo', paths: [], page: 'index.html' },
+  jjirashy: { repo: 'jjirashy', paths: ['jjirasi_sticker_maker.html'], legacy: /class="ver">v(\d+(?:\.\d+)+)</ },
 };
 const BRANCH = 'main';
 const HOUR = 3600;
+const META = /<meta\s+name=["']aanah:version["']\s+content=["']v?(\d+(?:\.\d+)+)["']/i;
 const UA = { 'User-Agent': 'aanah.fyi-updated' };
 
 const json = (body, maxAge = HOUR) => new Response(JSON.stringify(body), {
@@ -38,13 +41,13 @@ async function lastCommit(repo, path) {
   return Date.parse(m[1]);
 }
 
-async function readVersion(repo, path, pattern) {
+async function readVersion(repo, path, legacy) {
   const file = path.split('/').map(encodeURIComponent).join('/');
   const res = await fetch(`https://raw.githubusercontent.com/${OWNER}/${repo}/${BRANCH}/${file}`, { headers: UA });
   if (!res.ok) throw new Error(`raw ${res.status}`);
-  const m = (await res.text()).match(pattern);
-  if (!m) throw new Error('version not found');
-  return m[1];
+  const html = await res.text();
+  const m = html.match(META) || (legacy && html.match(legacy));
+  return m ? m[1] : null;
 }
 
 // 학교 기준으로 날짜가 바뀌도록 한국 시간(UTC+9)으로 날짜를 만든다.
@@ -58,10 +61,10 @@ async function collect() {
     return jobs.get(key);
   };
   const out = {};
-  await Promise.all(Object.entries(TOOLS).map(async ([id, { repo, paths, version }]) => {
+  await Promise.all(Object.entries(TOOLS).map(async ([id, { repo, paths, page, legacy }]) => {
     const [times, ver] = await Promise.all([
       Promise.all((paths.length ? paths : ['']).map(p => one(repo, p))),
-      version ? readVersion(repo, paths[0], version).catch(() => null) : null,
+      readVersion(repo, page || paths[0] || 'index.html', legacy).catch(() => null),
     ]);
     const latest = Math.max(...times.filter(Number.isFinite));
     const item = {};
@@ -93,7 +96,7 @@ export async function onRequest({ request, waitUntil }) {
     const item = { ...(stale[id] && typeof stale[id] === 'object' ? stale[id] : {}), ...fresh[id] };
     if (Object.keys(item).length) data[id] = item;
   }
-  const complete = Object.entries(TOOLS).every(([id, t]) => fresh[id] && fresh[id].updated && (!t.version || fresh[id].version));
+  const complete = Object.keys(TOOLS).every(id => fresh[id] && fresh[id].updated);
 
   const res = json(data, complete ? HOUR : 60);
   const saves = [cache.put(cacheKey, res.clone())];
