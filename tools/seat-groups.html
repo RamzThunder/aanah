@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="aanah:version" content="1.0.0">
+<title>조 편성 자리판</title>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;500;700&display=swap">
+<style>
+/* layout: control strip on top, one seat board (6 x 6) in the middle, group legend below */
+:root{
+  --bg:#F3F4F0; --card:#FFFFFF; --fg:#1E2A2D; --muted:#66727A; --line:#C9D0CC;
+  --board:#2F5D50; --board-fg:#E9F1EC; --accent:#2F5D50; --accent-fg:#FFFFFF;
+  --tl:90%; --el:42%; --nl:30%;
+  --f-body:'Noto Sans KR',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --f-disp:'Jua','Noto Sans KR',system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#14191A; --card:#1D2426; --fg:#E7EDEA; --muted:#98A5A3; --line:#3A4547;
+  --board:#2A4F44; --board-fg:#E9F1EC; --accent:#7FC1AC; --accent-fg:#10201B;
+  --tl:26%; --el:58%; --nl:84%; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#14191A; --card:#1D2426; --fg:#E7EDEA; --muted:#98A5A3; --line:#3A4547;
+  --board:#2A4F44; --board-fg:#E9F1EC; --accent:#7FC1AC; --accent-fg:#10201B;
+  --tl:26%; --el:58%; --nl:84%; color-scheme:dark}
+*{box-sizing:border-box}
+html{color-scheme:light}
+body{margin:0}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);padding-block:20px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:900px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+h1{font-family:var(--f-disp);font-weight:400;font-size:30px;margin:0;letter-spacing:.01em}
+.sub{color:var(--muted);font-size:14px;margin:4px 0 0}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.step{display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:4px 6px 4px 12px;font-size:15px}
+.step b{font-family:var(--f-disp);font-weight:400;font-size:22px;min-width:1.4em;text-align:center}
+button{font:inherit;color:var(--fg);background:var(--card);border:1px solid var(--line);border-radius:10px;padding:9px 14px;cursor:pointer;min-height:44px}
+button:hover{border-color:var(--accent)}
+button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.step button{min-height:36px;min-width:36px;padding:0;font-size:20px;line-height:1}
+button.pri{background:var(--accent);color:var(--accent-fg);border-color:var(--accent);font-weight:500}
+.spacer{flex:1}
+.board{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
+.tv{background:var(--board);color:var(--board-fg);border-radius:8px;text-align:center;padding:8px;font-family:var(--f-disp);font-size:20px;letter-spacing:.2em}
+.grid{display:grid;grid-template-columns:44px repeat(6,minmax(0,1fr));gap:6px;margin:10px 0}
+.hd{font-size:13px;color:var(--muted);background:none;border:none;border-radius:6px;min-height:0;padding:4px 0;display:flex;align-items:center;justify-content:center}
+.hd:hover{background:var(--bg);color:var(--fg)}
+.seat{height:clamp(52px,9.5vw,84px);padding:0;border-radius:10px;border:2px solid hsl(var(--h) 50% var(--el));background:hsl(var(--h) 62% var(--tl));color:hsl(var(--h) 60% var(--nl));font-family:var(--f-disp);font-size:clamp(20px,4.4vw,36px);display:flex;align-items:center;justify-content:center;gap:2px}
+.seat small{font-size:.5em;font-family:var(--f-body);font-weight:500}
+.seat.off{border:2px dashed var(--line);background:transparent;color:var(--muted);font-family:var(--f-body);font-size:15px}
+.seat.off:hover{border-color:var(--muted)}
+.sum{font-size:15px;margin:2px 0 0}
+.sum b{font-weight:700}
+.legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.chip{border:2px solid hsl(var(--h) 50% var(--el));background:hsl(var(--h) 62% var(--tl));color:hsl(var(--h) 60% var(--nl));border-radius:999px;padding:4px 14px;font-size:15px;font-weight:500}
+.chip i{font-style:normal;font-family:var(--f-disp);font-size:18px;margin-right:6px}
+.hint{font-size:13px;color:var(--muted);margin:0;line-height:1.6}
+@media (max-width:520px){.grid{grid-template-columns:34px repeat(6,minmax(0,1fr));gap:4px}.seat{border-radius:8px}}
+@media (prefers-reduced-motion:no-preference){.seat{transition:background .15s,border-color .15s}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div>
+    <h1>조 편성 자리판</h1>
+    <p class="sub">앉은 자리를 켜고 끄면 가까운 자리끼리 조가 만들어집니다.</p>
+  </div>
+
+  <div class="bar">
+    <div class="step" role="group" aria-label="조 수"><span>조 수</span>
+      <button id="kDown" aria-label="조 수 줄이기">−</button><b id="kVal">8</b><button id="kUp" aria-label="조 수 늘리기">+</button>
+    </div>
+    <button id="reroll" class="pri">다시 편성</button>
+    <span class="spacer"></span>
+    <button id="def">기본 30자리</button>
+    <button id="all">전부 켜기</button>
+    <button id="flip">화면 뒤집기</button>
+    <button id="fs">전체 화면</button>
+  </div>
+
+  <div class="board">
+    <div class="tv" id="tvTop">교실 TV (앞)</div>
+    <div class="grid" id="grid"></div>
+    <div class="tv" id="tvBot" hidden>교실 TV (앞)</div>
+    <p class="sum" id="sum"></p>
+    <div class="legend" id="legend"></div>
+  </div>
+
+  <p class="hint">자리를 누르면 결석·빈자리(점선)로 바뀝니다. 줄 번호나 열 번호를 누르면 그 줄·열 전체가 켜지거나 꺼집니다. 마음에 안 들면 「다시 편성」을 누르세요. 같은 자리 배치에서는 늘 같은 결과가 나오고, 설정은 이 기기에 저장됩니다.</p>
+</div>
+
+<script>
+var R=6,C=6,KEY='jo-seats-v1';
+var HUES=[262,158,18,332,212,92,38,186,292,58];
+var S={on:[],k:8,seed:1,flip:false};
+function defOn(){var a=[];for(var i=0;i<R*C;i++)a.push(Math.floor(i/C)<5);return a}
+S.on=defOn();
+try{var raw=localStorage.getItem(KEY);if(raw){var o=JSON.parse(raw);if(o&&o.on&&o.on.length===R*C){S=o}}}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+
+function mulberry(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function shuffle(a,rnd){for(var i=a.length-1;i>0;i--){var j=Math.floor(rnd()*(i+1));var t=a[i];a[i]=a[j];a[j]=t}return a}
+
+function solve(seats,k,seed){
+  var n=seats.length;if(!n)return[];
+  k=Math.min(k,n);
+  var base=Math.floor(n/k),extra=n%k,rnd=mulberry(seed*7919+13);
+  function d2(a,b){var dr=seats[a].r-seats[b].r,dc=seats[a].c-seats[b].c;return dr*dr+dc*dc}
+  function cost(as){var tot=0;for(var g=0;g<k;g++){var m=[],i;for(i=0;i<n;i++)if(as[i]===g)m.push(i);var s=0;for(i=0;i<m.length;i++)for(var j=i+1;j<m.length;j++)s+=d2(m[i],m[j]);tot+=m.length?s/m.length:0}return tot}
+  var best=null,bc=1e18;
+  for(var t=0;t<40;t++){
+    var caps=[];for(var g=0;g<k;g++)caps.push(base);
+    var ord=shuffle(Array.from({length:k},function(_,i){return i}),rnd);
+    for(var e=0;e<extra;e++)caps[ord[e]]++;
+    var sd=[Math.floor(rnd()*n)];
+    while(sd.length<k){var bi=-1,bd=-1;for(var s=0;s<n;s++){if(sd.indexOf(s)>=0)continue;var m=1e9;for(var q=0;q<sd.length;q++)m=Math.min(m,d2(s,sd[q]));m*=1+rnd()*.4;if(m>bd){bd=m;bi=s}}sd.push(bi)}
+    var pr=[];for(var s2=0;s2<n;s2++)for(var g2=0;g2<k;g2++)pr.push([d2(s2,sd[g2])+rnd()*.01,s2,g2]);
+    pr.sort(function(a,b){return a[0]-b[0]});
+    var as=new Array(n).fill(-1),left=caps.slice();
+    for(var p=0;p<pr.length;p++){var x=pr[p];if(as[x[1]]<0&&left[x[2]]>0){as[x[1]]=x[2];left[x[2]]--}}
+    var cur=cost(as),imp=true,pass=0;
+    while(imp&&pass<30){imp=false;pass++;
+      for(var i=0;i<n;i++)for(var j=i+1;j<n;j++){if(as[i]===as[j])continue;
+        var tmp=as[i];as[i]=as[j];as[j]=tmp;var c2=cost(as);
+        if(c2<cur-1e-9){cur=c2;imp=true}else{tmp=as[i];as[i]=as[j];as[j]=tmp}}}
+    if(cur<bc-1e-9){bc=cur;best=as.slice()}
+  }
+  var cen=[];for(var g3=0;g3<k;g3++){var sr=0,sc=0,cn=0;for(var i3=0;i3<n;i3++)if(best[i3]===g3){sr+=seats[i3].r;sc+=seats[i3].c;cn++}cen.push({g:g3,r:sr/cn,c:sc/cn})}
+  cen.sort(function(a,b){return a.r-b.r||a.c-b.c});
+  var per=3,order=[];
+  for(var s4=0;s4<cen.length;s4+=per){order=order.concat(cen.slice(s4,s4+per).sort(function(a,b){return a.c-b.c}))}
+  var map={};order.forEach(function(o,i){map[o.g]=i});
+  return best.map(function(g){return map[g]});
+}
+
+var grid=document.getElementById('grid');
+function render(){
+  var seats=[],idx=[];
+  for(var i=0;i<R*C;i++)if(S.on[i]){seats.push({r:Math.floor(i/C),c:i%C});idx.push(i)}
+  var res=solve(seats,S.k,S.seed),gOf={};
+  idx.forEach(function(ci,n){gOf[ci]=res[n]});
+  var rows=[],cols=[],r,c;for(r=0;r<R;r++)rows.push(r);for(c=0;c<C;c++)cols.push(c);
+  if(S.flip){rows.reverse();cols.reverse()}
+  var h='<span></span>';
+  cols.forEach(function(c){h+='<button class="hd" data-col="'+c+'" aria-label="'+(c+1)+'열 전체 켜기 또는 끄기">'+(c+1)+'열</button>'});
+  rows.forEach(function(r){
+    h+='<button class="hd" data-row="'+r+'" aria-label="'+(r+1)+'줄 전체 켜기 또는 끄기">'+(r+1)+'줄</button>';
+    cols.forEach(function(c){
+      var i=r*C+c;
+      if(S.on[i]){var g=gOf[i];h+='<button class="seat" data-i="'+i+'" style="--h:'+HUES[g%HUES.length]+'" aria-pressed="true" aria-label="'+(r+1)+'줄 '+(c+1)+'열 '+(g+1)+'조">'+(g+1)+'<small>조</small></button>'}
+      else h+='<button class="seat off" data-i="'+i+'" aria-pressed="false" aria-label="'+(r+1)+'줄 '+(c+1)+'열 빈자리">×</button>';
+    });
+  });
+  grid.innerHTML=h;
+  document.getElementById('tvTop').hidden=S.flip;document.getElementById('tvBot').hidden=!S.flip;
+  document.getElementById('kVal').textContent=S.k;
+  var n=seats.length,k=Math.min(S.k,n),cnt={};
+  res.forEach(function(g){cnt[g]=(cnt[g]||0)+1});
+  var sizes={};Object.keys(cnt).forEach(function(g){sizes[cnt[g]]=(sizes[cnt[g]]||0)+1});
+  var parts=Object.keys(sizes).sort(function(a,b){return b-a}).map(function(s){return '<b>'+s+'명</b> 조 '+sizes[s]+'개'});
+  document.getElementById('sum').innerHTML=n?('앉은 학생 <b>'+n+'명</b> → '+parts.join(' + ')):'켜진 자리가 없습니다. 자리를 눌러 켜 주세요.';
+  var lg='';for(var g=0;g<k;g++)lg+='<span class="chip" style="--h:'+HUES[g%HUES.length]+'"><i>'+(g+1)+'조</i>'+(cnt[g]||0)+'명</span>';
+  document.getElementById('legend').innerHTML=lg;
+  save();
+}
+grid.addEventListener('click',function(e){
+  var b=e.target.closest('button');if(!b)return;var i,all,k;
+  if(b.dataset.i!==undefined){i=+b.dataset.i;S.on[i]=!S.on[i]}
+  else if(b.dataset.row!==undefined){var r=+b.dataset.row;all=true;for(k=0;k<C;k++)if(!S.on[r*C+k])all=false;for(k=0;k<C;k++)S.on[r*C+k]=!all}
+  else if(b.dataset.col!==undefined){var c=+b.dataset.col;all=true;for(k=0;k<R;k++)if(!S.on[k*C+c])all=false;for(k=0;k<R;k++)S.on[k*C+c]=!all}
+  else return;
+  render();
+});
+document.getElementById('kDown').onclick=function(){if(S.k>2){S.k--;render()}};
+document.getElementById('kUp').onclick=function(){if(S.k<10){S.k++;render()}};
+document.getElementById('reroll').onclick=function(){S.seed++;render()};
+document.getElementById('def').onclick=function(){S.on=defOn();S.seed=1;render()};
+document.getElementById('all').onclick=function(){S.on=S.on.map(function(){return true});render()};
+document.getElementById('flip').onclick=function(){S.flip=!S.flip;render()};
+document.getElementById('fs').onclick=function(){try{if(document.documentElement.requestFullscreen)document.documentElement.requestFullscreen().catch(function(){})}catch(e){}};
+render();
+</script>
+</body>
+</html>

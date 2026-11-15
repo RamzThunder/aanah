@@ -18,6 +18,7 @@ const TOOLS = {
   writing: { repo: 'forClass', paths: ['argument-writing-grader.html'] },
   speaking: { repo: 'forClass', paths: ['logical-speaking-grader.html'], legacy: /id="appVersion">v(\d+(?:\.\d+)+)</ },
   roulette: { repo: 'forClass', paths: ['논리적인 말하기 수행평가 돌려돌려돌림판.html'] },
+  seatgroups: { repo: 'aanah', paths: ['tools/seat-groups.html'] },
   escape: { repo: 'gugeo', paths: [], page: 'index.html' },
   jjirashy: { repo: 'jjirashy', paths: ['jjirasi_sticker_maker.html'], legacy: /class="ver">v(\d+(?:\.\d+)+)</ },
 };
