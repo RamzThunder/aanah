@@ -1,21 +1,23 @@
-// 웹 도구들의 '마지막 업데이트 날짜'를 GitHub 커밋 기록에서 읽어 내준다.
+// 웹 도구들의 '마지막 업데이트 날짜'와 '버전'을 GitHub에서 읽어 내준다.
 //
-//   /api/updated   →  { "omr": "2026-11-01", "jjirashy": "2026-11-15", ... }   (1시간 캐시)
+//   /api/updated   →  { "omr": { "updated": "2026-11-01", "version": "2.3.5" }, ... }   (1시간 캐시)
 //
 // 한 레포에 도구가 여러 개 있는 경우(forClass)가 있어서, 도구마다 자기 파일이 마지막으로 바뀐 날짜를 쓴다.
 // 레포의 커밋 Atom 피드(github.com/.../commits/<브랜치>/<파일>.atom)를 읽기 때문에 GitHub API 횟수 제한에 걸리지 않는다.
 // 새 웹 도구를 추가하면 TOOLS에 index.html의 id와 같은 이름으로 한 줄 추가하면 된다.
 // paths를 비워 두면 레포 전체의 마지막 커밋 날짜를 쓴다.
+// version: 도구 화면에 적힌 버전 표시를 찾는 정규식. paths의 첫 파일(raw.githubusercontent.com)에서 찾는다.
+//          괄호 안이 버전 숫자. 화면의 버전 표시 모양을 바꾸면 여기도 같이 고쳐야 한다.
 
 const OWNER = 'RamzThunder';
 const TOOLS = {
   forclass: { repo: 'forClass', paths: ['index.html', 'shared-roster.js', 'roster-manager.js', 'google-drive-sync.js'] },
-  omr: { repo: 'forClass', paths: ['omr-grader.html'] },
+  omr: { repo: 'forClass', paths: ['omr-grader.html'], version: /id="appVersionText">v(\d+(?:\.\d+)+)</ },
   writing: { repo: 'forClass', paths: ['argument-writing-grader.html'] },
-  speaking: { repo: 'forClass', paths: ['logical-speaking-grader.html'] },
+  speaking: { repo: 'forClass', paths: ['logical-speaking-grader.html'], version: /id="appVersion">v(\d+(?:\.\d+)+)</ },
   roulette: { repo: 'forClass', paths: ['논리적인 말하기 수행평가 돌려돌려돌림판.html'] },
   escape: { repo: 'gugeo', paths: [] },
-  jjirashy: { repo: 'jjirashy', paths: ['jjirasi_sticker_maker.html'] },
+  jjirashy: { repo: 'jjirashy', paths: ['jjirasi_sticker_maker.html'], version: /class="ver">v(\d+(?:\.\d+)+)</ },
 };
 const BRANCH = 'main';
 const HOUR = 3600;
@@ -36,6 +38,15 @@ async function lastCommit(repo, path) {
   return Date.parse(m[1]);
 }
 
+async function readVersion(repo, path, pattern) {
+  const file = path.split('/').map(encodeURIComponent).join('/');
+  const res = await fetch(`https://raw.githubusercontent.com/${OWNER}/${repo}/${BRANCH}/${file}`, { headers: UA });
+  if (!res.ok) throw new Error(`raw ${res.status}`);
+  const m = (await res.text()).match(pattern);
+  if (!m) throw new Error('version not found');
+  return m[1];
+}
+
 // 학교 기준으로 날짜가 바뀌도록 한국 시간(UTC+9)으로 날짜를 만든다.
 const kstDate = t => new Date(t + 9 * HOUR * 1000).toISOString().slice(0, 10);
 
@@ -47,10 +58,16 @@ async function collect() {
     return jobs.get(key);
   };
   const out = {};
-  await Promise.all(Object.entries(TOOLS).map(async ([id, { repo, paths }]) => {
-    const times = await Promise.all((paths.length ? paths : ['']).map(p => one(repo, p)));
+  await Promise.all(Object.entries(TOOLS).map(async ([id, { repo, paths, version }]) => {
+    const [times, ver] = await Promise.all([
+      Promise.all((paths.length ? paths : ['']).map(p => one(repo, p))),
+      version ? readVersion(repo, paths[0], version).catch(() => null) : null,
+    ]);
     const latest = Math.max(...times.filter(Number.isFinite));
-    if (Number.isFinite(latest)) out[id] = kstDate(latest);
+    const item = {};
+    if (Number.isFinite(latest)) item.updated = kstDate(latest);
+    if (ver) item.version = ver;
+    if (Object.keys(item).length) out[id] = item;
   }));
   return out;
 }
@@ -61,17 +78,22 @@ export async function onRequest({ request, waitUntil }) {
   }
   const cache = caches.default;
   const url = new URL(request.url);
-  const cacheKey = new Request(url.origin + url.pathname, { method: 'GET' });
+  const cacheKey = new Request(url.origin + url.pathname + '?v=2', { method: 'GET' });
   const hit = await cache.match(cacheKey);
   if (hit) return hit;
 
   // 마지막으로 성공한 결과를 일주일 동안 따로 보관해 두고, GitHub를 못 읽을 때 빈 자리를 채운다.
-  const staleKey = new Request(cacheKey.url + '?stale=1', { method: 'GET' });
+  // (보관 키는 응답 모양이 바뀌면 v 숫자를 올린다)
+  const staleKey = new Request(cacheKey.url + '&stale=1', { method: 'GET' });
   const fresh = await collect();
   const staleRes = await cache.match(staleKey);
   const stale = staleRes ? await staleRes.json().catch(() => ({})) : {};
-  const data = { ...stale, ...fresh };
-  const complete = Object.keys(fresh).length === Object.keys(TOOLS).length;
+  const data = {};
+  for (const id of Object.keys(TOOLS)) {
+    const item = { ...(stale[id] && typeof stale[id] === 'object' ? stale[id] : {}), ...fresh[id] };
+    if (Object.keys(item).length) data[id] = item;
+  }
+  const complete = Object.entries(TOOLS).every(([id, t]) => fresh[id] && fresh[id].updated && (!t.version || fresh[id].version));
 
   const res = json(data, complete ? HOUR : 60);
   const saves = [cache.put(cacheKey, res.clone())];

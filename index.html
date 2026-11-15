@@ -132,7 +132,7 @@ const apps = [
   desc:'PDF 답안 영역을 보면서 문항별 점수와 메모를 착착 기록해요.',
   detail:'지필평가 서술형 채점용 도구예요. 구글로 로그인하면 채점 기록이 내 드라이브에 자동 저장돼요.',
   features:['PDF 답안을 보며 문항별 점수·메모 기록','루브릭과 검토 보조','메모·논의·키워드별 모아보기','학생용 점수 확인 화면'],
-  tags:['지필','서술형','루브릭'],url:`${PAGES}/forClass/omr-grader.html`,repo:`${GH}/forClass`,version:'2.3.0',updated:'2026-11-01',order:2},
+  tags:['지필','서술형','루브릭'],url:`${PAGES}/forClass/omr-grader.html`,repo:`${GH}/forClass`,version:'2.3.5',updated:'2026-11-01',order:2},
  {id:'pandecki',name:'판떼기 PanDeckI',kind:'app',category:'수업 도구',icon:'screen',img:'assets/icons/pandecki.png',tint:'#e5f1ff',
   desc:'교실 TV에 켜두는 판(보드) 앱. 판을 만들고 자유 캔버스로 꾸며요.',
   detail:'대시보드에서 판을 여러 개 만들고, 판마다 자유 캔버스처럼 꾸며서 수업 화면으로 쓰는 데스크톱 앱이에요.',
@@ -152,7 +152,7 @@ const apps = [
   desc:'발표 들으면서 구술형 수행평가를 바로 채점해요.',
   detail:'논리적인 말하기 같은 구술형 수행평가 채점용 템플릿이에요.',
   features:['발표 타이머','학생별 전사본 기록','학생용 점수표 만들기'],
-  tags:['수행평가','말하기','타이머'],url:`${PAGES}/forClass/logical-speaking-grader.html`,repo:`${GH}/forClass`,updated:'2026-10-19',order:6},
+  tags:['수행평가','말하기','타이머'],url:`${PAGES}/forClass/logical-speaking-grader.html`,repo:`${GH}/forClass`,version:'1.10.0',updated:'2026-10-19',order:6},
  {id:'roulette',shot:'assets/shots/roulette.jpg',name:'발표 순서 돌림판',kind:'web',category:'수업 도구',icon:'shuffle',tint:'#fff3df',
   desc:'두근두근! 말하기 수행평가 발표 순서를 돌림판으로 뽑아요.',
   detail:'말하기 수행평가 발표 순서를 돌려돌려 돌림판으로 정하는 도구예요.',
@@ -172,7 +172,7 @@ const apps = [
   desc:'속보·전단지 느낌 찌라시 스티커를 틀 골라서 뚝딱.',
   detail:'여러 가지 찌라시 틀에 문구를 넣어 스티커 이미지를 만드는 생성기예요.',
   features:['속보·간판·전단지 등 다양한 틀','랜덤 찌라시·문구 랜덤 뽑기','잉크색·종이색·크기 조절'],
-  tags:['스티커','재미'],url:`${PAGES}/jjirashy/jjirasi_sticker_maker.html`,repo:`${GH}/jjirashy`,version:'0.9.0',updated:'2026-11-15',order:10}
+  tags:['스티커','재미'],url:`${PAGES}/jjirashy/jjirasi_sticker_maker.html`,repo:`${GH}/jjirashy`,version:'1.0.0',updated:'2026-11-15',order:10}
 ];
 
 const icons={
@@ -298,15 +298,18 @@ async function loadReleases(){
     }catch(e){/* 오프라인·요청 제한 시 기본값 사용 */}
   }));
 }
-/* 웹 도구: 각 도구 파일의 마지막 커밋 날짜 (functions/api/updated.js, 1시간 캐시). 실패하면 기본값 유지 */
+/* 웹 도구: 각 도구 파일의 마지막 커밋 날짜와 화면에 적힌 버전 (functions/api/updated.js, 1시간 캐시). 실패하면 기본값 유지 */
 async function loadWebUpdates(){
   try{
     const res=await fetch('/api/updated',{signal:timeoutSignal(8000)});
     if(!res.ok)return;
-    const dates=await res.json();
-    apps.filter(a=>a.kind==='web'&&/^\d{4}-\d{2}-\d{2}$/.test(dates[a.id]||'')).forEach(a=>{
-      a.updated=dates[a.id];
+    const data=await res.json();
+    apps.filter(a=>a.kind==='web'&&data[a.id]).forEach(a=>{
+      const d=data[a.id];
+      if(/^\d{4}-\d{2}-\d{2}$/.test(d.updated||''))a.updated=d.updated;
+      if(/^\d+(\.\d+)+$/.test(d.version||''))a.version=d.version;
       const u=document.querySelector(`[data-upd="${a.id}"]`);if(u)u.textContent=fmtDate(a.updated);
+      const v=document.querySelector(`[data-ver="${a.id}"]`);if(v)v.textContent=`v${a.version}`;
       if(dialog.open&&$('#detailTitle').textContent===a.name)$('#modalMeta').textContent=[a.category,a.version&&`v${a.version}`,fmtDate(a.updated)].filter(Boolean).join(' · ');
     });
   }catch(e){}
