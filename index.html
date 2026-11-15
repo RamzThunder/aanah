@@ -103,6 +103,8 @@
                    macApp: 맥 .app 이름 (적어두면 '손상됨' 해결 명령어를 보여줌)
   - repo: 소스/릴리즈 GitHub 주소 (없으면 버튼 숨김)
   - version / updated: 자동 갱신이 안 될 때 보여줄 기본값
+  - 웹 도구의 updated는 /api/updated(functions/api/updated.js)가 GitHub 커밋 날짜로 자동 갱신해.
+    새 웹 도구를 추가하면 그 파일의 TOOLS에도 같은 id로 한 줄 추가!
 */
 const GH = 'https://github.com/RamzThunder';
 const PAGES = 'https://aanah.fyi';
@@ -125,7 +127,7 @@ const apps = [
   desc:'OMR·글쓰기·말하기 채점기를 한곳에서! 학생 명렬도 여기서 한 번에 등록해요.',
   detail:'지필·수행평가 채점 도구들의 시작 페이지예요. 학생 명렬을 한 번 등록하면 세 채점기에 함께 적용되고, 구글로 로그인하면 채점 기록과 명렬이 내 드라이브에 저장돼요.',
   features:['OMR 서술형·글쓰기·말하기 채점기 바로가기','공통 학생 명렬 CSV 등록, 세 채점기에 함께 적용','구글 로그인 시 드라이브 동기화, 다른 기기에서도 같은 명렬'],
-  tags:['평가','명렬','채점기 모음'],url:`${PAGES}/forClass/`,repo:`${GH}/forClass`,updated:'2026-11-01',order:1.5},
+  tags:['평가','명렬','채점기 모음'],url:`${PAGES}/forClass/`,repo:`${GH}/forClass`,updated:'2026-10-30',order:1.5},
  {id:'omr',shot:'assets/shots/omr.jpg',name:'OMR 서술형 채점 도구',kind:'web',category:'평가·채점',icon:'omr',tint:'#eaf6ee',
   desc:'PDF 답안 영역을 보면서 문항별 점수와 메모를 착착 기록해요.',
   detail:'지필평가 서술형 채점용 도구예요. 구글로 로그인하면 채점 기록이 내 드라이브에 자동 저장돼요.',
@@ -145,22 +147,22 @@ const apps = [
   desc:'글쓰기 수행평가 채점할 때 쓰기 좋은 채점표 템플릿.',
   detail:'주장하는 글쓰기 같은 쓰기 수행평가를 채점하기 위한 템플릿이에요. 평가 도구 모음의 명렬표와 함께 쓸 수 있어요.',
   features:['학생별 기준 충족 여부 기록','구글 로그인 시 드라이브 자동 저장'],
-  tags:['수행평가','쓰기'],url:`${PAGES}/forClass/argument-writing-grader.html`,repo:`${GH}/forClass`,updated:'2026-11-01',order:5},
+  tags:['수행평가','쓰기'],url:`${PAGES}/forClass/argument-writing-grader.html`,repo:`${GH}/forClass`,updated:'2026-09-21',order:5},
  {id:'speaking',shot:'assets/shots/speaking.jpg',name:'말하기 채점표',kind:'web',category:'평가·채점',icon:'check',tint:'#e9f5ef',
   desc:'발표 들으면서 구술형 수행평가를 바로 채점해요.',
   detail:'논리적인 말하기 같은 구술형 수행평가 채점용 템플릿이에요.',
   features:['발표 타이머','학생별 전사본 기록','학생용 점수표 만들기'],
-  tags:['수행평가','말하기','타이머'],url:`${PAGES}/forClass/logical-speaking-grader.html`,repo:`${GH}/forClass`,updated:'2026-11-01',order:6},
+  tags:['수행평가','말하기','타이머'],url:`${PAGES}/forClass/logical-speaking-grader.html`,repo:`${GH}/forClass`,updated:'2026-10-19',order:6},
  {id:'roulette',shot:'assets/shots/roulette.jpg',name:'발표 순서 돌림판',kind:'web',category:'수업 도구',icon:'shuffle',tint:'#fff3df',
   desc:'두근두근! 말하기 수행평가 발표 순서를 돌림판으로 뽑아요.',
   detail:'말하기 수행평가 발표 순서를 돌려돌려 돌림판으로 정하는 도구예요.',
   features:['돌림판으로 발표 순서 뽑기'],
-  tags:['랜덤','발표'],url:`${PAGES}/forClass/${encodeURIComponent('논리적인 말하기 수행평가 돌려돌려돌림판')}.html`,repo:`${GH}/forClass`,updated:'2026-11-01',order:7},
+  tags:['랜덤','발표'],url:`${PAGES}/forClass/${encodeURIComponent('논리적인 말하기 수행평가 돌려돌려돌림판')}.html`,repo:`${GH}/forClass`,updated:'2026-10-02',order:7},
  {id:'escape',shot:'assets/shots/escape.jpg',name:'검열국을 탈출하라',kind:'web',category:'수업 도구',icon:'key',tint:'#fbefe3',
   desc:'일제강점기 문학 1차시 방탈출. 드라마 「100일의 거짓말」 연계.',
   detail:'일제강점기 문학 수업을 위한 HTML 방탈출 게임이에요. 학생용 게임 화면과 교실 TV용 화면이 따로 있어요.',
   features:['학생용 방탈출 게임','교실 TV 진행 화면','단계별 힌트·미니게임'],
-  tags:['국어','방탈출','문학'],url:'https://gugeo.party/',repo:`${GH}/gugeo`,updated:'2026-11-13',order:8},
+  tags:['국어','방탈출','문학'],url:'https://gugeo.party/',repo:`${GH}/gugeo`,updated:'2026-11-15',order:8},
  {id:'dida',name:'디다',kind:'app',category:'일상·재미',icon:'diary',img:'assets/icons/dida.png',tint:'#fff0ee',
   desc:'디지털 다이어리. 경상도 말로는 “디다(고되다)”. 제가 고됩니다 막이래.',
   detail:'나의 소중한 순간들을 기록하는 일상 아카이빙 앱이에요.',
@@ -170,7 +172,7 @@ const apps = [
   desc:'속보·전단지 느낌 찌라시 스티커를 틀 골라서 뚝딱.',
   detail:'여러 가지 찌라시 틀에 문구를 넣어 스티커 이미지를 만드는 생성기예요.',
   features:['속보·간판·전단지 등 다양한 틀','랜덤 찌라시·문구 랜덤 뽑기','잉크색·종이색·크기 조절'],
-  tags:['스티커','재미'],url:`${PAGES}/jjirashy/jjirasi_sticker_maker.html`,repo:`${GH}/jjirashy`,version:'0.9.0',updated:'2026-11-10',order:10}
+  tags:['스티커','재미'],url:`${PAGES}/jjirashy/jjirasi_sticker_maker.html`,repo:`${GH}/jjirashy`,version:'0.9.0',updated:'2026-11-15',order:10}
 ];
 
 const icons={
@@ -296,6 +298,19 @@ async function loadReleases(){
     }catch(e){/* 오프라인·요청 제한 시 기본값 사용 */}
   }));
 }
+/* 웹 도구: 각 도구 파일의 마지막 커밋 날짜 (functions/api/updated.js, 1시간 캐시). 실패하면 기본값 유지 */
+async function loadWebUpdates(){
+  try{
+    const res=await fetch('/api/updated',{signal:timeoutSignal(8000)});
+    if(!res.ok)return;
+    const dates=await res.json();
+    apps.filter(a=>a.kind==='web'&&/^\d{4}-\d{2}-\d{2}$/.test(dates[a.id]||'')).forEach(a=>{
+      a.updated=dates[a.id];
+      const u=document.querySelector(`[data-upd="${a.id}"]`);if(u)u.textContent=fmtDate(a.updated);
+      if(dialog.open&&$('#detailTitle').textContent===a.name)$('#modalMeta').textContent=[a.category,a.version&&`v${a.version}`,fmtDate(a.updated)].filter(Boolean).join(' · ');
+    });
+  }catch(e){}
+}
 
 $('#statWeb').textContent=apps.filter(a=>a.kind==='web').length;
 $('#statApp').textContent=apps.filter(a=>a.kind==='app').length;
@@ -309,7 +324,7 @@ $('#closeDialog').addEventListener('click',()=>dialog.close());
 dialog.addEventListener('click',e=>{if(e.target===dialog)dialog.close()});
 document.addEventListener('keydown',e=>{if(e.key==='/'&&!dialog.open&&!['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)){e.preventDefault();$('#searchInput').focus()}});
 render();
-loadReleases().then(()=>{if($('#sortSelect').value==='new')render()});
+Promise.all([loadReleases(),loadWebUpdates()]).then(()=>{if($('#sortSelect').value==='new')render()});
 </script>
 </body>
 </html>
