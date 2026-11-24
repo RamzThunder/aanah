@@ -195,6 +195,7 @@ const rows = [
   [223, 2020, "시작", "가호", "6LDg0YGYVw4", "", "OST", "이태원 클라쓰"],
   [224, 2022, "스티커 사진", "21학번", "85ryqI84DGA", "", "밴드·인디"],
   [225, 2026, "You Can’t Stop Me Now", "B.A.S.E", "r0r6rxhXwXU", "", "응원가"],
+  [226, 2023, "晩餐歌 (만찬가)", "tuki.", "oZpYEEcvu5I", "", "J-pop"],
 ];
 const defaultRows = rows.map(([number,year,title,artist,answerVideo,introVideo,genre = 'K-pop',work])=>({
   id:`song-${number}`,year,title,artist,genre,introVideo:introVideo||answerVideo,
