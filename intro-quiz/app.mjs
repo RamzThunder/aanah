@@ -34,7 +34,7 @@ function fillFilters(){
    }).join('');
  const by=$('#bankYear').value;$('#bankYear').innerHTML='<option value="">모든 연도</option>'+years.map(y=>`<option>${y}</option>`).join('');$('#bankYear').value=by;
  renderArtistOptions();
- poolCount();renderBank();
+ poolCount();
 }
 function selectedYears() {
   return [...document.querySelectorAll('#years input:checked')].map(input => Number(input.value));
@@ -62,6 +62,7 @@ function poolCount() {
   $('#start').disabled = available === 0;
   $('#excludedCount').textContent = excludedArtists.size ? `${excludedArtists.size}팀 제외` : '없음';
   $('#clearExcluded').disabled = excludedArtists.size === 0;
+  renderBank();
 }
 
 $('#excludedArtists').onchange = event => {
@@ -123,14 +124,38 @@ $('#easy').onchange=()=>{$('#easyLabel').innerHTML=`${$('#easy').value}<small>�
 $('#stop').onclick=()=>{stop();if(phase==='answer'){phase='question';render();}status('재생을 중지했어요.');};
 $('#reveal').onclick=()=>{stopPlayback();phase='answer';render();status('TV 화면에 정답과 영상이 공개됐어요. 자동재생이 막히면 TV 영상의 재생 버튼을 눌러 주세요.');};
 $('#next').onclick=()=>{stopPlayback();index++;stage=0;duration=0;phase=index>=playlist.length?'done':'question';render();status(phase==='done'?'모든 문제를 마쳤어요!':song().checked?'다음 문제예요. 1단계부터 시작하세요.':'이 곡은 전주 시작 지점 확인이 필요해요.');};
-function renderBank(){const q=$('#search').value.toLocaleLowerCase(),year=$('#bankYear').value;const rows=bank.filter(s=>(!year||s.year===+year)&&`${s.title} ${songCredit(s)}`.toLocaleLowerCase().includes(q));$('#bankCount').textContent=`${bank.length}곡`;$('#songs').innerHTML=rows.map(s=>{
+function renderBankRow(s) {
   const original = defaultSongs.get(s.id);
   const modified = original && [...new Set([...Object.keys(original), ...Object.keys(s)])].some(key => key !== 'checked' && (s[key] ?? '') !== (original[key] ?? ''));
   const kind = !original ? 'added' : modified ? 'modified' : '';
   const label = kind === 'added' ? '추가곡' : '수정곡';
   const badge = kind ? ` <span class="song-label">${label}</span>` : '';
   return `<tr class="${kind}"><td>${s.year}</td><td><b>${esc(s.title)}</b>${badge}<small>${esc(songCredit(s))}</small></td><td>${esc(s.genre)}</td><td>${s.introStart}초</td><td class="${s.checked?'ready':'unchecked'}">${s.checked?'준비 완료':'미리듣기 필요'}</td><td><button data-preview="${esc(s.id)}">3초 미리듣기</button><button data-edit="${esc(s.id)}">설정</button></td></tr>`;
-}).join('')||'<tr><td colspan="6">검색 결과가 없어요.</td></tr>';}
+}
+
+function renderBank() {
+  const query = $('#search').value.trim().toLocaleLowerCase();
+  const year = $('#bankYear').value;
+  const eligibleIds = new Set(
+    filterSongs(bank, selectedYears(), selectedGenres(), excludedArtists).map(song => song.id)
+  );
+  const eligible = [];
+  const remaining = [];
+
+  for (const song of bank) {
+    if (year && song.year !== Number(year)) continue;
+    if (!`${song.title} ${songCredit(song)}`.toLocaleLowerCase().includes(query)) continue;
+    (eligibleIds.has(song.id) ? eligible : remaining).push(song);
+  }
+
+  const heading = (title, count) =>
+    `<tr class="bank-group"><th colspan="6">${title} <span>${count}곡</span></th></tr>`;
+  const empty = query || year ? '검색 조건에 맞는 출제 가능 곡이 없어요.' : '현재 출제 설정에 맞는 곡이 없어요.';
+  $('#bankCount').textContent = `${bank.length}곡`;
+  $('#songs').innerHTML = heading('출제 가능한 노래들', eligible.length) +
+    (eligible.map(renderBankRow).join('') || `<tr><td colspan="6">${empty}</td></tr>`) +
+    (remaining.length ? heading('현재 출제 범위 밖', remaining.length) + remaining.map(renderBankRow).join('') : '');
+}
 $('#search').oninput=renderBank;$('#bankYear').onchange=renderBank;
 $('#songs').onclick=e=>{const b=e.target.closest('button');if(!b)return;const s=bank.find(s=>s.id===(b.dataset.edit||b.dataset.preview));if(!s)return;if(b.dataset.edit)edit(s);else{stop();if(phase==='answer'){phase='question';render();}$('#answerTitle').textContent=`미리듣기: ${s.title}`;$('#answerArtist').textContent=songCredit(s);playClip(s,3,true);}};
 function edit(s){stop();if(phase==='answer'){phase='question';render();}editing=s.id;const f=$('#editForm');for(const k of ['title','artist','year','genre','work','introVideo','answerVideo','introStart','answerStart'])f.elements[k].value=k.endsWith('Video')?(s[k]?`https://www.youtube.com/watch?v=${s[k]}`:''):(s[k]??'');f.elements.checked.checked=s.checked;$('#editError').textContent='';searchLinks();$('#editor').showModal();}

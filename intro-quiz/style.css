@@ -24,3 +24,17 @@
 #excludedArtists label { display: flex; align-items: center; gap: 6px; padding: 4px 2px; cursor: pointer; }
 #excludedArtists input { flex-shrink: 0; }
 #clearExcluded { font-size: 13px; padding: 6px 10px; }
+
+#songs .bank-group th {
+  background: #e9e4fa;
+  color: #3e3068;
+  font-weight: 750;
+}
+#songs .bank-group:not(:first-child) th {
+  background: #f3f4f8;
+  color: var(--muted);
+}
+#songs .bank-group span {
+  margin-left: 6px;
+  font-weight: 500;
+}
