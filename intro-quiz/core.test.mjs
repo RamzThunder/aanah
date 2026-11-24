@@ -3,9 +3,13 @@ import assert from 'node:assert/strict';
 import {BANK} from './bank.mjs';
 import {videoId,validateBank,mergeSavedSongs,pickSongs,publicState} from './core.mjs';
 
-test('70 valid songs with ten per year',()=>{
-  assert.equal(validateBank(BANK).length,70);
-  for(const year of [2020,2021,2022,2023,2024,2025,2026])assert.equal(BANK.filter(s=>s.year===year).length,10);
+test('98 valid songs with ten K-pop, two OST and two band/indie songs per year',()=>{
+  assert.equal(validateBank(BANK).length,98);
+  for (const year of [2020, 2021, 2022, 2023, 2024, 2025, 2026]) {
+    for (const [genre, count] of [['K-pop', 10], ['OST', 2], ['밴드·인디', 2]]) {
+      assert.equal(BANK.filter(song => song.year === year && song.genre === genre).length, count);
+    }
+  }
 });
 test('accept supported YouTube URLs and reject impostors',()=>{
   for(const value of ['phuiiNCxRMg','https://youtu.be/phuiiNCxRMg?t=3','https://www.youtube.com/watch?v=phuiiNCxRMg','https://music.youtube.com/watch?v=phuiiNCxRMg','https://youtube.com/shorts/phuiiNCxRMg'])assert.equal(videoId(value),'phuiiNCxRMg');
@@ -31,12 +35,12 @@ test('invalid imports fail before persistence',()=>{
 });
 
 test('existing browser banks gain new default songs without losing teacher edits', () => {
-  const original = BANK.filter(song => song.year >= 2024);
+  const original = BANK.filter(song => song.year >= 2024 && song.genre === 'K-pop');
   const edited = {...original[0], introStart: 4.5, checked: true};
   const added = {...original[1], id: 'teacher-song', title: '추가곡'};
   const merged = mergeSavedSongs(BANK, [edited, ...original.slice(1), added]);
-  assert.equal(merged.length, 71);
-  assert.equal(merged.filter(song => song.year < 2024).length, 40);
+  assert.equal(merged.length, 99);
+  assert.equal(merged.filter(song => song.year < 2024).length, 56);
   assert.deepEqual(merged.find(song => song.id === edited.id), edited);
   assert.deepEqual(merged.find(song => song.id === added.id), added);
 });
@@ -44,7 +48,7 @@ test('existing browser banks gain new default songs without losing teacher edits
 test('excluded artists do not appear in the playlist', () => {
   const years = [2020, 2021, 2022, 2023, 2024, 2025, 2026];
   const excluded = new Set(['IVE', 'aespa']);
-  const pool = BANK.filter(song => !excluded.has(song.artist));
+  const pool = BANK.filter(song => song.genre === 'K-pop' && !excluded.has(song.artist));
   const playlist = pickSongs(BANK, years, 'K-pop', 70, () => 0.5, excluded);
   assert.equal(playlist.length, pool.length);
   assert.ok(playlist.every(song => !excluded.has(song.artist)));

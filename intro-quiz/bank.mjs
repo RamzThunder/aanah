@@ -1,6 +1,9 @@
 // Official video links checked on 2026-11-24. Embedding and intro offsets
 // require a classroom preflight; availability is controlled by YouTube.
 // Keep existing rows in order so saved song IDs remain stable.
+const OST = 'OST';
+const BAND_INDIE = '밴드·인디';
+
 const rows = [
   [2024,'Supernova','aespa','phuiiNCxRMg','SkP_MvTKTJM'],
   [2024,'Magnetic','ILLIT','Vk5-c_v4gMU'],
@@ -72,8 +75,36 @@ const rows = [
   [2023,'손오공 (Super)','SEVENTEEN','-GQg25oP0S4'],
   [2023,'특 (S-Class)','Stray Kids','JsOOis4bBFg'],
   [2023,'Get A Guitar','RIIZE','iUw3LPM7OBU'],
+  [2020,'시작','가호 (Gaho)','sVzborJObAI',null,OST],
+  [2020,'마음을 드려요','아이유 (IU)','euI-C1YONaU',null,OST],
+  [2020,'Zombie','DAY6','k8gx-C7GCGU',null,BAND_INDIE],
+  [2020,'개화 (Flowering)','LUCY','2-P-NIiLiQc',null,BAND_INDIE],
+  [2021,'비와 당신','이무진','M9CmGpxGbMs',null,OST],
+  [2021,'좋아좋아','조정석','poiZpOXZXN8',null,OST],
+  [2021,'You make Me','DAY6','HwcCBnfhsR4',null,BAND_INDIE],
+  [2021,'I Got U','LUCY','p_DczUl8x60',null,BAND_INDIE],
+  [2022,'사랑인가 봐','멜로망스','UoBsiQW23IY','0e7uplpFJdE',OST],
+  [2022,'With you','지민 & 하성운','3y9FCSlfaMk',null,OST],
+  [2022,'WHAT TIME IS IT NOW?','SURL','RNzWQAOrnKg',null,BAND_INDIE],
+  [2022,'Test Me','Xdinary Heroes','CL6wr7jozs8',null,BAND_INDIE],
+  [2023,'그대가 있는 곳, 언제 어디든','로이킴','lOOwFFlJXSs','vjrk0_T4Jzs',OST],
+  [2023,'Star','Colde (콜드)','mT9-CWoz244',null,OST],
+  [2023,'Back To Me','The Rose','fuzLp9gDcwY',null,BAND_INDIE],
+  [2023,'Good enough','Xdinary Heroes','TFZszieg4J0',null,BAND_INDIE],
+  [2024,'소나기','이클립스 (ECLIPSE)','fBB4MaBybyg',null,OST],
+  [2024,'미안해 미워해 사랑해','Crush','X8c8NQzFl00',null,OST],
+  [2024,'고민중독','QWER','ImuWa3SJulY',null,BAND_INDIE],
+  [2024,'Welcome to the Show','DAY6','RowlrvmyFEk',null,BAND_INDIE],
+  [2025,'밤 산책','아이유 (IU)','CgGJlSvA9m4',null,OST],
+  [2025,'START!','리노, 승민, 아이엔 (Stray Kids)','ZGcgCSmofZk',null,OST],
+  [2025,'INSIDE OUT','DAY6','-N-pmPKS-bE','WNJdZqyugg4',BAND_INDIE],
+  [2025,'눈물참기','QWER','pifz9JH1Re8',null,BAND_INDIE],
+  [2026,'Go On','KiiiKiii','0PZ4fElBkS8',null,OST],
+  [2026,'EVERGLOW','WOODZ','2VKJ1hg9RBg',null,OST],
+  [2026,'잔불 (Still)','N.Flying','gYAduKnFHG4',null,BAND_INDIE],
+  [2026,'Voyager','Xdinary Heroes','ZeNOs_7kqaw',null,BAND_INDIE],
 ];
-export const BANK = rows.map(([year,title,artist,answerVideo,introVideo],i)=>({
-  id:`song-${i+1}`,year,title,artist,genre:'K-pop',introVideo:introVideo||answerVideo,
+export const BANK = rows.map(([year,title,artist,answerVideo,introVideo,genre = 'K-pop'],i)=>({
+  id:`song-${i+1}`,year,title,artist,genre,introVideo:introVideo||answerVideo,
   answerVideo,introStart:0,answerStart:0,checked:false
 }));
