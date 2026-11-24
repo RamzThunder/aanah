@@ -1,5 +1,7 @@
 // Official video links checked on 2026-11-24. Embedding and intro offsets
 // require a classroom preflight; availability is controlled by YouTube.
+import {OFFICIAL_INTRO_AUDIO} from './intro-audio.mjs';
+
 const HIP_HOP = '힙합';
 const FILM = '영화 수록곡';
 const ANIMATION = '어린이 애니 OST';
@@ -168,21 +170,33 @@ const rows = [
   [177, 2026, "체포하겠어 (You’re Under Arrest)", "ILLIT", "V2V9-9VhYJo"],
   [178, 2026, "Looks Can Kill", "IVE", "rsNhWkC4neE"],
 ];
-export const BANK = rows.map(([number,year,title,artist,answerVideo,introVideo,genre = 'K-pop',work])=>({
+const defaultRows = rows.map(([number,year,title,artist,answerVideo,introVideo,genre = 'K-pop',work])=>({
   id:`song-${number}`,year,title,artist,genre,introVideo:introVideo||answerVideo,
   answerVideo,...(work ? {work} : {}),introStart:0,answerStart:0,checked:false
 }));
+const previousDefaults = new Map(defaultRows.map(song => [song.id, song]));
+
+export const BANK = defaultRows.map(song => {
+  const audio = OFFICIAL_INTRO_AUDIO.get(song.id);
+  return audio ? {...song, introVideo: audio} : song;
+});
 
 // Update older saved copies that still use the original defaults.
 export function updateLegacySong(song) {
   if (song.id === 'song-36' && song.title === '아무노래' &&
       song.artist === '지코 (ZICO)' && song.genre === 'K-pop') {
-    return {...song, genre: HIP_HOP};
+    song = {...song, genre: HIP_HOP};
   }
   if (song.id === 'song-25' && song.title === 'RUDE!' &&
       song.artist === 'Hearts2Hearts' && song.introVideo === 'F7sGJVUrkjQ' &&
       song.introStart === 0 && !song.checked) {
     return {...song, introVideo: 'Q4AE3ub4nBM'};
+  }
+  const audio = OFFICIAL_INTRO_AUDIO.get(song.id);
+  const original = previousDefaults.get(song.id);
+  if (audio && original && song.title === original.title && song.artist === original.artist &&
+      song.introVideo === original.introVideo && song.introStart === 0 && !song.checked) {
+    return {...song, introVideo: audio};
   }
   return song;
 }

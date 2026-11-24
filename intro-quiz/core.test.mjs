@@ -106,3 +106,17 @@ test('RUDE uses the official audio and preserves customized intro settings', () 
     assert.deepEqual(updateLegacySong(saved), saved);
   }
 });
+
+test('reviewed audio replaces only unchanged intro settings in older banks', () => {
+  const song = BANK.find(song => song.id === 'song-36');
+  const previous = {...song, genre: 'K-pop', introVideo: song.answerVideo};
+  assert.deepEqual(updateLegacySong(previous), song);
+  assert.deepEqual(updateLegacySong({...previous, introStart: 5}), {
+    ...song, introVideo: previous.introVideo, introStart: 5
+  });
+
+  const whiplash = BANK.find(song => song.id === 'song-7');
+  const saved = {...whiplash, introVideo: whiplash.answerVideo, answerStart: 12};
+  assert.deepEqual(updateLegacySong(saved), {...whiplash, answerStart: 12});
+  assert.deepEqual(updateLegacySong({...saved, checked: true}), {...saved, checked: true});
+});
