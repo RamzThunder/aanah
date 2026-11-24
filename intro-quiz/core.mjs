@@ -53,16 +53,16 @@ export function mergeSavedSongs(defaults, savedSongs, retiredIds = new Set()) {
   return [...songs.values()];
 }
 
-export function filterSongs(bank, years, genre, excludedArtists = new Set()) {
+export function filterSongs(bank, years, genres, excludedArtists = new Set()) {
   return bank.filter(song =>
     years.includes(song.year) &&
-    (!genre || song.genre === genre) &&
+    (!genres || genres.includes(song.genre)) &&
     !excludedArtists.has(song.artist)
   );
 }
 
-export function pickSongs(bank,years,genre,count,random=Math.random,excludedArtists) {
-  const pool=filterSongs(bank, years, genre, excludedArtists);
+export function pickSongs(bank,years,genres,count,random=Math.random,excludedArtists) {
+  const pool=filterSongs(bank, years, genres, excludedArtists);
   for(let i=pool.length-1;i>0;i--){const j=Math.floor(random()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]];}
   return pool.slice(0,Math.max(0,Math.floor(count)));
 }

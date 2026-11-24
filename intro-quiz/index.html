@@ -12,7 +12,8 @@
 <div class="workspace">
 <aside class="panel setup"><div class="section-title"><h2>오늘의 플레이리스트</h2><span class="pill">출제 설정</span></div>
 <fieldset id="years"><legend>발매 연도 <span>여러 개 선택 가능</span></legend></fieldset>
-<div class="row"><label>장르<select id="genre"><option value="">전체 장르</option></select></label><label>문제 수<select id="count"><option>5</option><option selected>10</option><option>15</option><option>20</option><option>30</option></select></label></div>
+<fieldset id="genresFilter"><legend>장르 <span>여러 개 선택 가능</span></legend></fieldset>
+<div class="row"><label>문제 수<select id="count"><option>5</option><option selected>10</option><option>15</option><option>20</option><option>30</option></select></label></div>
 <details class="artist-exclusions">
   <summary>제외할 가수 <span id="excludedCount">없음</span></summary>
   <div id="excludedArtists" role="group" aria-label="출제에서 제외할 가수"></div>
@@ -35,7 +36,7 @@
 </aside>
 </div>
 <section class="panel bank"><div class="section-title"><div><p class="eyebrow">YOUR QUESTION BANK</p><h2>우리 반 문제은행 <span id="bankCount"></span></h2></div><div class="bank-actions"><button id="add">+ 곡 추가</button><button id="export">내보내기</button><label class="button" for="import">가져오기</label><input id="import" type="file" accept="application/json,.json" hidden></div></div>
-<p class="muted">2020~2026년 K-pop·영화 수록곡·어린이 애니 OST 기본 76곡 · 전주용 영상과 정답용 교차편집을 따로 설정할 수 있어요. 변경 내용은 이 브라우저에 저장됩니다.</p>
+<p class="muted">2020~2026년 K-pop·힙합·영화 수록곡·어린이 애니 OST 기본 79곡 · 전주용 영상과 정답용 교차편집을 따로 설정할 수 있어요. 변경 내용은 이 브라우저에 저장됩니다.</p>
 <div class="bank-filter"><label class="search-label">곡 검색<input id="search" type="search" placeholder="곡 제목·가수·작품명 검색"></label><label>연도<select id="bankYear"><option value="">모든 연도</option></select></label></div><div class="table-scroll"><table><thead><tr><th>연도</th><th>노래 / 가수</th><th>장르</th><th>전주 시작</th><th>준비 상태</th><th>영상 설정</th></tr></thead><tbody id="songs"></tbody></table></div>
 <p class="hint">기본 영상은 공식 뮤비·라이브·음원 영상입니다. 시작 시간 0초는 음악 시작을 보장하지 않으므로, 곡마다 확인 후 ‘수업 준비 완료’를 체크하세요.</p>
 </section>

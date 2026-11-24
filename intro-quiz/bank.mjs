@@ -1,11 +1,12 @@
 // Official video links checked on 2026-11-24. Embedding and intro offsets
 // require a classroom preflight; availability is controlled by YouTube.
+const HIP_HOP = '힙합';
 const FILM = '영화 수록곡';
 const ANIMATION = '어린이 애니 OST';
 
 // IDs match earlier exports and must not be reused.
 export const RETIRED_SONG_IDS = new Set(
-  [6, 20, ...Array.from({length: 28}, (_, i) => 71 + i)].map(number => `song-${number}`)
+  [20, ...Array.from({length: 28}, (_, i) => 71 + i)].map(number => `song-${number}`)
 );
 
 const rows = [
@@ -14,6 +15,7 @@ const rows = [
   [3,2024,'첫 만남은 계획대로 되지 않아','TWS','hVAc1Vf2ITU'],
   [4,2024,'나는 아픈 건 딱 질색이니까','(여자)아이들','ATK7gAaZTOM'],
   [5,2024,'해야 (HEYA)','IVE','07EzMbVH3QE'],
+  [6,2024,'HAPPY','DAY6','2o1zdX72400'],
   [7,2024,'Whiplash','aespa','jWQx2f-CErU'],
   [8,2024,'Armageddon','aespa','nFYwcndNuOY'],
   [9,2024,'APT.','ROSÉ & Bruno Mars','ekr2nIex040','tQRt_P_-EHg'],
@@ -42,7 +44,7 @@ const rows = [
   [33,2020,'I CAN’T STOP ME','TWICE','CM4CkVFmTds'],
   [34,2020,'Black Mamba','aespa','ZeerrnuLi5E'],
   [35,2020,'살짝 설렜어 (Nonstop)','OH MY GIRL','iDjQSdN_ig8'],
-  [36,2020,'아무노래','지코 (ZICO)','UuV2BmJ1p_I'],
+  [36,2020,'아무노래','지코 (ZICO)','UuV2BmJ1p_I',null,HIP_HOP],
   [37,2020,'Not Shy','ITZY','wTowEKjDGkU'],
   [38,2020,'God’s Menu (神메뉴)','Stray Kids','TQTlCHxyuu8'],
   [39,2020,'Left & Right','SEVENTEEN','HdZdxocqzq4'],
@@ -85,8 +87,19 @@ const rows = [
   [104,2024,'슈팅스타 캐치! 티니핑 주제곡','이정은','8t7UQwX8Cr4',null,ANIMATION,'슈팅스타 캐치! 티니핑'],
   [105,2025,'프린세스 캐치! 티니핑 주제곡','리즈 (IVE)','RNAkSI0-zMI',null,ANIMATION,'프린세스 캐치! 티니핑'],
   [106,2026,'파편의 궤도','안태규 (Dragon Pony)','hM0ijNSvo00',null,ANIMATION,'포켓몬스터: 라이징 어게인'],
+  [107,2021,'회전목마','sokodomo feat. Zion.T, 원슈타인','tnAxZipkuWw','3laLavGghc0',HIP_HOP],
+  [108,2022,'새삥','지코 (ZICO) feat. 호미들','JnQu_5O4lh4','C_cpDd0WYTk',HIP_HOP],
 ];
 export const BANK = rows.map(([number,year,title,artist,answerVideo,introVideo,genre = 'K-pop',work])=>({
   id:`song-${number}`,year,title,artist,genre,introVideo:introVideo||answerVideo,
   answerVideo,...(work ? {work} : {}),introStart:0,answerStart:0,checked:false
 }));
+
+// Earlier copies of this default song were filed under K-pop.
+export function updateLegacyGenre(song) {
+  if (song.id === 'song-36' && song.title === '아무노래' &&
+      song.artist === '지코 (ZICO)' && song.genre === 'K-pop') {
+    return {...song, genre: HIP_HOP};
+  }
+  return song;
+}
