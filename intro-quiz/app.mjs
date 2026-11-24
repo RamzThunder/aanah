@@ -38,7 +38,6 @@ function fillFilters(){
  const previouslyUncheckedYears = new Set([...document.querySelectorAll('#years input:not(:checked)')].map(input => Number(input.value)));
  const years = [...new Set(bank.map(currentYear).filter(Number.isInteger))].sort((a, b) => a - b);
  const yearLabel = mode() === 'shortform' ? '유행 연도' : '발매 연도';
- $('#shortformHint').hidden = mode() !== 'shortform';
  $('#yearsTitle').textContent = yearLabel;
  $('#years').innerHTML = `<legend class="sr-only">${yearLabel}</legend>` +
    years.map(year => `<label class="year-choice"><input type="checkbox" value="${year}" ${previouslyUncheckedYears.has(year) ? '' : 'checked'}>${year}</label>`).join('');

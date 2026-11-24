@@ -8,13 +8,12 @@
 <body>
 <header class="topbar"><a href="../index.html" class="brand">아나! <span>교실 플레이리스트</span></a><span class="badge">TEACHER MODE</span><button id="openTV" class="primary">▣ TV 화면 열기</button></header>
 <main>
-<section class="intro"><div><p class="eyebrow">LISTEN. GUESS. PLAY.</p><h1>이 노래, <em>몇 초면 알아?</em></h1><p>0.5초의 전주부터 정답 무대까지. 우리 반 음악 퀴즈.</p></div><div class="intro-note"><strong>교사는 진행하고, 학생은 집중하고.</strong><span>TV에는 문제 화면만 · 같은 컴퓨터에서 창 분리</span></div></section>
+<section class="intro"><div><p class="eyebrow">LISTEN. GUESS. PLAY.</p><h1>이 노래, <em>몇 초면 알아?</em></h1><p>0.5초의 전주부터 정답 무대까지. 우리 반 음악 퀴즈.</p></div></section>
 <div class="workspace">
 <aside class="panel setup"><div class="section-title"><h2>오늘의 플레이리스트</h2><span class="pill">출제 설정</span></div>
 <label class="question-mode">출제 유형
   <select id="questionMode"><option value="release">발매 연도별</option><option value="shortform">숏폼 유행곡</option></select>
 </label>
-<p id="shortformHint" class="hint" hidden>틱톡에서 유행한 해로 골라요. 곡별 기본 시작 지점부터 들려주며, 곡 설정에서 바꿀 수 있어요.</p>
 <details class="filter-fold" id="yearsFold">
   <summary><span id="yearsTitle">발매 연도</span> <span class="fold-summary" id="yearsSummary"></span></summary>
   <div class="fold-actions"><button type="button" data-select-all="years">모두 선택</button><button type="button" data-select-none="years">모두 해제</button></div>
@@ -31,8 +30,8 @@
   <div id="excludedArtists" role="group" aria-label="출제에서 제외할 가수"></div>
   <button id="clearExcluded" type="button" disabled>선택 해제</button>
 </details>
-<p id="poolCount" aria-live="polite" class="muted"></p><button id="start" class="primary wide">문제 섞고 시작하기</button><p class="hint">진행 중 다시 시작하면 새 문제로 교체됩니다.</p>
-<hr><h3>TV 연결, 이렇게 해요</h3><ol class="guide"><li>디스플레이를 <b>확장 모드</b>로 설정해요.</li><li>TV 화면을 열어 TV 쪽으로 옮겨요.</li><li>TV 창에서 <b>전체 화면</b>을 눌러요.</li><li>컴퓨터 소리 출력을 <b>TV / HDMI</b>로 맞춰요.</li></ol><p id="connection" class="connection">TV 화면 연결 전</p><p class="hint">다른 기기와의 원격 연결은 지원하지 않아요.</p>
+<p id="poolCount" aria-live="polite" class="muted"></p><button id="start" class="primary wide">문제 섞고 시작하기</button>
+<hr><h3>TV 연결, 이렇게 해요</h3><ol class="guide"><li>디스플레이를 <b>확장 모드</b>로 설정해요.</li><li>TV 화면을 열어 TV 쪽으로 옮겨요.</li><li>TV 창에서 <b>전체 화면</b>을 눌러요.</li><li>컴퓨터 소리 출력을 <b>TV / HDMI</b>로 맞춰요.</li></ol><p id="connection" class="connection">TV 화면 연결 전</p>
 </aside>
 <section class="panel console"><div class="section-title"><h2>진행 콘솔</h2><span id="progress" class="pill">시작 전</span></div>
 <div class="stage-preview" id="preview"><span class="stage-tag" id="stageTag">READY TO PLAY</span><div class="record" aria-hidden="true"><div>♪</div></div><h2 id="previewTitle">귀를 쫑긋, 준비됐나요?</h2><p id="previewText">출제 범위를 고르고 게임을 시작해 주세요.</p><div class="wave" aria-hidden="true">▂ ▅ ▃ █ ▆ ▂ ▇ ▄ ▂</div></div>
@@ -42,18 +41,16 @@
 <p id="status" class="status" role="status" aria-live="polite">아래 문제은행에서 전주 시작 지점과 정답 영상을 준비하세요.</p>
 </section>
 <aside class="panel monitor"><div class="section-title"><h2>교사만 보는 정답</h2><span class="pill">비공개</span></div><h3 id="answerTitle">아직 선택된 곡이 없어요</h3><p id="answerArtist" class="muted">문제를 시작하면 정답이 여기에 표시됩니다.</p>
-<div class="player-frame"><div id="introPlayer"></div></div><p class="hint">전주용 유튜브 플레이어 · 이 창은 교사 화면에 두세요.</p>
-<p class="notice">유튜브의 광고·버퍼링·재생 제어 지연으로 짧은 구간에는 오차가 생길 수 있어요. 수업 전에 반드시 미리 들어보세요.</p>
+<div class="player-frame"><div id="introPlayer"></div></div><p class="hint">전주용 유튜브 플레이어</p>
+
 <button id="editCurrent" class="wide" disabled>현재 곡 영상·시작 시간 수정</button><div class="mini-heading">이번 게임의 진행</div><ol id="queue" class="queue"><li>새 플레이리스트를 기다리고 있어요.</li></ol>
 </aside>
 </div>
 <section class="panel bank"><div class="section-title"><div><p class="eyebrow">YOUR QUESTION BANK</p><h2>우리 반 문제은행 <span id="bankCount"></span></h2></div><div class="bank-actions"><button id="add">+ 곡 추가</button><button id="export">내보내기</button><label class="button" for="import">가져오기</label><input id="import" type="file" accept="application/json,.json" hidden></div></div>
-<p class="muted">2020~2026년 발매곡, 선생님들의 신청곡, 숏폼 유행곡 · 전주용 영상과 정답용 교차편집을 따로 설정할 수 있어요. 변경 내용은 이 브라우저에 저장됩니다.</p>
 <div class="bank-filter"><label class="search-label">곡 검색<input id="search" type="search" placeholder="곡 제목·가수·작품명 검색"></label><label>연도<select id="bankYear"><option value="">모든 연도</option></select></label></div><div class="table-scroll"><table><thead id="bankHead"><tr><th aria-sort="none"><button type="button" class="sort" data-sort="year">연도</button></th><th aria-sort="none"><button type="button" class="sort" data-sort="title">노래 / 가수</button></th><th aria-sort="none"><button type="button" class="sort" data-sort="genre">장르</button></th><th aria-sort="none"><button type="button" class="sort" data-sort="start">전주 시작</button></th><th aria-sort="none"><button type="button" class="sort" data-sort="checked">준비 상태</button></th><th>영상 설정</th></tr></thead><tbody id="songs"></tbody></table></div>
-<p class="hint">기본 영상은 공식 뮤비·라이브·음원 영상입니다. 시작 시간 0초는 음악 시작을 보장하지 않으므로, 곡마다 확인 후 ‘수업 준비 완료’를 체크하세요.</p>
 </section>
 <footer>아나! · 전주 듣고 노래 맞히기 <a href="help.html">사용 안내 및 곡 출처</a></footer>
-<a class="request-fab" href="/request?kind=song" target="_blank" rel="noopener" title="모든 선생님이 쓰는 기본 문제은행에 넣어 달라고 요청해요"><span aria-hidden="true">🎵</span> 곡 신청하기</a>
+<a class="request-fab" href="/request?kind=song" target="_blank" rel="noopener"><span aria-hidden="true">🎵</span> 곡 신청하기</a>
 </main>
 <dialog id="editor"><form id="editForm"><div class="section-title"><h2>곡 준비하기</h2><button type="button" id="closeEditor" aria-label="닫기">✕</button></div><div class="row"><label>노래 제목<input name="title" required maxlength="150"></label><label>가수<input name="artist" required maxlength="150"></label></div><div class="row"><label>발매 연도<input name="year" type="number" min="1900" max="2100" required></label><label>장르<input name="genre" list="genres" required maxlength="150"><datalist id="genres"><option>K-pop</option><option>발라드</option><option>힙합</option><option>영화 수록곡</option><option>어린이 애니 OST</option><option>밴드·인디</option><option>OST</option><option>야구</option><option>응원가</option><option>트로트</option></datalist></label></div>
 <label>작품명 (선택)<input name="work" maxlength="150" placeholder="예: 케이팝 데몬 헌터스"></label>
@@ -61,6 +58,6 @@
 <label id="shortformStartField" hidden>숏폼 시작 시간 (초, 선택)<input name="shortformStart" type="number" min="0" max="86400" step="0.1" placeholder="곡별 기본값 사용"></label>
 <label>정답용 유튜브 주소 · 교차편집 / 뮤비<input name="answerVideo" required placeholder="https://youtu.be/..."></label><label>정답 영상 시작 시간 (초)<input name="answerStart" type="number" min="0" max="86400" step="0.1" required></label>
 <div class="row"><a id="findAudio" target="_blank" rel="noopener noreferrer">YouTube Music에서 음원 찾기</a><a id="findStage" target="_blank" rel="noopener noreferrer">교차편집 찾기</a></div>
-<p class="hint">음원 검색에서 ‘노래’를 선택하고, 공유 링크를 전주용 주소에 붙여넣으세요. 저장 후 미리듣기로 시작 지점을 확인해 주세요. 미리듣기는 컴퓨터의 현재 출력 장치로 들립니다.</p><label class="check"><input name="checked" type="checkbox">전주와 정답 영상을 확인했어요 · 수업 준비 완료</label><p id="editError" role="alert"></p><button class="primary wide" type="submit">저장하기</button></form></dialog>
+<label class="check"><input name="checked" type="checkbox">전주와 정답 영상을 확인했어요 · 수업 준비 완료</label><p id="editError" role="alert"></p><button class="primary wide" type="submit">저장하기</button></form></dialog>
 <script type="module" src="app.mjs"></script>
 </body></html>

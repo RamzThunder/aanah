@@ -105,7 +105,7 @@
     <section class="panel pending" id="pendingPanel" hidden>
       <h2>반영 대기 <span id="pendingTitle"></span></h2>
       <ul id="pendingList"></ul>
-      <p class="muted" style="margin:0">아직 퀴즈에는 적용되지 않았어요. Claude에게 <b>“문제은행 반영해 줘”</b>라고 하면 모든 선생님 화면의 기본 문제은행에 반영돼요. 선생님이 직접 고친 값은 그대로 지켜요.</p>
+      <p class="muted" style="margin:0">“문제은행 반영해 줘”라고 요청하면 반영돼요.</p>
     </section>
     <div class="toolbar">
       <input type="search" id="bankSearch" placeholder="제목·가수·작품명 검색" aria-label="곡 검색">
@@ -157,7 +157,7 @@
         <button class="btn primary" type="button" data-play="3">3초</button>
         <button class="btn" type="button" data-play="0">계속 재생</button>
         <button class="btn" type="button" id="listenStop">정지</button>
-        <button class="btn" type="button" id="listenMark" title="재생 중인 위치를 선택한 구간의 시작 시간으로 넣어요">지금 위치를 시작으로</button>
+        <button class="btn" type="button" id="listenMark">지금 위치를 시작으로</button>
       </div>
       <div class="listen-row" aria-label="시작 시간 미세 조정">
         <span class="muted" style="font-size:13px">시작 조정</span>
@@ -169,7 +169,7 @@
         <button class="btn" type="button" data-nudge="1">+1</button>
       </div>
       <p class="err" id="listenError" role="alert" style="margin-top:6px"></p>
-      <p class="muted" style="margin:4px 0 0;font-size:12px"><a id="introLink" target="_blank" rel="noopener noreferrer">유튜브에서 열기</a> · 유튜브 탐색 지연으로 실제 재생 구간에 약간 오차가 있어요.</p>
+      <p class="muted" style="margin:4px 0 0;font-size:12px"><a id="introLink" target="_blank" rel="noopener noreferrer">유튜브에서 열기</a></p>
     </section>
     <p class="err" id="editError" role="alert"></p>
     <div class="dialog-actions">

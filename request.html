@@ -63,7 +63,6 @@
 <main>
   <a class="home" href="/"><img src="assets/icon-512.png" alt="">아나!</a>
   <h1>요청 보내기</h1>
-  <p class="lead">쓰다가 불편한 점, 오류, 아이디어, 전주 퀴즈에 넣고 싶은 노래를 보내 주세요.<br>보내 주신 내용은 아나! 관리자에게만 전달돼요.</p>
   <div id="notice" class="notice" hidden></div>
 
   <form id="form" novalidate autocomplete="off">
@@ -84,7 +83,6 @@
       <div class="song-head" aria-hidden="true"><span>가수</span><span>노래 제목</span><span>유튜브 링크 <small>선택</small></span><span></span></div>
       <div id="songRows"></div>
       <button type="button" class="add-song" id="addSong">+ 곡 더 추가</button>
-      <p class="hint">한 번에 20곡까지 보낼 수 있어요. 전주 듣고 노래 맞히기 기본 문제은행에 넣어 드려요.</p>
     </fieldset>
     <template id="songRow"><div class="song-row">
       <input type="text" data-field="artist" maxlength="100" autocomplete="off" placeholder="가수">
@@ -94,9 +92,8 @@
     </div></template>
 
     <label id="titleField"><span>제목 <small>선택</small></span><input type="text" name="title" maxlength="200" autocomplete="off"></label>
-    <label><span id="bodyLabel">내용</span><textarea name="body" maxlength="2000"></textarea>
-      <p class="hint" id="bodyHint">오류라면 어떤 화면에서 무엇을 눌렀는지 적어 주시면 빨리 고칠 수 있어요.</p></label>
-    <label><span>보내는 분 <small>선택 · 답장이 필요하면 학교·이름이나 연락처</small></span><input type="text" name="contact" maxlength="100" autocomplete="off"></label>
+    <label><span id="bodyLabel">내용</span><textarea name="body" maxlength="2000"></textarea></label>
+    <label><span>보내는 분 <small>선택</small></span><input type="text" name="contact" maxlength="100" autocomplete="off"></label>
     <input class="trap" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
     <div id="turnstile"></div>
     <p id="error" role="alert"></p>
@@ -168,8 +165,7 @@ function sync() {
   $('#songFields').hidden = !song;
   $('#toolField').hidden = song;
   $('#titleField').hidden = song;
-  $('#bodyLabel').innerHTML = song ? '하고 싶은 말 <small>선택 · 쓰고 싶은 학년, 유행한 구간 등</small>' : '내용';
-  $('#bodyHint').hidden = form.elements.kind.value !== 'bug';
+  $('#bodyLabel').innerHTML = song ? '하고 싶은 말 <small>선택</small>' : '내용';
   form.elements.body.classList.toggle('short', song);
   form.elements.body.rows = song ? 2 : 6;
 }
