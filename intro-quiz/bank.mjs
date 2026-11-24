@@ -33,7 +33,7 @@ const rows = [
   [22,2026,'SWIM','BTS','b4iVv91Z6lY'],
   [23,2026,'LEMONADE','aespa','83C3TZ4Zm_o','LBhcqYqeu0U'],
   [24,2026,'404 (New Era)','KiiiKiii','zhHB4dZTChw'],
-  [25,2026,'RUDE!','Hearts2Hearts','F7sGJVUrkjQ'],
+  [25,2026,'RUDE!','Hearts2Hearts','F7sGJVUrkjQ','Q4AE3ub4nBM'],
   [26,2026,'춤 (CHOOM)','BABYMONSTER','x3eqqoZPV_E'],
   [27,2026,'Heavy Serenade','NMIXX','6Ycn9qZK09I'],
   [28,2026,'캐치 캐치 (Catch Catch)','YENA','NOiyDlWl534'],
@@ -173,11 +173,16 @@ export const BANK = rows.map(([number,year,title,artist,answerVideo,introVideo,g
   answerVideo,...(work ? {work} : {}),introStart:0,answerStart:0,checked:false
 }));
 
-// Earlier copies of this default song were filed under K-pop.
-export function updateLegacyGenre(song) {
+// Update older saved copies that still use the original defaults.
+export function updateLegacySong(song) {
   if (song.id === 'song-36' && song.title === '아무노래' &&
       song.artist === '지코 (ZICO)' && song.genre === 'K-pop') {
     return {...song, genre: HIP_HOP};
+  }
+  if (song.id === 'song-25' && song.title === 'RUDE!' &&
+      song.artist === 'Hearts2Hearts' && song.introVideo === 'F7sGJVUrkjQ' &&
+      song.introStart === 0 && !song.checked) {
+    return {...song, introVideo: 'Q4AE3ub4nBM'};
   }
   return song;
 }

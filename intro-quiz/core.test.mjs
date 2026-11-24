@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {BANK, RETIRED_SONG_IDS, updateLegacyGenre} from './bank.mjs';
+import {BANK, RETIRED_SONG_IDS, updateLegacySong} from './bank.mjs';
 import {videoId,validateBank,mergeSavedSongs,pickSongs,publicState} from './core.mjs';
 
 test('149 active default songs including film and children’s animation', () => {
@@ -92,5 +92,17 @@ test('combined genre selection includes only checked genres', () => {
   assert.deepEqual(pickSongs(BANK, [2020], [], 10), []);
   const anySong = BANK.find(song => song.title === '아무노래');
   const saved = {...anySong, genre: 'K-pop', introStart: 5};
-  assert.deepEqual(updateLegacyGenre(saved), {...anySong, introStart: 5});
+  assert.deepEqual(updateLegacySong(saved), {...anySong, introStart: 5});
+});
+
+test('RUDE uses the official audio and preserves customized intro settings', () => {
+  const rude = BANK.find(song => song.id === 'song-25');
+  assert.equal(rude.introVideo, 'Q4AE3ub4nBM');
+  assert.equal(rude.answerVideo, 'F7sGJVUrkjQ');
+  const oldDefault = {...rude, introVideo: rude.answerVideo};
+  assert.deepEqual(updateLegacySong(oldDefault), rude);
+  for (const edited of [{introStart: 2}, {introVideo: 'HttxcynVU48'}, {checked: true}]) {
+    const saved = {...oldDefault, ...edited};
+    assert.deepEqual(updateLegacySong(saved), saved);
+  }
 });
