@@ -41,9 +41,10 @@ export function validateBank(input) {
     return r;
   });
 }
-export function mergeSavedSongs(defaults, savedSongs) {
+export function mergeSavedSongs(defaults, savedSongs, retiredIds = new Set()) {
   const songs = new Map(defaults.map(song => [song.id, song]));
   for (const song of savedSongs) {
+    if (retiredIds.has(song.id)) continue;
     const original = songs.get(song.id);
     const sameTrack = original?.title === song.title && original.artist === song.artist && song.genre === 'OST';
     const work = song.work ?? (sameTrack ? original.work : undefined);
