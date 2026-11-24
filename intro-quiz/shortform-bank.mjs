@@ -48,6 +48,17 @@ export function questionYear(song, mode) {
   return shortformOnly.has(song.id) ? undefined : song.year;
 }
 
+// Approximate cue points in the linked recordings. Changing the source
+// invalidates the suggestion so a different video never inherits its offset.
+const defaultCues = new Map([]);
+
+export function defaultShortformStart(song) {
+  const cue = defaultCues.get(song.id);
+  return cue?.videoId === song.introVideo ? cue.seconds : song.introStart;
+}
+
 export function clipStart(song, mode) {
-  return mode === 'shortform' ? song.shortformStart ?? song.introStart : song.introStart;
+  return mode === 'shortform'
+    ? song.shortformStart ?? defaultShortformStart(song)
+    : song.introStart;
 }

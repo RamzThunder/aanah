@@ -14,7 +14,7 @@
 <label class="question-mode">출제 유형
   <select id="questionMode"><option value="release">발매 연도별</option><option value="shortform">숏폼 유행곡</option></select>
 </label>
-<p id="shortformHint" class="hint" hidden>틱톡에서 유행한 해로 골라요. 숏폼 시작 시간을 지정하면 해당 구간부터 들려줘요.</p>
+<p id="shortformHint" class="hint" hidden>틱톡에서 유행한 해로 골라요. 곡별 기본 시작 지점부터 들려주며, 곡 설정에서 바꿀 수 있어요.</p>
 <fieldset id="years"><legend>발매 연도 <span>여러 개 선택 가능</span></legend></fieldset>
 <fieldset id="genresFilter"><legend>장르 <span>여러 개 선택 가능</span></legend></fieldset>
 <div class="row"><label>문제 수<select id="count"><option>5</option><option selected>10</option><option>15</option><option>20</option><option>30</option></select></label></div>
@@ -49,7 +49,7 @@
 <dialog id="editor"><form id="editForm"><div class="section-title"><h2>곡 준비하기</h2><button type="button" id="closeEditor" aria-label="닫기">✕</button></div><div class="row"><label>노래 제목<input name="title" required maxlength="150"></label><label>가수<input name="artist" required maxlength="150"></label></div><div class="row"><label>발매 연도<input name="year" type="number" min="1900" max="2100" required></label><label>장르<input name="genre" list="genres" required maxlength="150"><datalist id="genres"><option>K-pop</option><option>발라드</option><option>힙합</option><option>영화 수록곡</option><option>어린이 애니 OST</option><option>밴드·인디</option><option>OST</option></datalist></label></div>
 <label>작품명 (선택)<input name="work" maxlength="150" placeholder="예: 케이팝 데몬 헌터스"></label>
 <label>전주용 유튜브 주소<input name="introVideo" required placeholder="https://www.youtube.com/watch?v=..."></label><label>전주 시작 시간 (초)<input name="introStart" type="number" min="0" max="86400" step="0.1" required></label>
-<label id="shortformStartField" hidden>숏폼 시작 시간 (초, 선택)<input name="shortformStart" type="number" min="0" max="86400" step="0.1" placeholder="비워두면 전주 시작 시간 사용"></label>
+<label id="shortformStartField" hidden>숏폼 시작 시간 (초, 선택)<input name="shortformStart" type="number" min="0" max="86400" step="0.1" placeholder="곡별 기본값 사용"></label>
 <label>정답용 유튜브 주소 · 교차편집 / 뮤비<input name="answerVideo" required placeholder="https://youtu.be/..."></label><label>정답 영상 시작 시간 (초)<input name="answerStart" type="number" min="0" max="86400" step="0.1" required></label>
 <div class="row"><a id="findAudio" target="_blank" rel="noopener noreferrer">YouTube Music에서 음원 찾기</a><a id="findStage" target="_blank" rel="noopener noreferrer">교차편집 찾기</a></div>
 <p class="hint">음원 검색에서 ‘노래’를 선택하고, 공유 링크를 전주용 주소에 붙여넣으세요. 저장 후 미리듣기로 시작 지점을 확인해 주세요. 미리듣기는 컴퓨터의 현재 출력 장치로 들립니다.</p><label class="check"><input name="checked" type="checkbox">전주와 정답 영상을 확인했어요 · 수업 준비 완료</label><p id="editError" role="alert"></p><button class="primary wide" type="submit">저장하기</button></form></dialog>

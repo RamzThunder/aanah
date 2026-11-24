@@ -1,6 +1,6 @@
 import {BANK, RETIRED_SONG_IDS, updateLegacySong} from './bank.mjs';
 import {validateBank,mergeSavedSongs,filterSongs,pickSongs,publicState} from './core.mjs';
-import {questionYear, clipStart} from './shortform-bank.mjs';
+import {questionYear, clipStart, defaultShortformStart} from './shortform-bank.mjs';
 import {createPlayer,playerError} from './player.mjs';
 const $=s=>document.querySelector(s), KEY='aanah-intro-bank-v1';
 const defaultSongs = new Map(BANK.map(song => [song.id, song]));
@@ -174,7 +174,7 @@ function renderBank() {
 }
 $('#search').oninput=renderBank;$('#bankYear').onchange=renderBank;
 $('#songs').onclick=e=>{const b=e.target.closest('button');if(!b)return;const s=bank.find(s=>s.id===(b.dataset.edit||b.dataset.preview));if(!s)return;if(b.dataset.edit)edit(s);else{stop();if(phase==='answer'){phase='question';render();}$('#answerTitle').textContent=`미리듣기: ${s.title}`;$('#answerArtist').textContent=songCredit(s);playClip(s,3,true,mode());}};
-function edit(s){stop();if(phase==='answer'){phase='question';render();}editing=s.id;const f=$('#editForm');for(const k of ['title','artist','year','genre','work','introVideo','answerVideo','introStart','shortformStart','answerStart'])f.elements[k].value=k.endsWith('Video')?(s[k]?`https://www.youtube.com/watch?v=${s[k]}`:''):(s[k]??'');$('#shortformStartField').hidden=questionYear(s,'shortform')===undefined;f.elements.checked.checked=s.checked;$('#editError').textContent='';searchLinks();$('#editor').showModal();}
+function edit(s){stop();if(phase==='answer'){phase='question';render();}editing=s.id;const f=$('#editForm');for(const k of ['title','artist','year','genre','work','introVideo','answerVideo','introStart','shortformStart','answerStart'])f.elements[k].value=k.endsWith('Video')?(s[k]?`https://www.youtube.com/watch?v=${s[k]}`:''):(s[k]??'');$('#shortformStartField').hidden=questionYear(s,'shortform')===undefined;f.elements.shortformStart.placeholder=`기본값 ${defaultShortformStart(s)}초`;f.elements.checked.checked=s.checked;$('#editError').textContent='';searchLinks();$('#editor').showModal();}
 function searchLinks() {
   const {artist, title} = $('#editForm').elements;
   const query = `${artist.value} ${title.value}`.trim();
