@@ -115,20 +115,23 @@ function onPlayerState(e){
   if(!active.timer)active.timer=setInterval(()=>{
    if(!active||!player)return;
    const now=player.getCurrentTime();
-   if(now>=active.end||Date.now()-active.startedAt>30000)finishClip();
+   // Ignore stale positions left over from the previous clip until playback
+   // actually reaches this clip's window.
+   if(!active.reached&&now>=active.start-0.3&&now<active.end)active.reached=true;
+   if((active.reached&&now>=active.end)||Date.now()-active.startedAt>30000)finishClip();
   },16);
- } else if(e.data===0&&active)finishClip('영상이 끝났어요. 시작 시간과 영상 길이를 확인해 주세요.');
+ } else if(e.data===0&&active?.reached)finishClip('영상이 끝났어요. 시작 시간과 영상 길이를 확인해 주세요.');
 }
 async function playClip(s,seconds,previewOnly=false,playbackMode='release'){
  stopPlayback();
  const start = clipStart(s, playbackMode);
- const token={end:start+seconds,previewOnly,startedAt:Date.now()};active=token;
+ const token={start,end:start+seconds,previewOnly,startedAt:Date.now()};active=token;
  if(!previewOnly){phase='loading';render();}else{send();}
  status(previewOnly?`${s.title} · ${seconds}초 미리듣기 (현재 소리 출력 장치)`:'유튜브에서 전주를 준비하고 있어요.');
  try{
   const p=await getPlayer();if(active!==token)return;
   token.watchdog=setTimeout(()=>{if(active===token)finishClip('재생 대기 시간이 길어 중지했어요. 광고·네트워크·영상 제한을 확인하고 다시 시도하세요.');},25000);
-  p.unMute();p.setVolume(80);p.loadVideoById({videoId:s.introVideo,startSeconds:start,endSeconds:token.end});
+  p.unMute();p.setVolume(80);p.loadVideoById({videoId:s.introVideo,startSeconds:start});
  }catch(e){if(active===token){stop();status(e.message);}}
 }
 $('#start').onclick=()=>{stopPlayback();playlist=pickSongs(bank,selectedYears(),selectedGenres(),+$('#count').value,Math.random,excludedArtists,currentYear).map(s=>({...s}));if(!playlist.length)return;playlistMode=mode();index=0;stage=0;duration=0;phase='question';render();status('플레이리스트를 준비했어요. 1단계부터 시작해 주세요.');};
