@@ -6,12 +6,12 @@ import {videoId,validateBank,mergeSavedSongs,pickSongs,publicState} from './core
 
 const releaseBank = BANK.filter(song => questionYear(song, 'release') !== undefined);
 
-test('174 active default songs including film, animation, and requested songs', () => {
+test('175 active default songs including film, animation, and requested songs', () => {
   validateBank(BANK);
   const songs = releaseBank;
-  assert.equal(songs.length, 174);
+  assert.equal(songs.length, 175);
   assert.equal(songs.filter(song => song.genre === 'K-pop').length, 138);
-  assert.equal(songs.filter(song => song.genre === '힙합').length, 5);
+  assert.equal(songs.filter(song => song.genre === '힙합').length, 6);
   assert.equal(songs.find(song => song.title === 'HAPPY').id, 'song-6');
   assert.equal(songs.filter(song => song.genre === '어린이 애니 OST').length, 7);
   assert.ok(songs.every(song => !RETIRED_SONG_IDS.has(song.id)));
@@ -52,8 +52,8 @@ test('existing browser banks gain new default songs without losing teacher edits
   const edited = {...original[0], introStart: 4.5, checked: true};
   const added = {...original[1], id: 'teacher-song', title: '추가곡'};
   const merged = mergeSavedSongs(BANK, [edited, ...original.slice(1), added]);
-  assert.equal(merged.length, 198);
-  assert.equal(merged.filter(song => questionYear(song, 'release') < 2024).length, 103);
+  assert.equal(merged.length, 199);
+  assert.equal(merged.filter(song => questionYear(song, 'release') < 2024).length, 104);
   assert.deepEqual(merged.find(song => song.id === edited.id), edited);
   assert.deepEqual(merged.find(song => song.id === added.id), added);
 });
@@ -85,7 +85,7 @@ test('old backups cannot restore retired defaults but keep teacher additions', (
   const retired = {...BANK[0], id: 'song-20', title: 'Golden'};
   const custom = {...BANK[0], id: 'teacher-ost', genre: 'OST', work: '수업용 작품'};
   const merged = mergeSavedSongs(BANK, [retired, custom], RETIRED_SONG_IDS);
-  assert.equal(merged.length, 198);
+  assert.equal(merged.length, 199);
   assert.equal(merged.find(song => song.id === retired.id), undefined);
   assert.deepEqual(merged.find(song => song.id === custom.id), custom);
 });
