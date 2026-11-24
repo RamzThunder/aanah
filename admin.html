@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" href="favicon.ico" sizes="any" />
+  <title>요청함 관리 · 아나!</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <style>
+    :root{--navy:#193f7c;--ink:#203a60;--muted:#74849e;--blue:#4c91eb;--pale:#f6faff;--line:#e0eaf4;--red:#c8423b}
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--pale);color:var(--ink);font-family:Pretendard,ui-sans-serif,system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;letter-spacing:-.02em;word-break:keep-all}
+    button,input,select{font:inherit;color:inherit}
+    :focus-visible{outline:3px solid #80b4ff;outline-offset:2px}
+    main{max-width:960px;margin:0 auto;padding:32px 20px 60px}
+    h1{color:var(--navy);margin:0;font-size:26px}
+    h2{font-size:17px;margin:0 0 12px;color:var(--navy)}
+    .top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:22px}
+    .panel{background:#fff;border:1px solid var(--line);border-radius:18px;padding:20px;margin-bottom:18px}
+    .btn{padding:9px 14px;border:1.5px solid var(--line);border-radius:10px;background:#fff;font-weight:700;cursor:pointer}
+    .btn.primary{background:var(--navy);border-color:var(--navy);color:#fff}
+    .btn.danger{color:var(--red)}
+    .muted{color:var(--muted)}
+    #login{max-width:380px;margin:80px auto;display:grid;gap:12px}
+    #login input{padding:12px 14px;border:1.5px solid var(--line);border-radius:12px}
+    .err{color:var(--red);font-weight:700;margin:0;min-height:1em}
+    .kakao{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+    .filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+    .filters button{padding:7px 13px;border:1.5px solid var(--line);border-radius:999px;background:#fff;font-weight:700;cursor:pointer}
+    .filters button[aria-pressed=true]{background:#eaf3ff;border-color:var(--blue);color:var(--navy)}
+    .filters .sep{width:1px;background:var(--line);margin:0 4px}
+    .songs{width:100%;border-collapse:collapse}
+    .songs td{padding:7px 4px;border-top:1px solid var(--line)}
+    .songs td:last-child{text-align:right;font-weight:800;color:var(--navy);white-space:nowrap}
+    .item{border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:10px;background:#fff}
+    .item.done,.item.hold{opacity:.6}
+    .meta{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;font-size:13px;color:var(--muted);margin-bottom:8px}
+    .tag{padding:2px 9px;border-radius:999px;background:#eef4fb;color:var(--navy);font-weight:800}
+    .tag.bug{background:#fdecea;color:#a3332d}.tag.song{background:#efe9ff;color:#5b3fb0}.tag.idea{background:#e8f7ee;color:#23774a}
+    .title{font-weight:800;margin:0 0 6px}
+    .body{white-space:pre-wrap;margin:0 0 10px;line-height:1.55}
+    .actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .actions select{padding:7px 10px;border:1.5px solid var(--line);border-radius:10px}
+    .empty{text-align:center;padding:40px 0;color:var(--muted)}
+  </style>
+</head>
+<body>
+<form id="login" hidden>
+  <h1>요청함 관리</h1>
+  <input type="password" id="password" placeholder="관리자 비밀번호" autocomplete="current-password" required>
+  <button class="btn primary" type="submit">들어가기</button>
+  <p class="err" id="loginError" role="alert"></p>
+</form>
+
+<main id="app" hidden>
+  <div class="top"><h1>요청함 관리</h1><div><button class="btn" id="refresh">새로고침</button> <button class="btn" id="logout">나가기</button></div></div>
+
+  <section class="panel">
+    <h2>카카오톡 알림</h2>
+    <div class="kakao"><span id="kakaoStatus" class="muted">확인 중…</span>
+      <span><button class="btn" id="kakaoTest">테스트 보내기</button> <button class="btn primary" id="kakaoLogin">카카오 연결하기</button></span></div>
+    <p class="err" id="kakaoError" role="alert"></p>
+  </section>
+
+  <section class="panel" id="songPanel" hidden>
+    <h2>곡 신청 모아 보기 <small class="muted">반영 전 신청만</small></h2>
+    <table class="songs"><tbody id="songs"></tbody></table>
+  </section>
+
+  <div class="filters" id="filters"></div>
+  <div id="list"></div>
+</main>
+<script>
+const KINDS = { bug: '오류 신고', idea: '기능 제안', song: '곡 신청', etc: '기타' };
+const STATUSES = { new: '새 요청', seen: '확인함', done: '반영함', hold: '보류' };
+const KEY = 'aanah-admin-key';
+const $ = s => document.querySelector(s);
+let requests = [], kindFilter = 'all', statusFilter = 'open';
+
+async function api(method, body, query = '') {
+  const res = await fetch('/api/admin/requests' + query, {
+    method, headers: { authorization: 'Bearer ' + sessionStorage.getItem(KEY), 'content-type': 'application/json' },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const out = await res.json().catch(() => ({}));
+  if (res.status === 401) { sessionStorage.removeItem(KEY); showLogin(out.error); throw new Error(out.error); }
+  if (!res.ok) throw new Error(out.error || '요청에 실패했어요.');
+  return out;
+}
+
+function showLogin(message = '') { $('#app').hidden = true; $('#login').hidden = false; $('#loginError').textContent = message; $('#password').focus(); }
+
+$('#login').onsubmit = e => { e.preventDefault(); sessionStorage.setItem(KEY, $('#password').value); load(); };
+$('#logout').onclick = () => { sessionStorage.removeItem(KEY); showLogin(); };
+$('#refresh').onclick = () => load();
+
+async function load() {
+  try {
+    const out = await api('GET');
+    requests = out.requests;
+    $('#login').hidden = true; $('#app').hidden = false; $('#password').value = '';
+    renderKakao(out.kakao); render();
+  } catch (e) { showLogin(e.message); }
+}
+
+function renderKakao(k) {
+  const el = $('#kakaoStatus');
+  if (!k.configured) el.textContent = 'KAKAO_REST_KEY가 아직 설정되지 않았어요.';
+  else if (k.connected) {
+    const days = Math.floor((k.refreshExpires - Date.now()) / 86400000);
+    el.textContent = `연결됨 · 요청이 없으면 ${days}일 뒤 다시 연결이 필요해요 (요청이 올 때마다 자동 연장).`;
+  } else el.textContent = '연결되지 않았어요. ‘카카오 연결하기’를 눌러 주세요.';
+  $('#kakaoTest').disabled = !k.connected; $('#kakaoLogin').disabled = !k.configured;
+  $('#kakaoLogin').textContent = k.connected ? '다시 연결하기' : '카카오 연결하기';
+}
+$('#kakaoLogin').onclick = async () => {
+  try { location.href = (await api('POST', { action: 'kakao-login' })).url; } catch (e) { $('#kakaoError').textContent = e.message; }
+};
+$('#kakaoTest').onclick = async () => {
+  $('#kakaoError').textContent = '';
+  try { await api('POST', { action: 'kakao-test' }); $('#kakaoError').textContent = ''; alert('보냈어요. 카카오톡 ‘나와의 채팅’을 확인해 주세요.'); }
+  catch (e) { $('#kakaoError').textContent = e.message; }
+};
+
+function renderFilters() {
+  const count = k => requests.filter(r => (k === 'all' || r.kind === k) && matchStatus(r)).length;
+  const kindBtns = [['all', '전체'], ...Object.entries(KINDS)].map(([k, label]) =>
+    `<button data-kind="${k}" aria-pressed="${kindFilter === k}">${label} ${count(k)}</button>`);
+  const statusBtns = [['open', '처리 전'], ['all', '모두'], ...Object.entries(STATUSES)].map(([s, label]) =>
+    `<button data-status="${s}" aria-pressed="${statusFilter === s}">${label}</button>`);
+  $('#filters').innerHTML = [...kindBtns, '<span class="sep"></span>', ...statusBtns].join('');
+}
+$('#filters').onclick = e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.kind) kindFilter = b.dataset.kind; else statusFilter = b.dataset.status;
+  render();
+};
+const matchStatus = r => statusFilter === 'all' || (statusFilter === 'open' ? r.status === 'new' || r.status === 'seen' : r.status === statusFilter);
+
+function renderSongs() {
+  const groups = new Map();
+  for (const r of requests) {
+    if (r.kind !== 'song' || r.status === 'done' || r.status === 'hold') continue;
+    const key = r.title.toLowerCase().replace(/[\s()'’"`.,!?-]/g, '');
+    const g = groups.get(key) || { title: r.title, n: 0 };
+    g.n++; groups.set(key, g);
+  }
+  const rows = [...groups.values()].sort((a, b) => b.n - a.n);
+  $('#songPanel').hidden = !rows.length;
+  const tbody = $('#songs'); tbody.replaceChildren();
+  for (const g of rows) {
+    const tr = tbody.insertRow();
+    tr.insertCell().textContent = g.title;
+    tr.insertCell().textContent = `${g.n}명`;
+  }
+}
+
+function render() {
+  renderFilters(); renderSongs();
+  const list = $('#list'); list.replaceChildren();
+  const shown = requests.filter(r => (kindFilter === 'all' || r.kind === kindFilter) && matchStatus(r));
+  if (!shown.length) { list.innerHTML = '<p class="empty">해당하는 요청이 없어요.</p>'; return; }
+  for (const r of shown) {
+    const item = document.createElement('article');
+    item.className = `item ${r.status}`;
+    const meta = document.createElement('div'); meta.className = 'meta';
+    const tag = document.createElement('span'); tag.className = `tag ${r.kind}`; tag.textContent = KINDS[r.kind] || r.kind;
+    const info = document.createElement('span');
+    info.textContent = [r.tool, new Date(r.created_at).toLocaleString('ko-KR'), r.contact && `보낸 분: ${r.contact}`, !r.notified && '카톡 알림 안 감'].filter(Boolean).join(' · ');
+    meta.append(tag, info);
+    item.append(meta);
+    if (r.title) { const t = document.createElement('p'); t.className = 'title'; t.textContent = r.title; item.append(t); }
+    if (r.body) { const b = document.createElement('p'); b.className = 'body'; b.textContent = r.body; item.append(b); }
+    if (r.link) {
+      const p = document.createElement('p'); p.className = 'body';
+      const a = document.createElement('a'); a.href = r.link; a.textContent = r.link; a.target = '_blank'; a.rel = 'noopener noreferrer';
+      p.append(a); item.append(p);
+    }
+    const actions = document.createElement('div'); actions.className = 'actions';
+    const sel = document.createElement('select'); sel.setAttribute('aria-label', '처리 상태');
+    for (const [v, label] of Object.entries(STATUSES)) sel.add(new Option(label, v, false, v === r.status));
+    sel.onchange = async () => {
+      try { await api('PATCH', { id: r.id, status: sel.value }); r.status = sel.value; render(); }
+      catch (e) { alert(e.message); sel.value = r.status; }
+    };
+    const del = document.createElement('button'); del.className = 'btn danger'; del.textContent = '삭제';
+    del.onclick = async () => {
+      if (!confirm('이 요청을 삭제할까요? 되돌릴 수 없어요.')) return;
+      try { await api('DELETE', null, `?id=${r.id}`); requests = requests.filter(x => x.id !== r.id); render(); }
+      catch (e) { alert(e.message); }
+    };
+    actions.append(sel, del); item.append(actions);
+    list.append(item);
+  }
+}
+
+const kakaoResult = new URLSearchParams(location.search).get('kakao');
+if (kakaoResult) {
+  history.replaceState(null, '', location.pathname);
+  const messages = { connected: '카카오톡이 연결됐어요. ‘테스트 보내기’로 확인해 보세요.', expired: '연결 시간이 지났어요. 다시 시도해 주세요.',
+    denied: '카카오 동의가 취소됐어요.', failed: '카카오 연결에 실패했어요. 키와 Redirect URI 설정을 확인해 주세요.', unconfigured: '카카오 설정이 아직 없어요.' };
+  setTimeout(() => alert(messages[kakaoResult] || kakaoResult), 300);
+}
+if (sessionStorage.getItem(KEY)) load(); else showLogin();
+</script>
+</body>
+</html>

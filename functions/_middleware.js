@@ -7,25 +7,24 @@ const PREFIXES = ['/forClass', '/dida-releases'];
 
 // 하단에 "아나!에서 다른 도구 보기" 링크를 붙일 페이지. 화면을 꽉 채우는 채점 도구·돌림판은 레이아웃이 깨져서 뺐다.
 // 값이 'footer'면 페이지에 이미 있는 하단 줄(footer .wrap) 끝에 이어 붙이고, 'body'면 본문 맨 아래에 한 줄 추가한다.
-// tool은 의견 보내기 폼에서 미리 선택될 도구 이름(폼 선택지와 글자가 똑같아야 한다).
-const FORCLASS = '평가 도구 모음 (메인)';
+// tool은 의견 보내기(/request)에서 미리 선택될 도구 이름(index.html의 도구 이름과 같게 쓴다).
+const FORCLASS = '평가 도구 모음';
 const AANAH_LINK_PAGES = {
   '/forClass/': { spot: 'footer', tool: FORCLASS },
   '/forClass/index.html': { spot: 'footer', tool: FORCLASS },
   '/forClass/privacy.html': { spot: 'body', tool: FORCLASS },
   '/forClass/terms.html': { spot: 'body', tool: FORCLASS },
   '/jjirashy/jjirasi_sticker_maker.html': { spot: 'body', tool: '찌라시 스티커 생성기' },
+  // Pages가 .html 주소를 확장자 없는 주소로 넘기므로 실제로는 이 주소로 열린다.
+  '/jjirashy/jjirasi_sticker_maker': { spot: 'body', tool: '찌라시 스티커 생성기' },
   '/dida-releases/': { spot: 'body', tool: '디다' },
   '/dida-releases/index.html': { spot: 'body', tool: '디다' },
   '/dida-releases/privacy.html': { spot: 'body', tool: '디다' },
   '/dida-releases/terms.html': { spot: 'body', tool: '디다' },
 };
-const FEEDBACK_FORM = 'https://docs.google.com/forms/d/e/1FAIpQLSf3LzumGBb5t9QskyB-CtbIGP41AC6S4h2uGFizKO3KOKcw4w/viewform';
-const FEEDBACK_TOOL_ENTRY = 'entry.1162952170';
-
 function feedbackLink(tool, style) {
-  const href = `${FEEDBACK_FORM}?usp=pp_url&${FEEDBACK_TOOL_ENTRY}=${encodeURIComponent(tool)}`;
-  return `<a href="${href}" target="_blank" rel="noopener noreferrer" style="${style}">의견 보내기</a>`;
+  const href = `/request?tool=${encodeURIComponent(tool)}`;
+  return `<a href="${href}" target="_blank" rel="noopener" style="${style}">의견 보내기</a>`;
 }
 function footerLinks(tool) {
   return ' · <a href="/" style="text-decoration:underline">아나!에서 다른 도구 보기</a>'
@@ -43,7 +42,7 @@ const DROP_RESPONSE_HEADERS = ['set-cookie', 'via', 'x-github-request-id', 'x-fa
 export async function onRequest({ request, next }) {
   const url = new URL(request.url);
   const matched = PREFIXES.some(p => url.pathname === p || url.pathname.startsWith(p + '/'));
-  const localSticker = url.pathname === '/jjirashy/jjirasi_sticker_maker.html';
+  const localSticker = /^\/jjirashy\/jjirasi_sticker_maker(\.html)?$/.test(url.pathname);
   if (!matched && !localSticker) return next();
 
   if (request.method !== 'GET' && request.method !== 'HEAD') {
