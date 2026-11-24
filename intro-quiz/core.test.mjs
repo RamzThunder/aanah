@@ -54,3 +54,16 @@ test('excluded artists do not appear in the playlist', () => {
   assert.ok(playlist.every(song => !excluded.has(song.artist)));
   assert.deepEqual(pickSongs(BANK, years, '', 10, Math.random, new Set(BANK.map(song => song.artist))), []);
 });
+
+test('OST works appear only at reveal and are restored for older saved songs', () => {
+  const song = BANK.find(song => song.title === '소나기');
+  const {work, ...legacySong} = song;
+  assert.equal(work, '선재 업고 튀어');
+  const saved = validateBank([{...legacySong, introStart: 3}]);
+  const [merged] = mergeSavedSongs([song], saved);
+  assert.equal(merged.introStart, 3);
+  assert.equal(merged.work, work);
+  assert.equal(publicState({phase: 'question', song: merged}).song, undefined);
+  assert.equal(publicState({phase: 'answer', song: merged}).song.work, work);
+  assert.equal(validateBank([{...song, work: ' 내 작품명 '}])[0].work, '내 작품명');
+});
