@@ -38,3 +38,6 @@
   margin-left: 6px;
   font-weight: 500;
 }
+
+.question-mode { display: block; margin-bottom: 14px; }
+#shortformHint[hidden], #shortformStartField[hidden] { display: none; }

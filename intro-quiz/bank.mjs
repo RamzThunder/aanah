@@ -1,6 +1,7 @@
 // Official video links checked on 2026-11-24. Embedding and intro offsets
 // require a classroom preflight; availability is controlled by YouTube.
 import {OFFICIAL_INTRO_AUDIO} from './intro-audio.mjs';
+import {SHORTFORM_ADDITIONS} from './shortform-bank.mjs';
 
 const HIP_HOP = '힙합';
 const FILM = '영화 수록곡';
@@ -176,10 +177,10 @@ const defaultRows = rows.map(([number,year,title,artist,answerVideo,introVideo,g
 }));
 const previousDefaults = new Map(defaultRows.map(song => [song.id, song]));
 
-export const BANK = defaultRows.map(song => {
+export const BANK = [...defaultRows.map(song => {
   const audio = OFFICIAL_INTRO_AUDIO.get(song.id);
   return audio ? {...song, introVideo: audio} : song;
-});
+}), ...SHORTFORM_ADDITIONS];
 
 // Update older saved copies that still use the original defaults.
 export function updateLegacySong(song) {

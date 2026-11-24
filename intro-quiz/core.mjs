@@ -33,6 +33,12 @@ export function validateBank(input) {
       if(typeof s[k]!=='number'||!Number.isFinite(s[k])||s[k]<0||s[k]>86400) throw Error('시작 시간은 0~86400초 사이여야 합니다.');
       r[k]=s[k];
     }
+    if (s.shortformStart !== undefined) {
+      if (!Number.isFinite(s.shortformStart) || s.shortformStart < 0 || s.shortformStart > 86400) {
+        throw Error('숏폼 시작 시간은 0~86400초 사이여야 합니다.');
+      }
+      r.shortformStart = s.shortformStart;
+    }
     if (s.work !== undefined) {
       if (typeof s.work !== 'string' || s.work.length > 150) throw Error('작품명은 150자 이내로 입력해 주세요.');
       r.work = s.work.trim();
@@ -53,16 +59,16 @@ export function mergeSavedSongs(defaults, savedSongs, retiredIds = new Set()) {
   return [...songs.values()];
 }
 
-export function filterSongs(bank, years, genres, excludedArtists = new Set()) {
+export function filterSongs(bank, years, genres, excludedArtists = new Set(), yearOf = song => song.year) {
   return bank.filter(song =>
-    years.includes(song.year) &&
+    years.includes(yearOf(song)) &&
     (!genres || genres.includes(song.genre)) &&
     !excludedArtists.has(song.artist)
   );
 }
 
-export function pickSongs(bank,years,genres,count,random=Math.random,excludedArtists) {
-  const pool=filterSongs(bank, years, genres, excludedArtists);
+export function pickSongs(bank,years,genres,count,random=Math.random,excludedArtists,yearOf) {
+  const pool=filterSongs(bank, years, genres, excludedArtists, yearOf);
   for(let i=pool.length-1;i>0;i--){const j=Math.floor(random()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]];}
   return pool.slice(0,Math.max(0,Math.floor(count)));
 }
