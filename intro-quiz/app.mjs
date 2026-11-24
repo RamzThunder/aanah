@@ -152,6 +152,35 @@ function renderBankRow(s) {
   return `<tr class="${kind}"><td>${yearText}</td><td><b>${esc(s.title)}</b>${badge}<small>${esc(songCredit(s))}</small></td><td>${esc(s.genre)}</td><td>${start}초</td><td class="${s.checked?'ready':'unchecked'}">${s.checked?'준비 완료':'미리듣기 필요'}</td><td><button data-preview="${esc(s.id)}">3초 미리듣기</button><button data-edit="${esc(s.id)}">설정</button></td></tr>`;
 }
 
+// 머리글을 누를 때마다 오름차순 → 내림차순 → 원래 순서로 돌아간다. 출제 가능/범위 밖 묶음 안에서 정렬한다.
+let bankSort = {key: '', dir: 1};
+const collator = new Intl.Collator('ko', {numeric: true, sensitivity: 'base'});
+const sortValue = {
+  year: s => currentYear(s) ?? s.year,
+  title: s => s.title,
+  genre: s => s.genre,
+  start: s => clipStart(s, mode()),
+  checked: s => (s.checked ? 1 : 0),
+};
+function sortedBank() {
+  const value = sortValue[bankSort.key];
+  if (!value) return bank;
+  return bank.map((song, i) => ({song, i})).sort((a, b) => {
+    const x = value(a.song), y = value(b.song);
+    const diff = typeof x === 'string' ? collator.compare(x, y) : x - y;
+    return diff * bankSort.dir || a.i - b.i;
+  }).map(({song}) => song);
+}
+$('#bankHead').onclick = e => {
+  const key = e.target.closest('[data-sort]')?.dataset.sort;
+  if (!key) return;
+  bankSort = bankSort.key !== key ? {key, dir: 1} : bankSort.dir === 1 ? {key, dir: -1} : {key: '', dir: 1};
+  for (const b of document.querySelectorAll('#bankHead [data-sort]')) {
+    b.closest('th').setAttribute('aria-sort', b.dataset.sort !== bankSort.key ? 'none' : bankSort.dir === 1 ? 'ascending' : 'descending');
+  }
+  renderBank();
+};
+
 function renderBank() {
   const query = $('#search').value.trim().toLocaleLowerCase();
   const year = $('#bankYear').value;
@@ -161,7 +190,7 @@ function renderBank() {
   const eligible = [];
   const remaining = [];
 
-  for (const song of bank) {
+  for (const song of sortedBank()) {
     if (year && currentYear(song) !== Number(year)) continue;
     if (!`${song.title} ${songCredit(song)}`.toLocaleLowerCase().includes(query)) continue;
     (eligibleIds.has(song.id) ? eligible : remaining).push(song);
