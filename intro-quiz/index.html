@@ -15,8 +15,16 @@
   <select id="questionMode"><option value="release">발매 연도별</option><option value="shortform">숏폼 유행곡</option></select>
 </label>
 <p id="shortformHint" class="hint" hidden>틱톡에서 유행한 해로 골라요. 곡별 기본 시작 지점부터 들려주며, 곡 설정에서 바꿀 수 있어요.</p>
-<fieldset id="years"><legend>발매 연도 <span>여러 개 선택 가능</span></legend></fieldset>
-<fieldset id="genresFilter"><legend>장르 <span>여러 개 선택 가능</span></legend></fieldset>
+<details class="filter-fold" id="yearsFold">
+  <summary><span id="yearsTitle">발매 연도</span> <span class="fold-summary" id="yearsSummary"></span></summary>
+  <div class="fold-actions"><button type="button" data-select-all="years">모두 선택</button><button type="button" data-select-none="years">모두 해제</button></div>
+  <fieldset id="years"><legend class="sr-only">발매 연도</legend></fieldset>
+</details>
+<details class="filter-fold" id="genresFold">
+  <summary><span>장르</span> <span class="fold-summary" id="genresSummary"></span></summary>
+  <div class="fold-actions"><button type="button" data-select-all="genresFilter">모두 선택</button><button type="button" data-select-none="genresFilter">모두 해제</button></div>
+  <fieldset id="genresFilter"><legend class="sr-only">장르</legend></fieldset>
+</details>
 <div class="row"><label>문제 수<select id="count"><option>5</option><option selected>10</option><option>15</option><option>20</option><option>30</option></select></label></div>
 <details class="artist-exclusions">
   <summary>제외할 가수 <span id="excludedCount">없음</span></summary>

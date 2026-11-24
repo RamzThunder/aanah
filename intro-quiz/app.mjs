@@ -39,12 +39,13 @@ function fillFilters(){
  const years = [...new Set(bank.map(currentYear).filter(Number.isInteger))].sort((a, b) => a - b);
  const yearLabel = mode() === 'shortform' ? '유행 연도' : '발매 연도';
  $('#shortformHint').hidden = mode() !== 'shortform';
- $('#years').innerHTML = `<legend>${yearLabel} <span>여러 개 선택 가능</span></legend>` +
+ $('#yearsTitle').textContent = yearLabel;
+ $('#years').innerHTML = `<legend class="sr-only">${yearLabel}</legend>` +
    years.map(year => `<label class="year-choice"><input type="checkbox" value="${year}" ${previouslyUncheckedYears.has(year) ? '' : 'checked'}>${year}</label>`).join('');
  const genreInputs = [...$('#genresFilter').querySelectorAll('input')];
  const previouslyUnchecked = new Set(genreInputs.filter(input => !input.checked).map(input => input.value));
  const genres = [...new Set(bank.filter(song => Number.isInteger(currentYear(song))).map(song => song.genre))];
- $('#genresFilter').innerHTML = '<legend>장르 <span>여러 개 선택 가능</span></legend>' +
+ $('#genresFilter').innerHTML = '<legend class="sr-only">장르</legend>' +
    genres.map(genre => {
      const checked = previouslyUnchecked.has(genre) ? '' : ' checked';
      return `<label class="year-choice"><input type="checkbox" value="${esc(genre)}"${checked}>${esc(genre)}</label>`;
@@ -73,7 +74,22 @@ function renderArtistOptions() {
   }).join('');
 }
 
+// 접힌 연도·장르 칸에도 무엇을 골랐는지 보이게 한다.
+function foldSummary(fieldset) {
+  const inputs = [...$(fieldset).querySelectorAll('input')], picked = inputs.filter(input => input.checked).map(input => input.value);
+  if (!inputs.length) return '';
+  if (picked.length === inputs.length) return `전체 ${inputs.length}개`;
+  if (!picked.length) return '선택 안 함';
+  return picked.length <= 3 ? picked.join(', ') : `${inputs.length}개 중 ${picked.length}개`;
+}
+for (const button of document.querySelectorAll('[data-select-all],[data-select-none]')) button.onclick = () => {
+  const all = !!button.dataset.selectAll;
+  for (const input of $(`#${button.dataset.selectAll || button.dataset.selectNone}`).querySelectorAll('input')) input.checked = all;
+  poolCount();
+};
 function poolCount() {
+  $('#yearsSummary').textContent = foldSummary('#years');
+  $('#genresSummary').textContent = foldSummary('#genresFilter');
   const available = availableSongs().length;
   const excludedCount = bank.filter(song => excludedSongs.has(song.id)).length;
   $('#poolCount').textContent = `출제 가능 ${available}곡 · ${Math.min(available, Number($('#count').value))}문제 출제${excludedCount ? ` · 내가 제외한 곡 ${excludedCount}곡` : ''}`;
