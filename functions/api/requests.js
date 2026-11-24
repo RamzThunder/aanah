@@ -7,6 +7,7 @@ const SONG_TOOL = '전주 듣고 노래 맞히기';
 const LIMITS = { tool: 60, title: 200, body: 2000, link: 300, contact: 100 };
 const WINDOW = 10 * 60 * 1000;
 const MAX_PER_WINDOW = 5;
+const MAX_SONGS = 20;
 
 const ready = env => !!(env.DB && env.ADMIN_PASSWORD);
 const turnstileOn = env => !!(env.TURNSTILE_SITE_KEY && env.TURNSTILE_SECRET);
@@ -29,20 +30,26 @@ export async function onRequestPost({ request, env }) {
   if (!kind) return json({ error: '요청 종류를 골라 주세요.' }, 400);
   const tool = kind === 'song' ? SONG_TOOL : text(input.tool, LIMITS.tool) || '아나! 전체';
   const contact = text(input.contact, LIMITS.contact);
-  let title, body, link = '';
+  const body = text(input.body, LIMITS.body);
+  // 곡 신청은 한 번에 여러 곡을 받아 곡마다 한 줄씩 저장한다(관리 페이지에서 같은 곡끼리 묶어 세기 위해).
+  const rows = [];
   if (kind === 'song') {
-    const artist = text(input.artist, 100), song = text(input.song, 100);
-    if (!artist || !song) return json({ error: '가수와 노래 제목을 모두 적어 주세요.' }, 400);
-    title = `${artist} - ${song}`;
-    body = text(input.body, LIMITS.body);
-    link = text(input.link, LIMITS.link);
-    if (link && !/^https:\/\/(www\.|m\.|music\.)?(youtube\.com|youtu\.be)\//i.test(link)) {
-      return json({ error: '유튜브 링크만 붙여 넣을 수 있어요.' }, 400);
+    const list = Array.isArray(input.songs) ? input.songs : [{ artist: input.artist, song: input.song, link: input.link }];
+    for (const [i, item] of list.slice(0, MAX_SONGS + 1).entries()) {
+      const artist = text(item?.artist, 100), song = text(item?.song, 100), link = text(item?.link, LIMITS.link);
+      if (!artist && !song && !link) continue;
+      const where = list.length > 1 ? `${i + 1}번째 곡: ` : '';
+      if (!artist || !song) return json({ error: `${where}가수와 노래 제목을 모두 적어 주세요.` }, 400);
+      if (link && !/^https:\/\/(www\.|m\.|music\.)?(youtube\.com|youtu\.be)\//i.test(link)) {
+        return json({ error: `${where}유튜브 링크만 붙여 넣을 수 있어요.` }, 400);
+      }
+      rows.push({ title: `${artist} - ${song}`, link });
     }
+    if (!rows.length) return json({ error: '가수와 노래 제목을 적어 주세요.' }, 400);
+    if (rows.length > MAX_SONGS) return json({ error: `한 번에 ${MAX_SONGS}곡까지 보낼 수 있어요.` }, 400);
   } else {
-    title = text(input.title, LIMITS.title);
-    body = text(input.body, LIMITS.body);
     if (!body) return json({ error: '내용을 적어 주세요.' }, 400);
+    rows.push({ title: text(input.title, LIMITS.title), link: '' });
   }
 
   const ip = request.headers.get('cf-connecting-ip') || '';
@@ -56,12 +63,14 @@ export async function onRequestPost({ request, env }) {
   const DB = await db(env);
   const now = Date.now();
   const ipHash = await sha256(`${env.ADMIN_PASSWORD}:${ip}`);
-  const recent = await DB.prepare('SELECT COUNT(*) AS n FROM requests WHERE ip_hash = ? AND created_at > ?')
+  // 한 번에 보낸 여러 곡은 created_at이 같으므로 보낸 횟수로 센다.
+  const recent = await DB.prepare('SELECT COUNT(DISTINCT created_at) AS n FROM requests WHERE ip_hash = ? AND created_at > ?')
     .bind(ipHash, now - WINDOW).first();
   if (recent.n >= MAX_PER_WINDOW) return json({ error: '잠시 뒤에 다시 보내 주세요. (10분에 5개까지)' }, 429);
 
-  await DB.prepare(`INSERT INTO requests (created_at, kind, tool, title, body, link, contact, ip_hash)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)`).bind(now, kind, tool, title, body, link, contact, ipHash).run();
+  const insert = DB.prepare(`INSERT INTO requests (created_at, kind, tool, title, body, link, contact, ip_hash)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)`);
+  await DB.batch(rows.map(r => insert.bind(now, kind, tool, r.title, body, r.link, contact, ipHash)));
 
   return json({ ok: true });
 }
