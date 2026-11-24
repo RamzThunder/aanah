@@ -25,7 +25,6 @@
     #login{max-width:380px;margin:80px auto;display:grid;gap:12px}
     #login input{padding:12px 14px;border:1.5px solid var(--line);border-radius:12px}
     .err{color:var(--red);font-weight:700;margin:0;min-height:1em}
-    .kakao{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
     .filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
     .filters button{padding:7px 13px;border:1.5px solid var(--line);border-radius:999px;background:#fff;font-weight:700;cursor:pointer}
     .filters button[aria-pressed=true]{background:#eaf3ff;border-color:var(--blue);color:var(--navy)}
@@ -55,13 +54,6 @@
 
 <main id="app" hidden>
   <div class="top"><h1>요청함 관리</h1><div><button class="btn" id="refresh">새로고침</button> <button class="btn" id="logout">나가기</button></div></div>
-
-  <section class="panel">
-    <h2>카카오톡 알림</h2>
-    <div class="kakao"><span id="kakaoStatus" class="muted">확인 중…</span>
-      <span><button class="btn" id="kakaoTest">테스트 보내기</button> <button class="btn primary" id="kakaoLogin">카카오 연결하기</button></span></div>
-    <p class="err" id="kakaoError" role="alert"></p>
-  </section>
 
   <section class="panel" id="songPanel" hidden>
     <h2>곡 신청 모아 보기 <small class="muted">반영 전 신청만</small></h2>
@@ -100,28 +92,9 @@ async function load() {
     const out = await api('GET');
     requests = out.requests;
     $('#login').hidden = true; $('#app').hidden = false; $('#password').value = '';
-    renderKakao(out.kakao); render();
+    render();
   } catch (e) { showLogin(e.message); }
 }
-
-function renderKakao(k) {
-  const el = $('#kakaoStatus');
-  if (!k.configured) el.textContent = 'KAKAO_REST_KEY가 아직 설정되지 않았어요.';
-  else if (k.connected) {
-    const days = Math.floor((k.refreshExpires - Date.now()) / 86400000);
-    el.textContent = `연결됨 · 요청이 없으면 ${days}일 뒤 다시 연결이 필요해요 (요청이 올 때마다 자동 연장).`;
-  } else el.textContent = '연결되지 않았어요. ‘카카오 연결하기’를 눌러 주세요.';
-  $('#kakaoTest').disabled = !k.connected; $('#kakaoLogin').disabled = !k.configured;
-  $('#kakaoLogin').textContent = k.connected ? '다시 연결하기' : '카카오 연결하기';
-}
-$('#kakaoLogin').onclick = async () => {
-  try { location.href = (await api('POST', { action: 'kakao-login' })).url; } catch (e) { $('#kakaoError').textContent = e.message; }
-};
-$('#kakaoTest').onclick = async () => {
-  $('#kakaoError').textContent = '';
-  try { await api('POST', { action: 'kakao-test' }); $('#kakaoError').textContent = ''; alert('보냈어요. 카카오톡 ‘나와의 채팅’을 확인해 주세요.'); }
-  catch (e) { $('#kakaoError').textContent = e.message; }
-};
 
 function renderFilters() {
   const count = k => requests.filter(r => (k === 'all' || r.kind === k) && matchStatus(r)).length;
@@ -167,7 +140,7 @@ function render() {
     const meta = document.createElement('div'); meta.className = 'meta';
     const tag = document.createElement('span'); tag.className = `tag ${r.kind}`; tag.textContent = KINDS[r.kind] || r.kind;
     const info = document.createElement('span');
-    info.textContent = [r.tool, new Date(r.created_at).toLocaleString('ko-KR'), r.contact && `보낸 분: ${r.contact}`, !r.notified && '카톡 알림 안 감'].filter(Boolean).join(' · ');
+    info.textContent = [r.tool, new Date(r.created_at).toLocaleString('ko-KR'), r.contact && `보낸 분: ${r.contact}`].filter(Boolean).join(' · ');
     meta.append(tag, info);
     item.append(meta);
     if (r.title) { const t = document.createElement('p'); t.className = 'title'; t.textContent = r.title; item.append(t); }
@@ -195,13 +168,6 @@ function render() {
   }
 }
 
-const kakaoResult = new URLSearchParams(location.search).get('kakao');
-if (kakaoResult) {
-  history.replaceState(null, '', location.pathname);
-  const messages = { connected: '카카오톡이 연결됐어요. ‘테스트 보내기’로 확인해 보세요.', expired: '연결 시간이 지났어요. 다시 시도해 주세요.',
-    denied: '카카오 동의가 취소됐어요.', failed: '카카오 연결에 실패했어요. 키와 Redirect URI 설정을 확인해 주세요.', unconfigured: '카카오 설정이 아직 없어요.' };
-  setTimeout(() => alert(messages[kakaoResult] || kakaoResult), 300);
-}
 if (sessionStorage.getItem(KEY)) load(); else showLogin();
 </script>
 </body>

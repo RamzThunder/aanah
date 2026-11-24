@@ -1,7 +1,7 @@
 // 요청 보내기(/request)가 쓰는 API.
 //   GET  /api/requests  → { ready, turnstile }  요청함 사용 가능 여부와 로봇 확인 사이트 키
-//   POST /api/requests  → 요청 저장 후 카카오톡 나에게 보내기로 알림
-import { KINDS, ADMIN_PATH, json, db, sha256, sendKakao, notificationText } from './_lib.js';
+//   POST /api/requests  → 요청 저장
+import { KINDS, json, db, sha256 } from './_lib.js';
 
 const SONG_TOOL = '전주 듣고 노래 맞히기';
 const LIMITS = { tool: 60, title: 200, body: 2000, link: 300, contact: 100 };
@@ -17,7 +17,7 @@ export function onRequestGet({ env }) {
 
 const text = (v, max) => String(v ?? '').replace(/\r\n?/g, '\n').trim().slice(0, max);
 
-export async function onRequestPost({ request, env, waitUntil }) {
+export async function onRequestPost({ request, env }) {
   if (!ready(env)) return json({ error: '요청함이 아직 준비되지 않았어요.' }, 503);
   let input;
   try { input = await request.json(); } catch { return json({ error: '잘못된 요청이에요.' }, 400); }
@@ -60,14 +60,8 @@ export async function onRequestPost({ request, env, waitUntil }) {
     .bind(ipHash, now - WINDOW).first();
   if (recent.n >= MAX_PER_WINDOW) return json({ error: '잠시 뒤에 다시 보내 주세요. (10분에 5개까지)' }, 429);
 
-  const row = { kind, tool, title, body, link, contact };
-  const saved = await DB.prepare(`INSERT INTO requests (created_at, kind, tool, title, body, link, contact, ip_hash)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`).bind(now, kind, tool, title, body, link, contact, ipHash).first();
-
-  // 알림이 실패해도 요청은 이미 저장됐으니 응답은 기다리지 않는다.
-  waitUntil(sendKakao(env, DB, notificationText(row), new URL(ADMIN_PATH, request.url).href)
-    .then(r => r.sent && DB.prepare('UPDATE requests SET notified = 1 WHERE id = ?').bind(saved.id).run())
-    .catch(e => console.error(e.message)));
+  await DB.prepare(`INSERT INTO requests (created_at, kind, tool, title, body, link, contact, ip_hash)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)`).bind(now, kind, tool, title, body, link, contact, ipHash).run();
 
   return json({ ok: true });
 }
