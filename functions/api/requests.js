@@ -5,8 +5,10 @@ import { KINDS, json, db, sha256 } from './_lib.js';
 
 const SONG_TOOL = '전주 듣고 노래 맞히기';
 const LIMITS = { tool: 60, title: 200, body: 2000, link: 300, contact: 100 };
+// 사람에게는 사실상 제한이 없고(같은 학교 선생님들은 IP를 함께 쓴다), 봇이 D1 하루 쓰기 한도를
+// 다 써 버리는 것만 막는 상한. 곡 여러 개를 한 번에 보내면 곡 수만큼 센다.
 const WINDOW = 10 * 60 * 1000;
-const MAX_PER_WINDOW = 5;
+const MAX_ROWS_PER_WINDOW = 300;
 const MAX_SONGS = 20;
 
 const ready = env => !!(env.DB && env.ADMIN_PASSWORD);
@@ -63,14 +65,19 @@ export async function onRequestPost({ request, env }) {
   const DB = await db(env);
   const now = Date.now();
   const ipHash = await sha256(`${env.ADMIN_PASSWORD}:${ip}`);
-  // 한 번에 보낸 여러 곡은 created_at이 같으므로 보낸 횟수로 센다.
-  const recent = await DB.prepare('SELECT COUNT(DISTINCT created_at) AS n FROM requests WHERE ip_hash = ? AND created_at > ?')
-    .bind(ipHash, now - WINDOW).first();
-  if (recent.n >= MAX_PER_WINDOW) return json({ error: '잠시 뒤에 다시 보내 주세요. (10분에 5개까지)' }, 429);
+  const { results: recent } = await DB.prepare('SELECT kind, title, body FROM requests WHERE ip_hash = ? AND created_at > ?')
+    .bind(ipHash, now - WINDOW).all();
+  if (recent.length + rows.length > MAX_ROWS_PER_WINDOW) {
+    return json({ error: '짧은 시간에 너무 많이 보냈어요. 10분쯤 뒤에 다시 보내 주세요.' }, 429);
+  }
+  // 두 번 누르기·새로고침으로 같은 내용이 다시 오면 저장하지 않고 성공으로 답한다.
+  const seen = new Set(recent.map(r => `${r.kind}\n${r.title}\n${r.body}`));
+  const fresh = rows.filter(r => !seen.has(`${kind}\n${r.title}\n${body}`));
+  if (!fresh.length) return json({ ok: true });
 
   const insert = DB.prepare(`INSERT INTO requests (created_at, kind, tool, title, body, link, contact, ip_hash)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`);
-  await DB.batch(rows.map(r => insert.bind(now, kind, tool, r.title, body, r.link, contact, ipHash)));
+  await DB.batch(fresh.map(r => insert.bind(now, kind, tool, r.title, body, r.link, contact, ipHash)));
 
   return json({ ok: true });
 }
