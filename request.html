@@ -10,6 +10,7 @@
   <style>
     :root{--navy:#193f7c;--ink:#203a60;--muted:#74849e;--blue:#4c91eb;--pale:#f6faff;--line:#e0eaf4;--red:#c8423b}
     *{box-sizing:border-box}
+    [hidden]{display:none!important}
     body{margin:0;background:var(--pale);color:var(--ink);font-family:Pretendard,ui-sans-serif,system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;letter-spacing:-.03em;word-break:keep-all}
     button,input,select,textarea{font:inherit;color:inherit}
     a{color:var(--blue)}
@@ -48,7 +49,8 @@
     button[type=submit]:disabled{opacity:.55;cursor:wait}
     #error{margin:0;color:var(--red);font-weight:700;min-height:1em}
     .notice{background:#fff8e6;border:1px solid #f1dfa9;border-radius:14px;padding:14px 16px;line-height:1.6;margin-bottom:18px}
-    .done{background:#fff;border:2px solid #9fd3b4;border-radius:22px;padding:40px 26px;text-align:center;box-shadow:0 12px 36px rgba(35,119,74,.12)}
+    .done-overlay{position:fixed;inset:0;z-index:50;display:grid;place-items:center;padding:20px;background:rgba(246,250,255,.82);backdrop-filter:blur(6px)}
+    .done{width:min(440px,100%);background:#fff;border:2px solid #9fd3b4;border-radius:22px;padding:40px 26px;text-align:center;box-shadow:0 12px 36px rgba(35,119,74,.12)}
     .done-mark{width:56px;height:56px;margin:0 auto 14px;border-radius:50%;background:#e8f7ee;color:#23774a;display:grid;place-items:center;font-size:28px;font-weight:900}
     .done h2{color:var(--navy);margin:0 0 10px;outline:none}
     .done p{color:var(--muted);margin:0 0 22px;line-height:1.6}
@@ -64,7 +66,7 @@
   <p class="lead">쓰다가 불편한 점, 오류, 아이디어, 전주 퀴즈에 넣고 싶은 노래를 보내 주세요.<br>보내 주신 내용은 아나! 관리자에게만 전달돼요.</p>
   <div id="notice" class="notice" hidden></div>
 
-  <form id="form" novalidate>
+  <form id="form" novalidate autocomplete="off">
     <fieldset>
       <legend>어떤 요청인가요?</legend>
       <div class="kinds">
@@ -101,12 +103,14 @@
     <button type="submit" id="submit">보내기</button>
   </form>
 
-  <section class="done" id="done" hidden role="status">
-    <div class="done-mark" aria-hidden="true">✓</div>
-    <h2 id="doneTitle" tabindex="-1">보냈어요, 고마워요!</h2>
-    <p id="doneText">꼼꼼히 읽어 보고 반영할게요.</p>
-    <button type="button" id="again">하나 더 보내기</button>
-  </section>
+  <div class="done-overlay" id="done" hidden>
+    <section class="done" role="alertdialog" aria-modal="true" aria-labelledby="doneTitle" aria-describedby="doneText">
+      <div class="done-mark" aria-hidden="true">✓</div>
+      <h2 id="doneTitle" tabindex="-1">보냈어요, 고마워요!</h2>
+      <p id="doneText">꼼꼼히 읽어 보고 반영할게요.</p>
+      <button type="button" id="again">새로 작성하기</button>
+    </section>
+  </div>
 </main>
 <script>
 // 도구 이름은 index.html의 apps 목록과 맞춘다. 도구 페이지 링크의 ?tool= 값이 목록에 없으면 맨 아래에 추가한다.
@@ -188,8 +192,10 @@ fetch('/api/requests').then(r => r.json()).then(cfg => {
   }
 }).catch(() => {});
 
+let sent = false;
 form.addEventListener('submit', async e => {
   e.preventDefault();
+  if (sent) return;
   const f = form.elements, kind = f.kind.value;
   const data = {
     kind, tool: kind === 'song' ? SONG_TOOL : f.tool.value, title: f.title.value, body: f.body.value,
@@ -210,22 +216,21 @@ form.addEventListener('submit', async e => {
     const out = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(out.error || '보내지 못했어요. 잠시 뒤 다시 시도해 주세요.');
     $('#doneText').textContent = kind === 'song' && data.songs.length > 1 ? `${data.songs.length}곡을 신청했어요. 꼼꼼히 확인하고 반영할게요.` : '꼼꼼히 읽어 보고 반영할게요.';
-    form.hidden = true; $('#done').hidden = false;
-    // 긴 양식 아래쪽에서 보내도 완료 안내가 바로 보이도록 맨 위로 올린다.
-    window.scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
-    $('#doneTitle').focus({ preventScroll: true });
+    // 중복으로 보내지 않도록 입력을 비우고 잠근 뒤 완료 창으로 화면을 덮는다. 더 보내려면 새로고침한다.
+    sent = true;
+    form.reset(); songRows.replaceChildren(); addSongRow(false);
+    for (const el of form.elements) el.disabled = true;
+    form.inert = true;
+    $('#done').hidden = false;
+    $('#again').focus();
   } catch (err) {
     $('#error').textContent = err.message;
   } finally {
-    $('#submit').disabled = false; $('#submit').textContent = '보내기';
+    if (!sent) { $('#submit').disabled = false; $('#submit').textContent = '보내기'; }
     if (widget !== undefined) { window.turnstile?.reset(widget); turnstileToken = ''; }
   }
 });
-$('#again').onclick = () => {
-  for (const name of ['title', 'body']) form.elements[name].value = '';
-  songRows.replaceChildren(); addSongRow(false);
-  form.hidden = false; $('#done').hidden = true;
-};
+$('#again').onclick = () => location.reload();
 </script>
 </body>
 </html>
