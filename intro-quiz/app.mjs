@@ -3,6 +3,12 @@ import {validateBank,mergeSavedSongs,filterSongs,pickSongs,publicState} from './
 import {questionYear, clipStart, defaultShortformStart} from './shortform-bank.mjs';
 import {createPlayer,playerError} from './player.mjs';
 const $=s=>document.querySelector(s), KEY='aanah-intro-bank-v1';
+// 선생님이 출제에서 빼 둔 곡 ID. 문제은행 수정 내용과 따로 저장해 기본 문제은행이 바뀌어도 유지된다.
+const EXCLUDED_KEY='aanah-intro-excluded-songs-v1';
+const excludedSongs=new Set();
+try{const saved=JSON.parse(localStorage.getItem(EXCLUDED_KEY)||'[]');if(Array.isArray(saved))for(const id of saved)if(typeof id==='string')excludedSongs.add(id);}catch{}
+function saveExcluded(){try{localStorage.setItem(EXCLUDED_KEY,JSON.stringify([...excludedSongs]));}catch{status('브라우저에 제외 목록을 저장하지 못했어요.');}}
+const playableBank=()=>bank.filter(song=>!excludedSongs.has(song.id));
 const defaultSongs = new Map(BANK.map(song => [song.id, song]));
 let bank=BANK.map(s=>({...s}));
 try{const saved=localStorage.getItem(KEY);if(saved)bank=mergeSavedSongs(BANK,validateBank(JSON.parse(saved)).map(updateLegacySong),RETIRED_SONG_IDS);}catch{$('#status').textContent='저장된 목록을 불러오지 못해 기본 목록을 열었어요.';}
@@ -25,7 +31,7 @@ const currentYear = song => questionYear(song, mode());
 let playlistMode = 'release';
 
 function availableSongs() {
-  return filterSongs(bank, selectedYears(), selectedGenres(), excludedArtists, currentYear);
+  return filterSongs(playableBank(), selectedYears(), selectedGenres(), excludedArtists, currentYear);
 }
 
 function fillFilters(){
@@ -69,7 +75,8 @@ function renderArtistOptions() {
 
 function poolCount() {
   const available = availableSongs().length;
-  $('#poolCount').textContent = `출제 가능 ${available}곡 · ${Math.min(available, Number($('#count').value))}문제 출제`;
+  const excludedCount = bank.filter(song => excludedSongs.has(song.id)).length;
+  $('#poolCount').textContent = `출제 가능 ${available}곡 · ${Math.min(available, Number($('#count').value))}문제 출제${excludedCount ? ` · 내가 제외한 곡 ${excludedCount}곡` : ''}`;
   $('#start').disabled = available === 0;
   $('#excludedCount').textContent = excludedArtists.size ? `${excludedArtists.size}팀 제외` : '없음';
   $('#clearExcluded').disabled = excludedArtists.size === 0;
@@ -134,7 +141,7 @@ async function playClip(s,seconds,previewOnly=false,playbackMode='release'){
   p.unMute();p.setVolume(80);p.loadVideoById({videoId:s.introVideo,startSeconds:start});
  }catch(e){if(active===token){stop();status(e.message);}}
 }
-$('#start').onclick=()=>{stopPlayback();playlist=pickSongs(bank,selectedYears(),selectedGenres(),+$('#count').value,Math.random,excludedArtists,currentYear).map(s=>({...s}));if(!playlist.length)return;playlistMode=mode();index=0;stage=0;duration=0;phase='question';render();status('플레이리스트를 준비했어요. 1단계부터 시작해 주세요.');};
+$('#start').onclick=()=>{stopPlayback();playlist=pickSongs(playableBank(),selectedYears(),selectedGenres(),+$('#count').value,Math.random,excludedArtists,currentYear).map(s=>({...s}));if(!playlist.length)return;playlistMode=mode();index=0;stage=0;duration=0;phase='question';render();status('플레이리스트를 준비했어요. 1단계부터 시작해 주세요.');};
 for(const b of document.querySelectorAll('[data-stage]'))b.onclick=()=>{stage=+b.dataset.stage;duration=stage===1?.5:stage===2?1:+$('#easy').value;playClip(song(),duration,false,playlistMode);};
 $('#easy').onchange=()=>{$('#easyLabel').innerHTML=`${$('#easy').value}<small>초</small>`;};
 $('#stop').onclick=()=>{stop();if(phase==='answer'){phase='question';render();}status('재생을 중지했어요.');};
@@ -149,7 +156,9 @@ function renderBankRow(s) {
   const trendYear = mode() === 'shortform' ? questionYear(s, 'shortform') : undefined;
   const yearText = trendYear ? `${trendYear} 유행<small>${s.year} 발매</small>` : s.year;
   const start = clipStart(s, mode());
-  return `<tr class="${kind}"><td>${yearText}</td><td><b>${esc(s.title)}</b>${badge}<small>${esc(songCredit(s))}</small></td><td>${esc(s.genre)}</td><td>${start}초</td><td class="${s.checked?'ready':'unchecked'}">${s.checked?'준비 완료':'미리듣기 필요'}</td><td><button data-preview="${esc(s.id)}">3초 미리듣기</button><button data-edit="${esc(s.id)}">설정</button></td></tr>`;
+  const out = excludedSongs.has(s.id);
+  const excludeButton = `<button data-exclude="${esc(s.id)}" class="exclude-toggle" aria-pressed="${out}" title="${out ? '다시 출제 대상에 넣어요' : '이 브라우저에서 이 곡을 출제하지 않아요'}">${out ? '다시 출제' : '출제 제외'}</button>`;
+  return `<tr class="${kind}${out ? ' excluded' : ''}"><td>${yearText}</td><td><b>${esc(s.title)}</b>${badge}<small>${esc(songCredit(s))}</small></td><td>${esc(s.genre)}</td><td>${start}초</td><td class="${s.checked?'ready':'unchecked'}">${s.checked?'준비 완료':'미리듣기 필요'}</td><td><button data-preview="${esc(s.id)}">3초 미리듣기</button><button data-edit="${esc(s.id)}">설정</button>${excludeButton}</td></tr>`;
 }
 
 // 머리글을 누를 때마다 오름차순 → 내림차순 → 원래 순서로 돌아간다. 출제 가능/범위 밖 묶음 안에서 정렬한다.
@@ -189,11 +198,12 @@ function renderBank() {
   );
   const eligible = [];
   const remaining = [];
+  const excluded = [];
 
   for (const song of sortedBank()) {
     if (year && currentYear(song) !== Number(year)) continue;
     if (!`${song.title} ${songCredit(song)}`.toLocaleLowerCase().includes(query)) continue;
-    (eligibleIds.has(song.id) ? eligible : remaining).push(song);
+    (excludedSongs.has(song.id) ? excluded : eligibleIds.has(song.id) ? eligible : remaining).push(song);
   }
 
   const heading = (title, count) =>
@@ -202,10 +212,11 @@ function renderBank() {
   $('#bankCount').textContent = `${bank.length}곡`;
   $('#songs').innerHTML = heading('출제 가능한 노래들', eligible.length) +
     (eligible.map(renderBankRow).join('') || `<tr><td colspan="6">${empty}</td></tr>`) +
-    (remaining.length ? heading('현재 출제 범위 밖', remaining.length) + remaining.map(renderBankRow).join('') : '');
+    (remaining.length ? heading('현재 출제 범위 밖', remaining.length) + remaining.map(renderBankRow).join('') : '') +
+    (excluded.length ? heading('내가 제외한 노래 · 이 브라우저에 저장돼요', excluded.length) + excluded.map(renderBankRow).join('') : '');
 }
 $('#search').oninput=renderBank;$('#bankYear').onchange=renderBank;
-$('#songs').onclick=e=>{const b=e.target.closest('button');if(!b)return;const s=bank.find(s=>s.id===(b.dataset.edit||b.dataset.preview));if(!s)return;if(b.dataset.edit)edit(s);else{stop();if(phase==='answer'){phase='question';render();}$('#answerTitle').textContent=`미리듣기: ${s.title}`;$('#answerArtist').textContent=songCredit(s);playClip(s,3,true,mode());}};
+$('#songs').onclick=e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.exclude){const id=b.dataset.exclude,title=bank.find(s=>s.id===id)?.title||'';if(excludedSongs.has(id)){excludedSongs.delete(id);status(`‘${title}’을(를) 다시 출제 대상에 넣었어요.`);}else{excludedSongs.add(id);status(`‘${title}’을(를) 출제에서 뺐어요. 이 브라우저에 저장돼요.`);}saveExcluded();poolCount();return;}const s=bank.find(s=>s.id===(b.dataset.edit||b.dataset.preview));if(!s)return;if(b.dataset.edit)edit(s);else{stop();if(phase==='answer'){phase='question';render();}$('#answerTitle').textContent=`미리듣기: ${s.title}`;$('#answerArtist').textContent=songCredit(s);playClip(s,3,true,mode());}};
 function edit(s){stop();if(phase==='answer'){phase='question';render();}editing=s.id;const f=$('#editForm');for(const k of ['title','artist','year','genre','work','introVideo','answerVideo','introStart','shortformStart','answerStart'])f.elements[k].value=k.endsWith('Video')?(s[k]?`https://www.youtube.com/watch?v=${s[k]}`:''):(s[k]??'');$('#shortformStartField').hidden=questionYear(s,'shortform')===undefined;f.elements.shortformStart.placeholder=`기본값 ${defaultShortformStart(s)}초`;f.elements.checked.checked=s.checked;$('#editError').textContent='';searchLinks();$('#editor').showModal();}
 function searchLinks() {
   const {artist, title} = $('#editForm').elements;
@@ -218,8 +229,8 @@ $('#editCurrent').onclick=()=>edit(song());$('#closeEditor').onclick=()=>$('#edi
 $('#add').onclick=()=>edit({id:crypto.randomUUID(),title:'',artist:'',year:2026,genre:'K-pop',introVideo:'',answerVideo:'',introStart:0,answerStart:0,checked:false});
 function persist(next){const validated=validateBank(next);localStorage.setItem(KEY,JSON.stringify(validated));bank=validated;fillFilters();}
 $('#editForm').onsubmit=e=>{e.preventDefault();const f=e.target;try{const s=validateBank([{id:editing,title:f.elements.title.value,artist:f.elements.artist.value,genre:f.elements.genre.value,work:f.elements.work.value,year:+f.elements.year.value,introVideo:f.elements.introVideo.value,answerVideo:f.elements.answerVideo.value,introStart:+f.elements.introStart.value,shortformStart:f.elements.shortformStart.value === '' ? undefined : f.elements.shortformStart.valueAsNumber,answerStart:+f.elements.answerStart.value,checked:f.elements.checked.checked}])[0];const next=bank.some(x=>x.id===s.id)?bank.map(x=>x.id===s.id?s:x):[...bank,s];persist(next);playlist=playlist.map(x=>x.id===s.id?{...s}:x);if(phase==='answer')phase='question';render();$('#editor').close();status('저장했어요. 미리듣기로 시작 시간을 확인하세요.');}catch(err){$('#editError').textContent=`저장하지 못했어요. ${err.message}`;}};
-$('#export').onclick=()=>{const blob=new Blob([JSON.stringify({version:1,songs:bank},null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='aanah-intro-bank.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
-$('#import').onchange=async e=>{const file=e.target.files[0];if(!file)return;try{if(file.size>2e6)throw Error('2MB 이하 파일을 선택해 주세요.');const data=JSON.parse(await file.text());const incoming=validateBank(data.songs||data).map(updateLegacySong);const activeSongs=incoming.filter(song=>!RETIRED_SONG_IDS.has(song.id));persist(mergeSavedSongs(bank,activeSongs));const removedCount=incoming.length-activeSongs.length;status(`${activeSongs.length}곡을 가져왔어요. ${removedCount ? `기본 문제은행에서 제외된 ${removedCount}곡은 건너뛰었어요. ` : ''} 같은 ID는 갱신되며, 진행 중 게임에는 다음 게임부터 적용돼요.`);}catch(err){status(`가져오지 못했어요. ${err.message}`);}e.target.value='';};
+$('#export').onclick=()=>{const blob=new Blob([JSON.stringify({version:1,songs:bank,excludedSongIds:[...excludedSongs]},null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='aanah-intro-bank.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
+$('#import').onchange=async e=>{const file=e.target.files[0];if(!file)return;try{if(file.size>2e6)throw Error('2MB 이하 파일을 선택해 주세요.');const data=JSON.parse(await file.text());const incoming=validateBank(data.songs||data).map(updateLegacySong);const activeSongs=incoming.filter(song=>!RETIRED_SONG_IDS.has(song.id));persist(mergeSavedSongs(bank,activeSongs));const removedCount=incoming.length-activeSongs.length;if(Array.isArray(data.excludedSongIds)){for(const id of data.excludedSongIds)if(typeof id==='string')excludedSongs.add(id);saveExcluded();poolCount();}status(`${activeSongs.length}곡을 가져왔어요. ${removedCount ? `기본 문제은행에서 제외된 ${removedCount}곡은 건너뛰었어요. ` : ''} 같은 ID는 갱신되며, 진행 중 게임에는 다음 게임부터 적용돼요.`);}catch(err){status(`가져오지 못했어요. ${err.message}`);}e.target.value='';};
 window.addEventListener('beforeunload',()=>{channel?.postMessage({type:'closed',room});stopPlayback();});
 fillFilters();render();
 if(location.protocol==='file:')status('유튜브 재생을 위해 HTTP 서버로 열어 주세요. 사용 안내의 실행 방법을 확인하세요.');
