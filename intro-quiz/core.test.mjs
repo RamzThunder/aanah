@@ -6,19 +6,20 @@ import {videoId,validateBank,mergeSavedSongs,pickSongs,publicState} from './core
 
 const releaseBank = BANK.filter(song => questionYear(song, 'release') !== undefined);
 
-test('149 active default songs including film and children’s animation', () => {
+test('173 active default songs including film, animation, and requested songs', () => {
   validateBank(BANK);
   const songs = releaseBank;
-  assert.equal(songs.length, 149);
-  assert.equal(songs.filter(song => song.genre === 'K-pop').length, 136);
+  assert.equal(songs.length, 173);
+  assert.equal(songs.filter(song => song.genre === 'K-pop').length, 138);
   assert.equal(songs.filter(song => song.genre === '힙합').length, 5);
   assert.equal(songs.find(song => song.title === 'HAPPY').id, 'song-6');
   assert.equal(songs.filter(song => song.genre === '어린이 애니 OST').length, 7);
   assert.ok(songs.every(song => !RETIRED_SONG_IDS.has(song.id)));
   assert.equal(BANK.find(song => song.title === 'Golden').genre, '영화 수록곡');
-  assert.ok(songs.every(song => song.genre !== '밴드·인디'));
+  // 밴드·인디 곡은 요청함 신청곡(202번 이후)으로만 들어온다.
+  assert.deepEqual(songs.filter(song => song.genre === '밴드·인디').map(song => song.id), ['song-205', 'song-206', 'song-224']);
   assert.equal(new Set(songs.map(song => `${song.title}|${song.artist}`)).size, songs.length);
-  const added = songs.filter(song => Number(song.id.slice(5)) >= 109);
+  const added = songs.filter(song => Number(song.id.slice(5)) >= 109 && Number(song.id.slice(5)) <= 178);
   for (let year = 2020; year <= 2026; year++) {
     assert.equal(added.filter(song => song.year === year).length, 10);
   }
@@ -30,7 +31,7 @@ test('accept supported YouTube URLs and reject impostors',()=>{
 test('filter intersection, small pools, and no duplicates',()=>{
   const result=pickSongs(BANK,[2024,2026],['K-pop'],15,()=>.4);
   assert.equal(result.length,15);assert.equal(new Set(result.map(s=>s.id)).size,15);
-  assert.ok(result.every(s=>s.year!==2025));assert.equal(pickSongs(releaseBank,[2024],['K-pop'],30).length,18);
+  assert.ok(result.every(s=>s.year!==2025));assert.equal(pickSongs(releaseBank,[2024],['K-pop'],30).length,19);
   assert.equal(pickSongs(BANK,[],null,10).length,0);assert.equal(pickSongs(releaseBank,[2024],['발라드'],10).length,0);
 });
 test('question state never includes answers or video identifiers',()=>{
@@ -51,8 +52,8 @@ test('existing browser banks gain new default songs without losing teacher edits
   const edited = {...original[0], introStart: 4.5, checked: true};
   const added = {...original[1], id: 'teacher-song', title: '추가곡'};
   const merged = mergeSavedSongs(BANK, [edited, ...original.slice(1), added]);
-  assert.equal(merged.length, 173);
-  assert.equal(merged.filter(song => questionYear(song, 'release') < 2024).length, 86);
+  assert.equal(merged.length, 197);
+  assert.equal(merged.filter(song => questionYear(song, 'release') < 2024).length, 102);
   assert.deepEqual(merged.find(song => song.id === edited.id), edited);
   assert.deepEqual(merged.find(song => song.id === added.id), added);
 });
@@ -60,7 +61,7 @@ test('existing browser banks gain new default songs without losing teacher edits
 test('excluded artists do not appear in the playlist', () => {
   const years = [2020, 2021, 2022, 2023, 2024, 2025, 2026];
   const excluded = new Set(['IVE', 'aespa']);
-  const pool = releaseBank.filter(song => song.genre === 'K-pop' && !excluded.has(song.artist));
+  const pool = releaseBank.filter(song => song.genre === 'K-pop' && years.includes(song.year) && !excluded.has(song.artist));
   const playlist = pickSongs(releaseBank, years, ['K-pop'], BANK.length, () => 0.5, excluded);
   assert.equal(playlist.length, pool.length);
   assert.ok(playlist.every(song => !excluded.has(song.artist)));
@@ -84,7 +85,7 @@ test('old backups cannot restore retired defaults but keep teacher additions', (
   const retired = {...BANK[0], id: 'song-20', title: 'Golden'};
   const custom = {...BANK[0], id: 'teacher-ost', genre: 'OST', work: '수업용 작품'};
   const merged = mergeSavedSongs(BANK, [retired, custom], RETIRED_SONG_IDS);
-  assert.equal(merged.length, 173);
+  assert.equal(merged.length, 197);
   assert.equal(merged.find(song => song.id === retired.id), undefined);
   assert.deepEqual(merged.find(song => song.id === custom.id), custom);
 });
