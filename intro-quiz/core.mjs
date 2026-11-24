@@ -34,7 +34,7 @@ export function validateBank(input) {
       r[k]=s[k];
     }
     if (s.work !== undefined) {
-      if (typeof s.work !== 'string' || s.work.length > 150) throw Error('OST 작품명은 150자 이내로 입력해 주세요.');
+      if (typeof s.work !== 'string' || s.work.length > 150) throw Error('작품명은 150자 이내로 입력해 주세요.');
       r.work = s.work.trim();
     }
     r.checked=s.checked===true;
@@ -46,7 +46,7 @@ export function mergeSavedSongs(defaults, savedSongs, retiredIds = new Set()) {
   for (const song of savedSongs) {
     if (retiredIds.has(song.id)) continue;
     const original = songs.get(song.id);
-    const sameTrack = original?.title === song.title && original.artist === song.artist && song.genre === 'OST';
+    const sameTrack = original?.title === song.title && original.artist === song.artist && original.genre === song.genre;
     const work = song.work ?? (sameTrack ? original.work : undefined);
     songs.set(song.id, work === undefined ? song : {...song, work});
   }
@@ -73,7 +73,7 @@ export function publicState(state) {
   if(phase==='answer'&&state.song) {
     const {title,artist,year,answerVideo,answerStart,work}=state.song;
     result.song={title,artist,year,answerVideo,answerStart};
-    if (state.song.genre === 'OST' && work) result.song.work = work;
+    if (work) result.song.work = work;
   }
   return result;
 }

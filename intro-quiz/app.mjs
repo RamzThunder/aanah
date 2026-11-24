@@ -7,7 +7,7 @@ let bank=BANK.map(s=>({...s}));
 try{const saved=localStorage.getItem(KEY);if(saved)bank=mergeSavedSongs(BANK,validateBank(JSON.parse(saved)),RETIRED_SONG_IDS);}catch{$('#status').textContent='저장된 목록을 불러오지 못해 기본 목록을 열었어요.';}
 let playlist=[],index=-1,phase='idle',stage=0,duration=0,player,playerPromise,active=null,tv=null,lastSeen=0,editing=null;
 const room=crypto.randomUUID(), channel=typeof BroadcastChannel!=='undefined'?new BroadcastChannel(`intro-quiz-${room}`):null;
-const workLabel = song => song.genre === 'OST' && song.work ? `〈${song.work}〉 OST` : '';
+const workLabel = song => song.work ? `〈${song.work}〉` : '';
 const songCredit = song => [song.artist, workLabel(song)].filter(Boolean).join(' · ');
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const song=()=>playlist[index];

@@ -3,13 +3,14 @@ import assert from 'node:assert/strict';
 import {BANK, RETIRED_SONG_IDS} from './bank.mjs';
 import {videoId,validateBank,mergeSavedSongs,pickSongs,publicState} from './core.mjs';
 
-test('80 active default songs without retired OST and band entries', () => {
+test('76 active default songs including film and children’s animation', () => {
   const songs = validateBank(BANK);
-  assert.equal(songs.length, 80);
-  assert.equal(songs.filter(song => song.genre === 'K-pop').length, 69);
-  assert.equal(songs.filter(song => song.genre === '밴드·인디').length, 11);
+  assert.equal(songs.length, 76);
+  assert.equal(songs.filter(song => song.genre === 'K-pop').length, 68);
+  assert.equal(songs.filter(song => song.genre === '어린이 애니 OST').length, 7);
   assert.ok(songs.every(song => !RETIRED_SONG_IDS.has(song.id)));
-  assert.equal(BANK.find(song => song.title === 'Golden'), undefined);
+  assert.equal(BANK.find(song => song.title === 'Golden').genre, '영화 수록곡');
+  assert.ok(songs.every(song => song.genre !== '밴드·인디'));
 });
 test('accept supported YouTube URLs and reject impostors',()=>{
   for(const value of ['phuiiNCxRMg','https://youtu.be/phuiiNCxRMg?t=3','https://www.youtube.com/watch?v=phuiiNCxRMg','https://music.youtube.com/watch?v=phuiiNCxRMg','https://youtube.com/shorts/phuiiNCxRMg'])assert.equal(videoId(value),'phuiiNCxRMg');
@@ -18,7 +19,7 @@ test('accept supported YouTube URLs and reject impostors',()=>{
 test('filter intersection, small pools, and no duplicates',()=>{
   const result=pickSongs(BANK,[2024,2026],'K-pop',15,()=>.4);
   assert.equal(result.length,15);assert.equal(new Set(result.map(s=>s.id)).size,15);
-  assert.ok(result.every(s=>s.year!==2025));assert.equal(pickSongs(BANK,[2024],'K-pop',30).length,10);
+  assert.ok(result.every(s=>s.year!==2025));assert.equal(pickSongs(BANK,[2024],'K-pop',30).length,9);
   assert.equal(pickSongs(BANK,[],'',10).length,0);assert.equal(pickSongs(BANK,[2024],'발라드',10).length,0);
 });
 test('question state never includes answers or video identifiers',()=>{
@@ -39,8 +40,8 @@ test('existing browser banks gain new default songs without losing teacher edits
   const edited = {...original[0], introStart: 4.5, checked: true};
   const added = {...original[1], id: 'teacher-song', title: '추가곡'};
   const merged = mergeSavedSongs(BANK, [edited, ...original.slice(1), added]);
-  assert.equal(merged.length, 81);
-  assert.equal(merged.filter(song => song.year < 2024).length, 45);
+  assert.equal(merged.length, 77);
+  assert.equal(merged.filter(song => song.year < 2024).length, 44);
   assert.deepEqual(merged.find(song => song.id === edited.id), edited);
   assert.deepEqual(merged.find(song => song.id === added.id), added);
 });
@@ -55,10 +56,10 @@ test('excluded artists do not appear in the playlist', () => {
   assert.deepEqual(pickSongs(BANK, years, '', 10, Math.random, new Set(BANK.map(song => song.artist))), []);
 });
 
-test('OST works appear only at reveal and are restored for older saved songs', () => {
-  const song = {...BANK[0], title: '소나기', genre: 'OST', work: '선재 업고 튀어'};
+test('Work titles appear only at reveal and are restored for older saved songs', () => {
+  const song = BANK.find(song => song.title === 'Golden');
   const {work, ...legacySong} = song;
-  assert.equal(work, '선재 업고 튀어');
+  assert.equal(work, '케이팝 데몬 헌터스');
   const saved = validateBank([{...legacySong, introStart: 3}]);
   const [merged] = mergeSavedSongs([song], saved);
   assert.equal(merged.introStart, 3);
@@ -72,7 +73,7 @@ test('old backups cannot restore retired defaults but keep teacher additions', (
   const retired = {...BANK[0], id: 'song-20', title: 'Golden'};
   const custom = {...BANK[0], id: 'teacher-ost', genre: 'OST', work: '수업용 작품'};
   const merged = mergeSavedSongs(BANK, [retired, custom], RETIRED_SONG_IDS);
-  assert.equal(merged.length, 81);
+  assert.equal(merged.length, 77);
   assert.equal(merged.find(song => song.id === retired.id), undefined);
   assert.deepEqual(merged.find(song => song.id === custom.id), custom);
 });

@@ -35,7 +35,7 @@ function render(s){
  $('#tvProgress').textContent=idle?'전주 듣고 노래 맞히기':done?'PLAYLIST COMPLETE':`${s.index+1} / ${s.total}`;
  $('#tvTag').textContent=answer?'THE ANSWER IS':done?'PLAYLIST COMPLETE':idle?'READY TO PLAY':s.stage?`${s.stage}단계 · ${s.duration}초`:'LISTEN CLOSELY';
  $('#tvTitle').textContent=answer?s.song.title:done?'오늘의 음악 퀴즈 끝!':idle?'귀를 쫑긋, 준비됐나요?':'이 노래의 제목은?';
- $('#tvSub').textContent=answer?[s.song.artist, s.song.work && `〈${s.song.work}〉 OST`].filter(Boolean).join(' · '):done?'함께 들어서 더 즐거웠어요.':idle?'선생님이 음악 퀴즈를 준비하고 있어요.':s.phase==='loading'?'잠깐만요, 음악을 준비하고 있어요.':s.phase==='listening'?'잘 듣고 맞혀보세요!':'생각났다면 손을 들어주세요!';
+ $('#tvSub').textContent=answer?[s.song.artist, s.song.work && `〈${s.song.work}〉`].filter(Boolean).join(' · '):done?'함께 들어서 더 즐거웠어요.':idle?'선생님이 음악 퀴즈를 준비하고 있어요.':s.phase==='loading'?'잠깐만요, 음악을 준비하고 있어요.':s.phase==='listening'?'잘 듣고 맞혀보세요!':'생각났다면 손을 들어주세요!';
  $('#tvRecord').hidden=!!answer;$('#tvLevels').hidden=!!answer||done;$('#videoWrap').hidden=!answer;
  [...$('#tvLevels').children].forEach((el,i)=>el.classList.toggle('selected',s.stage===i+1));$('#tvEasy').textContent=s.stage===3?`하 · ${s.duration}초`:'하 · 3초 이상';
  $('#tvFooter').textContent='';

@@ -1,10 +1,11 @@
 // Official video links checked on 2026-11-24. Embedding and intro offsets
 // require a classroom preflight; availability is controlled by YouTube.
-const BAND_INDIE = '밴드·인디';
+const FILM = '영화 수록곡';
+const ANIMATION = '어린이 애니 OST';
 
 // IDs match earlier exports and must not be reused.
 export const RETIRED_SONG_IDS = new Set(
-  [20, 71, 72, 75, 76, 78, 79, 80, 81, 82, 83, 84, 87, 88, 91, 92, 95, 96].map(number => `song-${number}`)
+  [6, 20, ...Array.from({length: 28}, (_, i) => 71 + i)].map(number => `song-${number}`)
 );
 
 const rows = [
@@ -13,7 +14,6 @@ const rows = [
   [3,2024,'첫 만남은 계획대로 되지 않아','TWS','hVAc1Vf2ITU'],
   [4,2024,'나는 아픈 건 딱 질색이니까','(여자)아이들','ATK7gAaZTOM'],
   [5,2024,'해야 (HEYA)','IVE','07EzMbVH3QE'],
-  [6,2024,'HAPPY','DAY6','2o1zdX72400'],
   [7,2024,'Whiplash','aespa','jWQx2f-CErU'],
   [8,2024,'Armageddon','aespa','nFYwcndNuOY'],
   [9,2024,'APT.','ROSÉ & Bruno Mars','ekr2nIex040','tQRt_P_-EHg'],
@@ -77,19 +77,16 @@ const rows = [
   [68,2023,'손오공 (Super)','SEVENTEEN','-GQg25oP0S4'],
   [69,2023,'특 (S-Class)','Stray Kids','JsOOis4bBFg'],
   [70,2023,'Get A Guitar','RIIZE','iUw3LPM7OBU'],
-  [73,2020,'Zombie','DAY6','k8gx-C7GCGU',null,BAND_INDIE],
-  [74,2020,'개화 (Flowering)','LUCY','2-P-NIiLiQc',null,BAND_INDIE],
-  [77,2021,'You make Me','DAY6','HwcCBnfhsR4',null,BAND_INDIE],
-  [85,2023,'Back To Me','The Rose','fuzLp9gDcwY',null,BAND_INDIE],
-  [86,2023,'Good enough','Xdinary Heroes','TFZszieg4J0',null,BAND_INDIE],
-  [89,2024,'고민중독','QWER','ImuWa3SJulY',null,BAND_INDIE],
-  [90,2024,'Welcome to the Show','DAY6','RowlrvmyFEk',null,BAND_INDIE],
-  [93,2025,'INSIDE OUT','DAY6','-N-pmPKS-bE','WNJdZqyugg4',BAND_INDIE],
-  [94,2025,'눈물참기','QWER','pifz9JH1Re8',null,BAND_INDIE],
-  [97,2026,'잔불 (Still)','N.Flying','gYAduKnFHG4',null,BAND_INDIE],
-  [98,2026,'Voyager','Xdinary Heroes','ZeNOs_7kqaw',null,BAND_INDIE],
+  [99,2025,'Golden','HUNTR/X','yebNIHKAC4A','9_bTl2vvYQg',FILM,'케이팝 데몬 헌터스'],
+  [100,2020,'Higher','툴라 (TULA)','uLy88J5BbEg',null,ANIMATION,'신비아파트 고스트볼 더블X: 수상한 의뢰'],
+  [101,2021,'운명의 시간','윤도현','NujcjDM-cAk',null,ANIMATION,'신비아파트 고스트볼Z: 어둠의 퇴마사'],
+  [102,2022,'알쏭달쏭 캐치! 티니핑 오프닝','이정은','vFS_9yQppX8',null,ANIMATION,'알쏭달쏭 캐치! 티니핑'],
+  [103,2023,'We Go','aespa','JB8pXJiys-g','P0JBkd3mJ74',ANIMATION,'포켓몬스터: 리코와 로드의 모험'],
+  [104,2024,'슈팅스타 캐치! 티니핑 주제곡','이정은','8t7UQwX8Cr4',null,ANIMATION,'슈팅스타 캐치! 티니핑'],
+  [105,2025,'프린세스 캐치! 티니핑 주제곡','리즈 (IVE)','RNAkSI0-zMI',null,ANIMATION,'프린세스 캐치! 티니핑'],
+  [106,2026,'파편의 궤도','안태규 (Dragon Pony)','hM0ijNSvo00',null,ANIMATION,'포켓몬스터: 라이징 어게인'],
 ];
-export const BANK = rows.map(([number,year,title,artist,answerVideo,introVideo,genre = 'K-pop'])=>({
+export const BANK = rows.map(([number,year,title,artist,answerVideo,introVideo,genre = 'K-pop',work])=>({
   id:`song-${number}`,year,title,artist,genre,introVideo:introVideo||answerVideo,
-  answerVideo,introStart:0,answerStart:0,checked:false
+  answerVideo,...(work ? {work} : {}),introStart:0,answerStart:0,checked:false
 }));
