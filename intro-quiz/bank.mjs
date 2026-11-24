@@ -197,6 +197,13 @@ const rows = [
   [225, 2026, "You Can’t Stop Me Now", "B.A.S.E", "r0r6rxhXwXU", "", "응원가"],
   [226, 2023, "晩餐歌 (만찬가)", "tuki.", "oZpYEEcvu5I", "", "J-pop"],
   [227, 2023, "Smoke (Prod. Dynamicduo, Padi)", "다이나믹 듀오, 이영지", "ZwXzaqzRVi4", "", "힙합"],
+  [228, 2003, "さくらんぼ (사쿠란보)", "大塚愛 (오츠카 아이)", "upODO6OuOOk", "", "J-pop"],
+  [229, 2026, "うさぎラップ (우사기 랩)", "うさぎ (CV: 小澤亜李)", "wFOjWCLPDDM", "", "어린이 애니 OST", "치이카와"],
+  [230, 2012, "추격자 (The Chaser)", "인피니트", "wgmSImDoJNg"],
+  [231, 2018, "Lemon", "米津玄師 (요네즈 켄시)", "SX_ViT4Ra7k", "", "J-pop"],
+  [232, 1995, "残酷な天使のテーゼ (잔혹한 천사의 테제)", "高橋洋子 (다카하시 요코)", "o6wtDPVkKqI", "", "J-pop", "신세기 에반게리온"],
+  [233, 2002, "빠이빠이야", "소명", "KYvKCuNMV8M", "", "트로트"],
+  [234, 2006, "몽키매직", "이박사", "1GHp3GRt2BU", "", "트로트"],
 ];
 const defaultRows = rows.map(([number,year,title,artist,answerVideo,introVideo,genre = 'K-pop',work])=>({
   id:`song-${number}`,year,title,artist,genre,introVideo:introVideo||answerVideo,
