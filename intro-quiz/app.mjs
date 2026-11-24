@@ -2,6 +2,7 @@ import {BANK} from './bank.mjs';
 import {validateBank,pickSongs,publicState} from './core.mjs';
 import {createPlayer,playerError} from './player.mjs';
 const $=s=>document.querySelector(s), KEY='aanah-intro-bank-v1';
+const defaultSongs = new Map(BANK.map(song => [song.id, song]));
 let bank=BANK.map(s=>({...s}));
 try{const saved=localStorage.getItem(KEY);if(saved)bank=validateBank(JSON.parse(saved));}catch{$('#status').textContent='저장된 목록을 불러오지 못해 기본 목록을 열었어요.';}
 let playlist=[],index=-1,phase='idle',stage=0,duration=0,player,playerPromise,active=null,tv=null,lastSeen=0,editing=null;
@@ -73,7 +74,14 @@ $('#easy').onchange=()=>{$('#easyLabel').innerHTML=`${$('#easy').value}<small>�
 $('#stop').onclick=()=>{stop();if(phase==='answer'){phase='question';render();}status('재생을 중지했어요.');};
 $('#reveal').onclick=()=>{stopPlayback();phase='answer';render();status('TV 화면에 정답과 영상이 공개됐어요. 자동재생이 막히면 TV 영상의 재생 버튼을 눌러 주세요.');};
 $('#next').onclick=()=>{stopPlayback();index++;stage=0;duration=0;phase=index>=playlist.length?'done':'question';render();status(phase==='done'?'모든 문제를 마쳤어요!':song().checked?'다음 문제예요. 1단계부터 시작하세요.':'이 곡은 전주 시작 지점 확인이 필요해요.');};
-function renderBank(){const q=$('#search').value.toLocaleLowerCase(),year=$('#bankYear').value;const rows=bank.filter(s=>(!year||s.year===+year)&&`${s.title} ${s.artist}`.toLocaleLowerCase().includes(q));$('#bankCount').textContent=`${bank.length}곡`;$('#songs').innerHTML=rows.map(s=>`<tr><td>${s.year}</td><td><b>${esc(s.title)}</b><small>${esc(s.artist)}</small></td><td>${esc(s.genre)}</td><td>${s.introStart}초</td><td class="${s.checked?'ready':'unchecked'}">${s.checked?'준비 완료':'미리듣기 필요'}</td><td><button data-preview="${esc(s.id)}">3초 미리듣기</button><button data-edit="${esc(s.id)}">설정</button></td></tr>`).join('')||'<tr><td colspan="6">검색 결과가 없어요.</td></tr>';}
+function renderBank(){const q=$('#search').value.toLocaleLowerCase(),year=$('#bankYear').value;const rows=bank.filter(s=>(!year||s.year===+year)&&`${s.title} ${s.artist}`.toLocaleLowerCase().includes(q));$('#bankCount').textContent=`${bank.length}곡`;$('#songs').innerHTML=rows.map(s=>{
+  const original = defaultSongs.get(s.id);
+  const modified = original && Object.keys(original).some(key => key !== 'checked' && s[key] !== original[key]);
+  const kind = !original ? 'added' : modified ? 'modified' : '';
+  const label = kind === 'added' ? '추가곡' : '수정곡';
+  const badge = kind ? ` <span class="song-label">${label}</span>` : '';
+  return `<tr class="${kind}"><td>${s.year}</td><td><b>${esc(s.title)}</b>${badge}<small>${esc(s.artist)}</small></td><td>${esc(s.genre)}</td><td>${s.introStart}초</td><td class="${s.checked?'ready':'unchecked'}">${s.checked?'준비 완료':'미리듣기 필요'}</td><td><button data-preview="${esc(s.id)}">3초 미리듣기</button><button data-edit="${esc(s.id)}">설정</button></td></tr>`;
+}).join('')||'<tr><td colspan="6">검색 결과가 없어요.</td></tr>';}
 $('#search').oninput=renderBank;$('#bankYear').onchange=renderBank;
 $('#songs').onclick=e=>{const b=e.target.closest('button');if(!b)return;const s=bank.find(s=>s.id===(b.dataset.edit||b.dataset.preview));if(!s)return;if(b.dataset.edit)edit(s);else{stop();if(phase==='answer'){phase='question';render();}$('#answerTitle').textContent=`미리듣기: ${s.title}`;$('#answerArtist').textContent=s.artist;playClip(s,3,true);}};
 function edit(s){stop();if(phase==='answer'){phase='question';render();}editing=s.id;const f=$('#editForm');for(const k of ['title','artist','year','genre','introVideo','answerVideo','introStart','answerStart'])f.elements[k].value=k.endsWith('Video')?(s[k]?`https://www.youtube.com/watch?v=${s[k]}`:''):s[k];f.elements.checked.checked=s.checked;$('#editError').textContent='';searchLinks();$('#editor').showModal();}
