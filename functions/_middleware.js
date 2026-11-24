@@ -3,7 +3,7 @@
 // 새 도구를 연결하려면 PREFIXES와 _routes.json 두 곳에 경로를 추가하면 된다.
 
 const UPSTREAM = 'https://ramzthunder.github.io';
-const PREFIXES = ['/forClass', '/jjirashy', '/dida-releases'];
+const PREFIXES = ['/forClass', '/dida-releases'];
 
 // 하단에 "아나!에서 다른 도구 보기" 링크를 붙일 페이지. 화면을 꽉 채우는 채점 도구·돌림판은 레이아웃이 깨져서 뺐다.
 // 값이 'footer'면 페이지에 이미 있는 하단 줄(footer .wrap) 끝에 이어 붙이고, 'body'면 본문 맨 아래에 한 줄 추가한다.
@@ -43,7 +43,8 @@ const DROP_RESPONSE_HEADERS = ['set-cookie', 'via', 'x-github-request-id', 'x-fa
 export async function onRequest({ request, next }) {
   const url = new URL(request.url);
   const matched = PREFIXES.some(p => url.pathname === p || url.pathname.startsWith(p + '/'));
-  if (!matched) return next();
+  const localSticker = url.pathname === '/jjirashy/jjirasi_sticker_maker.html';
+  if (!matched && !localSticker) return next();
 
   if (request.method !== 'GET' && request.method !== 'HEAD') {
     return new Response('Method Not Allowed', { status: 405, headers: { Allow: 'GET, HEAD' } });
@@ -60,7 +61,7 @@ export async function onRequest({ request, next }) {
 
   let upstream;
   try {
-    upstream = await fetch(UPSTREAM + url.pathname + url.search, { method: request.method, headers, redirect: 'manual' });
+    upstream = localSticker ? await next() : await fetch(UPSTREAM + url.pathname + url.search, { method: request.method, headers, redirect: 'manual' });
   } catch {
     return new Response('잠시 연결이 안 됩니다. 조금 뒤 새로고침해 주세요.', { status: 502, headers: { 'content-type': 'text/plain; charset=utf-8' } });
   }

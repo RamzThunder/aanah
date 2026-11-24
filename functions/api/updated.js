@@ -20,7 +20,7 @@ const TOOLS = {
   roulette: { repo: 'forClass', paths: ['논리적인 말하기 수행평가 돌려돌려돌림판.html'] },
   seatgroups: { repo: 'aanah', paths: ['tools/seat-groups.html'] },
   escape: { repo: 'gugeo', paths: [], page: 'index.html' },
-  jjirashy: { repo: 'jjirashy', paths: ['jjirasi_sticker_maker.html'], legacy: /class="ver">v(\d+(?:\.\d+)+)</ },
+  jjirashy: { repo: 'aanah', paths: ['jjirashy/jjirasi_sticker_maker.html'], legacy: /class="ver">v(\d+(?:\.\d+)+)</ },
 };
 const BRANCH = 'main';
 const HOUR = 3600;

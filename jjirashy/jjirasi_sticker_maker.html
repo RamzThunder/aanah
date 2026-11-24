@@ -1,0 +1,2478 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="aanah:version" content="1.1.0">
+<title>찌라시 스티커 생성기 v1.1.0</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/galmuri@latest/dist/galmuri.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/neodgm/neodgm-webfont@latest/neodgm/style.css">
+<script src="https://unpkg.com/ag-psd@latest/dist/bundle.js"></script>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Pretendard,"Malgun Gothic",sans-serif;background:#f3f1ea;color:#111}
+  header{padding:14px 20px;background:#111;color:#ffe600;font-weight:800;font-size:20px}
+  header small{color:#ddd;font-weight:500;font-size:13px;margin-left:10px}
+  .wrap{display:grid;grid-template-columns:390px 1fr;gap:18px;padding:18px;max-width:1500px;margin:0 auto}
+  @media(max-width:900px){.wrap{grid-template-columns:1fr}}
+  .panel{background:#fff;border:2px solid #111;border-radius:10px;padding:14px}
+  label{display:block;font-size:13px;font-weight:700;margin:10px 0 4px}
+  input[type=text],textarea,select{width:100%;padding:8px;border:2px solid #111;border-radius:6px;font:inherit;font-size:14px}
+  textarea{min-height:90px;resize:vertical}
+  .row{display:flex;gap:8px}
+  .row>*{flex:1}
+  button{font:inherit;font-weight:800;padding:10px 12px;border:2px solid #111;border-radius:8px;background:#ffe600;cursor:pointer}
+  button:hover{background:#ffd000}
+  button.dark{background:#111;color:#ffe600}
+  button.small{padding:6px 8px;font-size:12px;background:#fff}
+  button.small:hover{background:#fff7b0}
+  .colors{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px}
+  .colors div{font-size:11px;text-align:center}
+  .colors input{width:100%;height:30px;padding:0;border:2px solid #111;border-radius:6px;background:none}
+  .stage{display:flex;flex-direction:column;gap:12px;align-items:center}
+  canvas#view{max-width:100%;height:auto;border:2px solid #111;background:#ccc;box-shadow:6px 6px 0 #111}
+  .note{font-size:12px;line-height:1.55;color:#444;background:#fffbe0;border:1px dashed #111;border-radius:8px;padding:10px;width:100%}
+  #msg{font-size:13px;font-weight:700;min-height:18px}
+  #tplHint{font-size:12px;color:#b00020;margin-top:4px;min-height:16px}
+  .adjrow{border:1px solid #bbb;border-radius:6px;padding:6px 8px;margin-top:6px}
+  .adjrow b{font-size:12px}
+  .adjrow div{display:grid;grid-template-columns:48px 1fr 44px;align-items:center;gap:6px;font-size:12px}
+  .adjrow input[type=range]{width:100%;padding:0}
+  .adjrow .v{text-align:right}
+  header .ver{display:inline-block;margin-left:8px;padding:2px 8px;border:2px solid #ffe600;border-radius:999px;font-size:12px;font-weight:800;vertical-align:middle;color:#ffe600}
+  .gal{max-width:1500px;margin:0 auto;padding:18px 18px 0}
+  .gal .panel{padding:10px 12px}
+  .gal h2{margin:0 0 8px;font-size:14px;font-weight:800;display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+  .gal h2 .randbtns{margin-left:auto;display:flex;gap:6px}
+  .gal h2 .randbtns button{padding:6px 12px;font-size:13px}
+  .gal h2 span{font-weight:500;color:#666;font-size:12px;margin-left:6px}
+  .tplgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:8px}
+  @media(min-width:1000px){.tplgrid{grid-template-columns:repeat(7,1fr)}}
+  .tplcard{display:flex;flex-direction:column;gap:4px;padding:5px;font-size:12px;background:#fff;border:2px solid #111;border-radius:8px;text-align:center}
+  .tplcard:hover{background:#fff7b0}
+  .tplcard.on{background:#ffe600;box-shadow:3px 3px 0 #111}
+  .tplcard .th{height:88px;display:flex;align-items:center;justify-content:center;background:#e6e3da;border-radius:4px;overflow:hidden}
+  .tplcard canvas{max-width:100%;max-height:100%;display:block}
+  .tplcard.slot{position:relative}
+  .tplcard.slot.empty .th{background:none;border:2px dashed #999;color:#777;font-size:13px;line-height:1.4}
+  .tplcard.slot.empty.ready .th{border-color:#111;color:#111;background:#fff7b0}
+  .tplcard .del{position:absolute;top:2px;right:2px;width:20px;height:20px;line-height:18px;border-radius:50%;background:#111;color:#fff;font-size:12px;display:none}
+  .tplcard.slot:not(.empty):hover .del{display:block}
+  @media(min-width:901px){.stage{position:sticky;top:12px;align-self:start}}
+  canvas#view{max-height:calc(100vh - 40px)}
+  .curTpl{font-size:15px;font-weight:800;margin:0 0 2px}
+  details.fold{margin-top:12px;border:1px solid #bbb;border-radius:8px;padding:6px 10px}
+  details.fold summary{cursor:pointer;font-size:13px;font-weight:700}
+  details.fold[open] summary{margin-bottom:4px}
+  details.note summary{cursor:pointer;font-weight:700}
+</style>
+</head>
+<body>
+<header>찌라시 스티커 생성기<span class="ver">v1.1.0</span><small>틀 25종 + 랜덤 찌라시 · 문구 입력 → 미리보기 → PNG 저장·복사 / PSD(글자 수정 가능)</small></header>
+
+<div class="gal">
+  <div class="panel">
+    <h2>틀 고르기<span>그림을 눌러 바로 바꿔요 · 지금 적은 문구와 색으로 미리 보여줘요</span>
+      <span class="randbtns"><button type="button" id="randGen" class="dark">🎲 랜덤 찌라시</button><button type="button" id="randAll">🔀 있는 틀 뽑기</button><button type="button" id="randText" class="small">✍ 문구만 랜덤</button></span></h2>
+    <div class="tplgrid" id="tplbtns"></div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="panel">
+    <div class="curTpl" id="curTpl"></div>
+    <div id="tplHint"></div>
+
+<div id="stdFields">
+    <label>제목</label>
+    <textarea id="title" style="min-height:52px">야구 끊습니다</textarea>
+    <label>부제</label>
+    <input type="text" id="sub" value="내일 경기 전까지만 연락 받습니다">
+<div id="basicBodyFields">
+    <label>본문 왼쪽</label>
+    <textarea id="bodyLeft">※ 무사 만루에 무득점 실존
+※ 안 본다 해놓고 문자중계 켬</textarea>
+    <label>본문 오른쪽</label>
+    <textarea id="bodyRight">※ 이겨도 화남 / 지면 더 화남
+※ 내일은 다르겠지 또 속는 중</textarea>
+</div>
+<div id="bodyWrap">
+    <label>본문</label>
+    <textarea id="body">※ 무사 만루에 무득점 실존
+※ 안 본다 해놓고 문자중계 켬
+※ 이겨도 화남 / 지면 더 화남</textarea>
+</div>
+</div>
+<div id="monoFields" style="display:none">
+    <label>윗줄</label>
+    <input type="text" id="monoTop" value="☞ 야구 안 본다던 사람 현재 접속 중 ☜">
+    <label>왼쪽 3줄</label>
+    <textarea id="monoLeft" style="min-height:70px">안 본다
+껐다가
+다시 켬</textarea>
+    <label>가운데 단어</label>
+    <input type="text" id="monoCenter" value="잔루">
+    <label>오른쪽 3줄</label>
+    <textarea id="monoRight" style="min-height:70px">출루는
+했는데
+왜 못 와</textarea>
+    <label>검정 바 문구</label>
+    <input type="text" id="monoBar" value="베이스에 사람 두고 퇴근하지 마세요">
+</div>
+<div id="patFields" style="display:none">
+    <label>윗줄</label>
+    <input type="text" id="p7Top" value="득점권 타격 실종 신고">
+    <label style="font-weight:600"><input type="checkbox" id="p7Slash" checked> 글자 사이에 / 자동 넣기</label>
+    <label>큰 글씨</label>
+    <textarea id="p7Big" style="min-height:60px">안타를 치라고 했지
+병살을 치라고 했냐</textarea>
+    <label>배지 글자</label>
+    <input type="text" id="p7Badge" value="환장함">
+    <label>테두리 문자</label>
+    <select id="p7Glyph"><option>★</option><option>✱</option><option>■</option><option>✚</option><option>◆</option></select>
+</div>
+<div id="gridFields" style="display:none">
+    <label>헤더 제목</label>
+    <input type="text" id="p8Head" value="이걸 또 보고 계십니까?">
+    <label>배지 글자</label>
+    <input type="text" id="p8Badge" value="내 얘기">
+    <label>큰 글씨</label>
+    <textarea id="p8Lines" style="min-height:60px">볼넷볼넷 또볼넷 볼넷볼넷
+스트라이크는 유료인가요</textarea>
+    <label>▶ 줄</label>
+    <input type="text" id="p8Bullet" value="▶ 리모컨 내려놓으실 분 ▶ 내일 또 보실 분">
+</div>
+<div id="dynFields" style="display:none"></div>
+<div id="dynColors" style="display:none"></div>
+<div id="monoColors" style="display:none">
+    <div class="row">
+      <div><label>잉크색</label><input type="color" id="monoInk" value="#111111" style="width:100%;height:34px;padding:0;border:2px solid #111;border-radius:6px"></div>
+      <div><label>종이색</label><input type="color" id="monoPaper" value="#ffffff" style="width:100%;height:34px;padding:0;border:2px solid #111;border-radius:6px"></div>
+    </div>
+</div>
+<div id="phoneWrap">
+    <label>전화번호</label>
+    <input type="text" id="phone" value="☎ 010-1234-5678">
+</div>
+    <div class="row">
+      <div id="decoWrap"><label>장식 문자 (비우면 없음)</label><input type="text" id="deco" value="★"></div>
+      <div><label>크기</label>
+        <select id="size">
+          <option value="1200x600">가로 1200×600</option>
+          <option value="1200x360">긴 띠 1200×360</option>
+          <option value="1000x600">흑백 3단용 1000×600</option>
+          <option value="1400x580">패턴 테두리용 1400×580</option>
+          <option value="1200x750">노랑 속보용 1200×750</option>
+          <option value="1200x700">검정 둥근 틀용 1200×700</option>
+          <option value="1200x800">가로 1200×800</option>
+          <option value="1200x840">빨강 간판용 1200×840</option>
+          <option value="900x1000">외계인 노랑용 900×1000</option>
+          <option value="600x800">핑크 폭발 세로용 600×800</option>
+          <option value="600x850">흑백 전단지용 600×850</option>
+          <option value="1000x700">타원용 1000×700</option>
+          <option value="900x900">정사각 900×900</option>
+          <option value="600x900">세로 600×900</option>
+        </select>
+      </div>
+    </div>
+
+<div id="palBlock">
+    <label>색 조합</label>
+    <div class="row">
+      <select id="palSel"></select>
+      <button id="rand" class="dark" style="flex:0 0 auto">🎲 랜덤</button>
+    </div>
+    <div class="colors" id="colors"></div>
+</div>
+
+    <label>글꼴 고르기 (제목 / 본문)</label>
+    <div class="row"><select id="fontT"></select><select id="fontB"></select></div>
+    <div class="row" style="margin-top:6px">
+      <button type="button" id="lfLocal" class="small">💻 내 컴퓨터 글꼴</button>
+      <button type="button" id="lfFile" class="small">📁 글꼴 파일 추가</button>
+    </div>
+    <input type="file" id="lfInput" accept=".ttf,.otf,.ttc,.woff,.woff2" multiple style="display:none">
+    <div id="lfPick" style="display:none;margin-top:6px">
+      <input type="text" id="lfSearch" list="lfList" placeholder="글꼴 이름을 적어서 고르세요">
+      <datalist id="lfList"></datalist>
+    </div>
+    <div id="lfMsg" style="font-size:12px;color:#444;margin-top:4px;min-height:0"></div>
+
+    <details class="fold">
+      <summary>글자 크기 조절</summary>
+      <div class="adjrow"><b>전체 글자 채우기</b>
+        <div><span>채움</span><input type="range" id="fillAll" min="80" max="140" value="115"><span class="v" id="fillAllV">115%</span></div>
+      </div>
+      <div style="text-align:right;margin-top:6px"><button id="adjReset" style="padding:4px 10px;font-size:12px">초기화</button></div>
+      <div id="adjList"></div>
+    </details>
+    <details class="fold">
+      <summary>PSD 글꼴 이름 (포토샵용)</summary>
+      <div class="row" style="margin-top:6px">
+        <input type="text" id="psTitle" value="Pretendard-ExtraBold" title="제목용">
+        <input type="text" id="psBody" value="Pretendard-Bold" title="본문용">
+      </div>
+      <div style="font-size:11px;color:#666;margin-top:4px">위 글꼴을 고르면 자동으로 바뀌어요. 왼쪽: 제목·부제·전화번호 / 오른쪽: 본문. 다른 글꼴을 쓰려면 포토샵에 설치된 PostScript 이름을 그대로 적으세요.</div>
+    </details>
+
+    <div class="row" style="margin-top:14px">
+      <button id="dlPng">PNG 저장</button>
+      <button id="cpPng">PNG 복사</button>
+      <button id="dlPsd" class="dark">PSD 저장</button>
+    </div>
+    <div id="msg"></div>
+  </div>
+
+  <div class="stage">
+    <div class="note" id="regionEditor">
+      <b>영역 편집</b> · Shift를 누른 채 클릭하면 여러 영역을 선택합니다. 선택한 영역은 함께 이동합니다. Shift+드래그: 가로·세로 이동 고정 · Ctrl/Cmd+손잡이 드래그: 비율 유지. 버튼은 클릭할 때마다 선택·해제됩니다. Ctrl/Cmd+Z: 실행 취소 · Ctrl/Cmd+Shift+Z: 다시 실행.
+      <div id="regionSelect" role="group" aria-label="편집할 영역" style="display:flex;flex-wrap:wrap;gap:5px;margin-top:8px"></div>
+      <div class="row" style="margin-top:6px"><button type="button" class="small" id="regionReset">선택 영역 초기화</button><button type="button" class="small" id="regionsReset">이 틀 배치 초기화</button></div>
+    </div>
+    <div style="position:relative;max-width:100%;line-height:0"><canvas id="view"></canvas><canvas id="regionOverlay" style="position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:default" aria-label="미리보기 영역 이동 및 크기 조절"></canvas></div>
+    <details class="note">
+      <summary>PSD 파일 안내</summary>
+      <b>PSD 구성</b>:배경·박스·폭발·타원 같은 도형은 이미지 레이어, 제목·부제·본문·전화번호·장식은 <b>수정 가능한 문자 레이어</b>예요. 제목 아래에는 그림자 문자 레이어가 하나 더 있어요.<br>
+      포토샵에서 열 때 글꼴이 없다는 안내가 뜨면 글꼴을 설치하거나 다른 글꼴로 바꾸세요. 제목 폭을 박스에 맞춘 값은 <b>가로 비율(장평)</b>로 들어 있어서, 글자를 고친 뒤에는 문자 패널의 가로 비율을 다시 맞추면 돼요.<br>
+      큰 글씨 외곽선(바깥 검정·안쪽 흰색 등)은 이미지 레이어라서, 글자를 고치면 외곽선은 다시 만들어야 해요.<br>
+      글꼴은 인터넷에서 불러오고, PSD 글꼴 이름은 추측값일 수 있으니 포토샵 글꼴 목록의 이름과 다르면 직접 고쳐 적으세요.<br>
+      이 파일은 인터넷이 연결된 상태에서 열어야 PSD 저장 기능이 작동해요.
+    </details>
+  </div>
+</div>
+
+<script>
+const PAL = [
+  {n:'노랑 충격', c:{bg:'#ffe600',titleBg:'#e8112d',titleFg:'#fff200',subBg:'#1b1bd6',subFg:'#ffffff',bodyBg:'#ffffff',bodyFg:'#111111',phoneBg:'#111111',phoneFg:'#ffe600'}},
+  {n:'핑크 시안', c:{bg:'#ff3ea5',titleBg:'#00d4ff',titleFg:'#1a0b6b',subBg:'#fff200',subFg:'#d6003f',bodyBg:'#ffffff',bodyFg:'#1a0b6b',phoneBg:'#1a0b6b',phoneFg:'#ff9bd0'}},
+  {n:'검정 라임', c:{bg:'#111111',titleBg:'#111111',titleFg:'#b6ff00',subBg:'#ff2bd6',subFg:'#111111',bodyBg:'#1d1d1d',bodyFg:'#00f0ff',phoneBg:'#b6ff00',phoneFg:'#111111'}},
+  {n:'주황 블루', c:{bg:'#ff7a00',titleBg:'#1536ff',titleFg:'#fff200',subBg:'#fff200',subFg:'#1536ff',bodyBg:'#ffffff',bodyFg:'#111111',phoneBg:'#e8112d',phoneFg:'#ffffff'}},
+  {n:'그린 마젠타', c:{bg:'#1fd655',titleBg:'#ff1e8c',titleFg:'#ffffff',subBg:'#111111',subFg:'#ffe600',bodyBg:'#ffffff',bodyFg:'#d6003f',phoneBg:'#ffe600',phoneFg:'#111111'}},
+  {n:'빨강 형광', c:{bg:'#ff1744',titleBg:'#fff200',titleFg:'#e60023',subBg:'#111111',subFg:'#fff200',bodyBg:'#fff200',bodyFg:'#111111',phoneBg:'#ffffff',phoneFg:'#e60023'}},
+  {n:'파랑 하양', c:{bg:'#1546ff',titleBg:'#ffffff',titleFg:'#1546ff',subBg:'#0a1f8f',subFg:'#ffffff',bodyBg:'#ffffff',bodyFg:'#0a1f8f',phoneBg:'#ffffff',phoneFg:'#1546ff'}},
+  {n:'하양 파랑', c:{bg:'#ffffff',titleBg:'#1546ff',titleFg:'#ffffff',subBg:'#00b4ff',subFg:'#ffffff',bodyBg:'#eef3ff',bodyFg:'#0a1f8f',phoneBg:'#0a1f8f',phoneFg:'#ffffff'}},
+  {n:'보라 레몬', c:{bg:'#7b2cff',titleBg:'#fff200',titleFg:'#7b2cff',subBg:'#ff2b7a',subFg:'#ffffff',bodyBg:'#ffffff',bodyFg:'#2a0a6b',phoneBg:'#111111',phoneFg:'#fff200'}},
+  {n:'민트 빨강', c:{bg:'#2ee6c8',titleBg:'#e8112d',titleFg:'#ffffff',subBg:'#111111',subFg:'#2ee6c8',bodyBg:'#ffffff',bodyFg:'#111111',phoneBg:'#fff200',phoneFg:'#e8112d'}},
+  {n:'크림 레트로', c:{bg:'#f6e7c1',titleBg:'#d7261e',titleFg:'#f6e7c1',subBg:'#1f4e9c',subFg:'#f6e7c1',bodyBg:'#fffaf0',bodyFg:'#222222',phoneBg:'#222222',phoneFg:'#f6c400'}}
+];
+const TPL = {
+  basic:   {n:'기본 박스', size:'1200x600', hint:''},
+  strip:   {n:'한 줄 띠', size:'1200x360', hint:''},
+  vertical:{n:'세로 광고', size:'600x900',  hint:''},
+  burst:   {n:'폭발', size:'900x900',  hint:'제목이 길면 가운데 띄어쓰기에서 자동으로 두 줄이 돼요.'},
+  oval:    {n:'타원', size:'1000x700', hint:''},
+  mono:    {n:'흑백 3단', size:'1000x600', fontT:'pretendard', fontB:'pretendard', hint:''},
+  pattern: {n:'패턴 테두리', size:'1400x580', fontT:'blackhan', fontB:'blackhan', hint:''},
+  grid:    {n:'검정 헤더', size:'1200x600', fontT:'pretendard', fontB:'galmuri', hint:''},
+  mart:    {n:'마트 라벨', size:'1200x800', fontT:'pretendard', fontB:'galmuri', hint:''},
+  pinkq:   {n:'핑크 폭발 인용', size:'1200x800', fontT:'blackhan', fontB:'pretendard', hint:''},
+  news:    {n:'노랑 속보', size:'1200x750', fontT:'blackhan', fontB:'blackhan', hint:''},
+  blackround:{n:'검정 둥근 틀', size:'1200x700', fontT:'blackhan', fontB:'blackhan', hint:''},
+  navy:    {n:'남색 추천', size:'1200x800', fontT:'blackhan', fontB:'pretendard', hint:''},
+  yslash:  {n:'노랑 슬래시', size:'1200x800', fontT:'blackhan', fontB:'pretendard', hint:''},
+  pinkv:   {n:'핑크 폭발 세로', size:'600x800', fontT:'blackhan', fontB:'pretendard', hint:''},
+  alien:   {n:'외계인 노랑', size:'900x1000', fontT:'blackhan', fontB:'pretendard', hint:'고정 외계인 그림이에요. 영역 편집에서 위치와 크기를 바꿀 수 있어요.'},
+  redsign: {n:'빨강 간판', size:'1200x840', fontT:'blackhan', fontB:'pretendard', hint:''},
+  greenintro:{n:'초록 소개', size:'1200x800', fontT:'blackhan', fontB:'pretendard', hint:''},
+  bluev:   {n:'파랑 세로 안내', size:'600x900', fontT:'blackhan', fontB:'pretendard', hint:''},
+  rockeff: {n:'흑백 효능', size:'1200x800', fontT:'blackhan', fontB:'pretendard', hint:''},
+  greenbanner:{n:'초록 구독 배너', size:'1200x700', fontT:'blackhan', fontB:'pretendard', hint:'제목은 글자마다 동그라미 하나씩 들어가요. 양옆 세로 글씨는 한 줄이 한 기둥이에요.'},
+  flyer:   {n:'흑백 전단지', size:'600x850', fontT:'blackhan', fontB:'pretendard', hint:''},
+  bluestar:{n:'파랑 별 세로', size:'600x900', fontT:'blackhan', fontB:'pretendard', hint:''},
+  pinkhr:  {n:'핑크 남색 명함', size:'1200x750', fontT:'blackhan', fontB:'pretendard', hint:''},
+  yrecruit:{n:'노랑 긴급모집', size:'1200x750', fontT:'blackhan', fontB:'pretendard', hint:'제목은 글자 사이에 / 가 자동으로 들어가요.'}
+};
+const NT = {
+  news:{
+    colors:[['bg','바탕','#ffe600'],['ink','글자·테두리','#111111'],['red','강조','#e8112d'],['navy','안내 띠','#1f2a6b'],['white','흰색','#ffffff']],
+    fields:[['badge','빨간 타원 뱃지 글자','text',"충격"],['title','큰 제목','text',"무사 만루 무득점"],['bar','검정 줄 문구','text',"출루는 했는데 귀가는 못 함"],['acc','빨강 박스 문구','text',"실화냐"],['band','남색 띠 문구','text',"※ 잔루는 적립해도 포인트가 되지 않습니다 ※"],['box','왼쪽 아래 박스','area',"득점 기대치\n100%\n증발"]]
+  },
+  blackround:{
+    colors:[['paper','바깥 종이','#ffffff'],['frame','검정 틀','#0a0a0a'],['txt','흰 글자·선','#ffffff'],['panel','흰 패널','#ffffff'],['pill','알약','#0a0a0a'],['pillTxt','알약 글자','#ffffff'],['badge','폭발 뱃지','#ffffff'],['badgeTxt','뱃지 글자','#0a0a0a']],
+    fields:[['title','제목','text',"잔루를 아십니까?"],['badgeT','폭발 뱃지 글자','text',"환장"],['p1','알약 1','text',"볼넷"],['p2','알약 2','text',"병살"],['p3','알약 3','text',"삼진"],['big','큰 글씨','text',"이걸 한 경기에 다 한다!!"],['line1','한 줄 앞부분','text',"이 모든 고통이!!"],['hl','한 줄 강조','text',"♥야구♥"],['line2','한 줄 뒷부분','text',"에 있다!!"],['grid','격자 박스','area',"안본다며\n또보는중"],['small','작은 줄','text',"▼ 내일도 같은 시간에 화내러 오기 ▼"]]
+  },
+  mart:{
+    colors:[['paper','바탕','#ffffff'],['green','초록','#40e050'],['ink','글자·바코드','#222222'],['num','가격 숫자','#444444']],
+    fields:[['l1','위 첫 줄','text',"볼넷  실책  병살  한 경기  꽉 채운  종합선물세트"],['l2','위 둘째 줄','text',"원산지: 오늘 경기"],['th1','표 머리 1','text',"제조 년.월.일"],['th2','표 머리 2','text',"희망 유통기한"],['th3','표 머리 3','text',"잔 루(명)"],['th4','표 머리 4','text',"한 숨(회)"],['code','바코드 아래 숫자','text',"1234 5678 9012 3456"],['plabel','가격 칸 제목','text',"분 노(원)"],['price','가격','text',"9900"],['bar','맨 아래 초록 바','text',"희망재고없음"]]
+  },
+  pinkq:{
+    colors:[['paper','바깥 종이','#ffffff'],['bg','어두운 바탕','#222222'],['pink','핑크','#ff3ea5'],['white','흰색','#ffffff'],['black','검정 박스·글자','#0a0a0a']],
+    fields:[['badgeT','폭발 뱃지 글자','text',"충격"],['title','큰 제목','text',"기대X배신"],['quote1','인용 문구 1','text',"“이번엔 진짜 점수 나겠지…”"],['big','큰 흰 글씨','text',"만루X무득점"],['quote2','인용 문구 2','text',"“설마 여기서 병살은 아니겠지…”"],['tag','검정 박스 1','text',"설/마/가/또 (ㅠ▽ㅠ)"],['box2','검정 박스 2','area',"득점권의♥ 금지된 기대…\n한번 믿으면 다음 이닝도 믿음"],['ell','핑크 타원','area',"♥야구♥에\n또 속은 사람들의 모임"],['bl','아래 핑크 박스 왼쪽','area',"출루는 풍년 득점은 흉년\n베이스에 두고 온 사람 찾습니다"]]
+  },
+  navy:{
+    colors:[['bg','바탕','#1d1d8f'],['yellow','제목 박스','#ffd400'],['red','강조 글자','#e8112d'],['black','검정 박스','#0a0a0a'],['white','흰색','#ffffff'],['ink','외곽선·글자','#111111']],
+    fields:[['title','제목','text',"왜또봤지"],['quote','얇은 한 줄 문구','text',"나는 오늘 야구를 안 볼 거야. 일단 선발만 확인하고."],['big','큰 글씨','text',"[ 야구 안 본다 선언문 ]"],['small','작은 줄','text',"본 선언은 첫 안타 발생 시 사전 통보 없이 철회될 수 있습니다 ♪"],['rec','추천 제목','area',"이런 분들 혹시\n본인인가요 :"],['list','추천 목록','area',"중계 끄고 문자중계 보는 분\n하이라이트 대신 한숨 보는 분\n내일 선발은 이미 아는 분"],['bar','맨 아래 흰 바 문구','text',"탈야구 상담 중 경기 시작하면 끊습니다 010-1234-5678"]]
+  },
+  yslash:{
+    colors:[['bg','바탕','#ffe600'],['navy','제목·띠','#1c1c7a'],['red','강조','#e8112d'],['white','흰색','#ffffff'],['ink','글자·테두리','#111111']],
+    fields:[['title','제목','text',"잔루상회"],['badge','빨간 타원 뱃지','area',"득점 품절\n출루 정상"],['band','남색 띠 문구','text',"출루 가능 - 진루 문의 - 득점 지연 - 잔루 마감"],['tag','빨강 한 줄','text',"베이스에 사람 있습니다♪"],['para','빨강 본문','area',"아니 출루를 했으면 집에 와야죠\n베이스가 무슨 전세도 아니고\n이닝마다 사람을 두고 오시면\n점수는 대체 누가 내나요"],['phone2','상담 전화','text',"접수) 010-1234-5678"],['slogan','큰 빨강 슬로건','area',"볼넷\\병살\\잔루\n환장의 조합!!"]]
+  },
+  pinkv:{
+    colors:[['bg','바탕','#d9578f'],['white','큰 글씨·폭발','#ffffff'],['ink','폭발 안 글자','#111111']],
+    fields:[['top','윗 글씨','text',"무사만루"],['badge','폭발 안 글자','text',"설마"],['bottom','아래 글씨','text',"아무일없음"]]
+  },
+  alien:{
+    colors:[['bg','바탕','#f2d36b'],['ink','검정 글자','#111111'],['red','강조 글자','#e8112d']],
+    fields:[['trait','[ ] 사람이 · 빈칸에 들어갈 문구','text','야구 안 보는']]
+  },
+  redsign:{
+    colors:[['bg','바탕','#d9412b'],['ink','검정','#111111'],['acc','검정 칸 안 글자','#d9412b']],
+    fields:[['badge','왼쪽 위 동그라미','text',"급구"],['pre','앞 문구','area',"득점권에서\n사라진"],['tag','작은 타원','area',"안타\n수배"],['name','큰 이름','text',"적시타"],['vert','오른쪽 세로 글씨','text',"五里霧中"],['pill','가운데 한 줄','text',"주자는 나가 있는데 홈으로 돌아온 사람을 찾을 수 없습니다"],['box1','검정 박스','area',"출루하면\n기대하면\n병살까지"],['box2','검정 박스 안 작은 칸','area',"삼진\n뜬공\n병살"],['star','별 폭발','area',"한 점\n그게\n어렵냐"]]
+  },
+  greenintro:{
+    colors:[['bg','바탕','#e4e4e4'],['green','초록','#3f9b3f'],['white','흰색','#ffffff']],
+    fields:[['t1','왼쪽 위','text',"전국 야구팬 공통 증상"],['name','이름','text',"야구팬"],['t2','오른쪽 위','text',"안 본다고만 십 년째"],['big','큰 글씨','text',"또속았네"],['para','큰 글씨 아래','area',"공 하나에 하루 기분이\n박살날 수 있습니까?"],['small','작은 줄','text',"오늘도 중계 종료와 함께 천장을 바라보는 사람"],['hanja','아래 큰 글씨','text',"喜怒哀樂"],['q1','오른쪽 첫 줄','text',"어떻게 매번 다른 방식으로 속는지 궁금하지 않으신가요?"],['q2','오른쪽 둘째 줄','text',"분명 어제도 다시는 안 본다고 했습니다"],['list','목록 상자','area',"• 이기는데 왜 불안하죠?\n• 투아웃인데 왜 안 끝나죠?\n• 안 본다면서 왜 켰죠?"],['obj','오른쪽 타원','area',"내 얘기\n맞음"],['foot','맨 아래 줄','text',"야구는 끝나도 한숨은 끝나지 않는다"]]
+  },
+  bluev:{
+    colors:[['paper','종이','#ffffff'],['blue','파랑','#2b45a8'],['white','파랑 칸 안 글자','#ffffff']],
+    fields:[['title','제목','text',"또 보다 또 속다"],['sub','제목 아래 상자','text',"야구를 끊은 게 아니라 이닝 사이 광고를 본 겁니다"],['burst','폭발 안 글자','text',"그런데"],['head','오른쪽 제목','text',"내일은 다를 것 같다!"],['bullets','오른쪽 목록','area',"· 안 본다면서 라인업은 봅니다\n· 졌는데 경우의 수는 셉니다\n· 이기면 역시 야구가 최고랍니다"],['pill','가운데 알약 줄','text',"야구팬 가라사대 \"한 점만 더\" — 아까도 했던 말"],['list','왼쪽 목록','area',"▶ 편하게 이기면 안 되나요?\n▶ 삼자범퇴는 품절인가요?\n▶ 꼭 이렇게 이겨야 하나요?"],['box','파랑 상자','area',"탈야구 선언\n유효기간 한 이닝"],['stars','별 줄','text',"★★★★★★"],['o1','타원 1','text',"왜 쳐"],['o2','타원 2','text',"왜 안 쳐"],['o3','타원 3','text',"왜 뛰어"]]
+  },
+  rockeff:{
+    colors:[['paper','종이','#ffffff'],['ink','잉크','#111111']],
+    fields:[['cbadge','동그라미 글자','text',"야"],['title','제목','text',"구의 폐해"],['q','오른쪽 위 질문','text',"평온했던 저녁을 기억하십니까?"],['bar','검정 알약 줄','text',"경기 전에는 분명 기분이 괜찮았는데 지금은 천장과 대화하고 있습니다!!!"],['c2','아래 동그라미 글자','text',"怒"],['eq','동그라미 옆 줄','text',"와 야구는 가까운 사이입니다"],['para','아래 본문','area',"리드 중인데 마음이 불편하고\n투아웃인데 끝날 생각이 없고\n풀카운트마다 방을 서성이다\n결국 이겨놓고도 한마디 합니다\n꼭 이렇게 이겨야 했냐고"],['rbox','오른쪽 상자','area',"야구를 보기 전의 나와\n보고 난 뒤의 내가\n서로 초면인 상황"],['rname','오른쪽 이름','text',"또야구"],['rsmall','이름 아래','area',"내일도\n같은시간"]]
+  },
+  greenbanner:{
+    colors:[['green','초록','#1f7a2a'],['white','흰색','#ffffff']],
+    fields:[['lstack','왼쪽 세로 글씨','area',"한숨은\n무제한\n리필중"],['title','동그라미 제목','text',"야구원망"],['rstack','오른쪽 세로 글씨','area',"안본다\n해놓고\n접속중"],['pill','윗 상자 한 줄','text',"♣ 중계만 켜면!! 즉시 《평정심》회수합니다!! ♣"],['emblem','왼쪽 동그라미 그림','text',"🫠"],['para1','초록 상자 왼쪽','area',"초구는 왜 쳤어요?\n그 공은 왜 안 쳤어요?\n거기서는 왜 뛰었어요?\n지금은 왜 안 바꿔요?\n아까는 왜 바꿨는데요?"],['vert','가운데 세로 글씨','text',"답답함"],['para2','초록 상자 오른쪽','area',"분명 안 본다고 했는데\n점수만 잠깐 확인했는데\n어쩌다 구종까지 보고 있죠\n그런데 내일은 몇 시죠\n아니 그냥 궁금해서요"],['foot','맨 아래 줄','text',"어제도-오늘도-안본다며-또본다"]]
+  },
+  flyer:{
+    colors:[['paper','종이','#ffffff'],['ink','잉크','#111111'],['gray','동그라미·폭발 회색','#808080'],['light','아래 띠 회색','#d9d9d9']],
+    fields:[['c1','동그라미 1','text',"득"],['c2','동그라미 2','text',"점"],['title','큰 제목','text',"찾습니다"],['from','화살표 앞','text',"출루"],['to','화살표 뒤','text',"행방불명"],['burst','폭발 띠 글자','text',"베이스잔류인원귀가요망"],['box','작은 상자','text',"잔루보관소"],['recruit','상자 옆 줄','text',"※적시타 목격자 급구※"]]
+  },
+  bluestar:{
+    colors:[['bg','위 바탕','#2a2ab8'],['bg2','아래 바탕','#15156e'],['white','큰 글씨','#ffffff'],['burst','폭발','#fff200'],['ink','폭발 안 글자','#111111']],
+    fields:[['top','윗 글씨','text',"삼자범퇴"],['badge','폭발 안 글자','text',"실존"],['bottom','아래 글씨','text',"남의공격때"]]
+  },
+  pinkhr:{
+    colors:[['pink','윗 바탕','#ff1f8e'],['navy','아래 바탕·타원','#2f2fb0'],['white','흰 글자','#ffffff'],['yellow','작은 글자','#fff200']],
+    fields:[['oval','타원 글자','text',"희망"],['title','큰 제목','text',"고문합니다"],['lines','작은 두 줄','area',"무사 만루에서 시작해 잔루 세 명으로 마무리\n고객님의 기대는 다음 이닝으로 이월됩니다"],['band','아래 한 줄','text',"★★잔-루 적립 항/시/가/능★★"],['o1','타원 1','text',"볼넷"],['o2','타원 2','text',"삼진"],['o3','타원 3','text',"병살"],['o4','타원 4','text',"뜬공"],['foot','전화번호 옆','text',"※ 적립된 잔루는 환불 불가 ※"]]
+  },
+  yrecruit:{
+    colors:[['yellow','노랑','#fff200'],['gray','가운데 띠','#e6e6e6'],['red','빨간 동그라미','#e8112d'],['ink','글자','#111111'],['white','동그라미 글자','#ffffff']],
+    fields:[['title','제목','text',"멘탈수습반"],['circle','빨간 동그라미','area',"긴급\n모집"],['lines','가운데 글','area',"무사 만루 무득점 목격자 급구\n이겼는데 화나시는 분도 접수 가능\n응원팀무관/한숨지참/내일또봄"]]
+  }
+};
+/* 흑백 3틀(흑백 3단·패턴 테두리·검정 헤더): [이름, 잉크, 종이] */
+const MONO_PAL = [
+  ['검정 하양','#111111','#ffffff'],
+  ['파랑 하양','#1546ff','#ffffff'],
+  ['하양 파랑','#ffffff','#1546ff'],
+  ['남색 크림','#1c2a7a','#fff6dc'],
+  ['빨강 하양','#d6112d','#ffffff'],
+  ['검정 노랑','#111111','#ffe600'],
+  ['검정 핑크','#111111','#ff8ccc'],
+  ['라임 검정','#b6ff00','#111111'],
+  ['초록 하양','#0a7a3a','#f4fff0'],
+  ['보라 레몬','#4a1a9e','#fff7a8'],
+  ['갈색 크림','#3a2412','#f6e7c1']
+];
+/* 칸별 색 틀: [이름, NT[틀].colors 순서대로 색] — 맨 앞 '기본'은 자동으로 붙어요 */
+const NT_PAL = {
+  // bg, ink, red, navy, white
+  news:[
+    ['파랑 하양', ['#ffffff','#0a1f8f','#1546ff','#1e90ff','#ffffff']],
+    ['핑크 블루', ['#ff7ac0','#111111','#1536ff','#7b2cff','#ffffff']],
+    ['민트 빨강', ['#2ee6c8','#111111','#e8112d','#1f2a6b','#ffffff']],
+    ['주황 블루', ['#ff8a00','#111111','#1536ff','#e8112d','#ffffff']],
+    ['크림 레트로', ['#f6e7c1','#222222','#d7261e','#1f4e9c','#fffaf0']],
+    ['흑백', ['#ffffff','#111111','#111111','#555555','#ffffff']]
+  ],
+  // paper, frame, txt, panel, pill, pillTxt, badge, badgeTxt
+  blackround:[
+    ['파랑 하양', ['#ffffff','#1546ff','#ffffff','#ffffff','#1546ff','#ffffff','#ffffff','#1546ff']],
+    ['남색 노랑', ['#ffffff','#1a237e','#ffe600','#ffffff','#1a237e','#ffe600','#ffe600','#1a237e']],
+    ['빨강', ['#ffffff','#c8102e','#ffffff','#ffffff','#111111','#ffffff','#ffe600','#c8102e']],
+    ['보라 라임', ['#ffffff','#3d1590','#ffffff','#b6ff00','#3d1590','#b6ff00','#b6ff00','#3d1590']],
+    ['초록', ['#ffffff','#0a6b3a','#ffffff','#ffffff','#0a6b3a','#ffffff','#ffe600','#0a6b3a']],
+    ['핑크', ['#ffffff','#ff2b8a','#ffffff','#ffffff','#111111','#ffffff','#fff200','#111111']]
+  ],
+  // paper, green, ink, num
+  mart:[
+    ['파랑 하양', ['#ffffff','#1546ff','#0a1f8f','#1546ff']],
+    ['빨강', ['#ffffff','#e8112d','#222222','#e8112d']],
+    ['주황', ['#fffaf0','#ff8a00','#222222','#444444']],
+    ['보라', ['#ffffff','#7b2cff','#222222','#444444']],
+    ['핑크', ['#ffffff','#ff3ea5','#222222','#444444']],
+    ['검정 노랑', ['#ffe600','#111111','#111111','#111111']]
+  ],
+  // paper, bg, pink, white, black
+  pinkq:[
+    ['파랑 하양', ['#ffffff','#0a1f8f','#2f6bff','#ffffff','#0a0a0a']],
+    ['빨강', ['#ffffff','#1a1a1a','#e8112d','#ffffff','#0a0a0a']],
+    ['보라', ['#ffffff','#1a0b3d','#9b30ff','#ffffff','#0a0a0a']],
+    ['주황', ['#ffffff','#222222','#ff6a00','#ffffff','#0a0a0a']],
+    ['청록', ['#ffffff','#0b2b2b','#00a99d','#ffffff','#0a0a0a']]
+  ],
+  // bg, yellow, red, black, white, ink
+  navy:[
+    ['파랑 하양', ['#1546ff','#ffffff','#1546ff','#0a0f3d','#ffffff','#0a0f3d']],
+    ['빨강 노랑', ['#c8102e','#ffe600','#c8102e','#111111','#ffffff','#111111']],
+    ['검정 형광', ['#111111','#b6ff00','#ff2bd6','#000000','#ffffff','#111111']],
+    ['초록', ['#0a6b3a','#ffe600','#e8112d','#0a0a0a','#ffffff','#111111']],
+    ['보라 핑크', ['#4a1a9e','#ff9bd0','#e8112d','#0a0a0a','#ffffff','#111111']]
+  ],
+  // bg, navy, red, white, ink
+  yslash:[
+    ['파랑 하양', ['#ffffff','#1546ff','#0a1f8f','#ffffff','#111111']],
+    ['핑크', ['#ff9bd0','#1c1c7a','#e8112d','#ffffff','#111111']],
+    ['민트', ['#2ee6c8','#1c1c7a','#e8112d','#ffffff','#111111']],
+    ['연두', ['#c8ff4a','#1c1c7a','#e8112d','#ffffff','#111111']],
+    ['크림 레트로', ['#f6e7c1','#1f4e9c','#d7261e','#fffaf0','#222222']]
+  ],
+  // bg, white, ink
+  pinkv:[
+    ['파랑 하양', ['#1546ff','#ffffff','#1546ff']],
+    ['빨강', ['#e8112d','#ffffff','#111111']],
+    ['노랑 검정', ['#ffe600','#111111','#ffe600']],
+    ['보라', ['#7b2cff','#ffffff','#7b2cff']],
+    ['초록', ['#1fa055','#ffffff','#111111']]
+  ],
+  // bg, ink, red
+  alien:[
+    ['파랑 하양', ['#ffffff','#0a1f8f','#1546ff']],
+    ['핑크', ['#ff9bd0','#111111','#1536ff']],
+    ['민트', ['#2ee6c8','#111111','#e8112d']],
+    ['크림 레트로', ['#f6e7c1','#222222','#d7261e']]
+  ],
+  // bg, ink, acc
+  redsign:[
+    ['파랑 하양', ['#ffffff','#1546ff','#ffffff']],
+    ['노랑', ['#ffe600','#111111','#ffe600']],
+    ['초록', ['#1fa055','#111111','#1fa055']],
+    ['핑크', ['#ff5fa2','#111111','#ff5fa2']],
+    ['하늘 남색', ['#5ac8fa','#0a1f8f','#5ac8fa']]
+  ],
+  // bg, green, white
+  greenintro:[
+    ['파랑 하양', ['#ffffff','#1546ff','#ffffff']],
+    ['빨강', ['#f3eee6','#d6112d','#ffffff']],
+    ['보라', ['#efeaff','#6a2cd9','#ffffff']],
+    ['주황', ['#fff3e0','#ff7a00','#ffffff']],
+    ['검정', ['#e4e4e4','#111111','#ffffff']]
+  ],
+  // paper, blue, white
+  bluev:[
+    ['빨강', ['#ffffff','#d6112d','#ffffff']],
+    ['초록', ['#ffffff','#0a7a3a','#ffffff']],
+    ['핑크', ['#fff0f6','#e0287a','#ffffff']],
+    ['남색 크림', ['#fff6dc','#1c2a7a','#fff6dc']],
+    ['검정 노랑', ['#ffe600','#111111','#ffe600']]
+  ],
+  // paper, ink
+  rockeff:[
+    ['파랑 하양', ['#ffffff','#1546ff']],
+    ['빨강', ['#ffffff','#d6112d']],
+    ['노랑 검정', ['#ffe600','#111111']],
+    ['반전', ['#111111','#ffffff']],
+    ['보라 레몬', ['#fff7a8','#4a1a9e']]
+  ],
+  // green, white
+  greenbanner:[
+    ['파랑 하양', ['#1546ff','#ffffff']],
+    ['빨강', ['#d6112d','#ffffff']],
+    ['남색', ['#1c2a7a','#ffffff']],
+    ['보라', ['#5b2ab8','#ffffff']],
+    ['검정 노랑', ['#111111','#ffe600']]
+  ],
+  // paper, ink, gray, light
+  flyer:[
+    ['파랑 하양', ['#ffffff','#0a1f8f','#5a7bff','#dbe4ff']],
+    ['빨강', ['#ffffff','#111111','#e8112d','#ffd6dc']],
+    ['노랑 주황', ['#fff6a0','#111111','#ff8a00','#ffe600']],
+    ['초록', ['#ffffff','#0a5a2a','#2fa860','#d8f3e0']]
+  ],
+  // bg, bg2, white, burst, ink
+  bluestar:[
+    ['파랑 하양', ['#1546ff','#0a1f8f','#ffffff','#ffffff','#1546ff']],
+    ['빨강', ['#e8112d','#7a0010','#ffffff','#fff200','#111111']],
+    ['초록', ['#1fa055','#0a4a25','#ffffff','#fff200','#111111']],
+    ['검정 핑크', ['#333333','#000000','#ffffff','#ff2bd6','#ffffff']],
+    ['핑크 하늘', ['#ff4fa0','#a0105a','#ffffff','#00e5ff','#111111']]
+  ],
+  // pink, navy, white, yellow
+  pinkhr:[
+    ['파랑 하양', ['#4da3ff','#1546ff','#ffffff','#ffffff']],
+    ['빨강 검정', ['#e8112d','#111111','#ffffff','#fff200']],
+    ['보라 라임', ['#9b30ff','#1c1c5a','#ffffff','#b6ff00']],
+    ['주황 파랑', ['#ff7a00','#1536ff','#ffffff','#fff200']],
+    ['초록 남색', ['#1fa055','#0a3a6b','#ffffff','#fff200']]
+  ],
+  // yellow, gray, red, ink, white
+  yrecruit:[
+    ['파랑 하양', ['#ffffff','#e8efff','#1546ff','#0a1f8f','#ffffff']],
+    ['핑크', ['#ff9bd0','#ffffff','#1536ff','#111111','#ffffff']],
+    ['민트', ['#2ee6c8','#f2f2f2','#e8112d','#111111','#ffffff']],
+    ['주황', ['#ff8a00','#fff3e0','#111111','#111111','#ffffff']]
+  ]
+};
+/* 랜덤 찌라시: 배치(GEN)는 누를 때마다 새로 만들어요. 색은 5가지 역할. */
+TPL.gen = {n:'랜덤 찌라시', size:'1200x700', fontT:'blackhan', fontB:'pretendard', hint:''};
+NT.gen = {colors:[['bg','바탕','#ffe600'],['ink','글자·테두리','#111111'],['acc1','강조 1','#e8112d'],['acc2','강조 2','#1b1bd6'],['light','밝은 글자','#ffffff']], fields:[]};
+NT_PAL.gen = [
+  ['파랑 하양', ['#ffffff','#0a1f8f','#1546ff','#00b4ff','#ffffff']],
+  ['핑크 시안', ['#ff3ea5','#1a0b6b','#00d4ff','#fff200','#ffffff']],
+  ['검정 라임', ['#111111','#ffffff','#b6ff00','#ff2bd6','#111111']],
+  ['초록 회색', ['#e4e4e4','#1f7a2a','#1f7a2a','#ffe600','#ffffff']],
+  ['주황 파랑', ['#ff7a00','#111111','#1536ff','#fff200','#ffffff']],
+  ['흑백', ['#ffffff','#111111','#111111','#808080','#ffffff']],
+  ['크림 레트로', ['#f6e7c1','#222222','#d7261e','#1f4e9c','#fffaf0']],
+  ['보라 레몬', ['#7b2cff','#111111','#fff200','#ff2b7a','#ffffff']],
+  ['민트 빨강', ['#2ee6c8','#111111','#e8112d','#1f2a6b','#ffffff']]
+];
+const LABEL = {bg:'바탕',titleBg:'제목칸',titleFg:'제목글자',subBg:'부제칸',subFg:'부제글자',bodyBg:'본문칸',bodyFg:'본문글자',phoneBg:'전화칸',phoneFg:'전화글자'};
+const KEYS = Object.keys(LABEL);
+const FONTS = {
+  pretendard:{n:'프리텐다드', defT:'Pretendard-ExtraBold', defB:'Pretendard-Bold'},
+  blackhan:{n:'블랙한산스', defT:'BlackHanSans-Regular', defB:'BlackHanSans-Regular'},
+  galmuri:{n:'갈무리 (도트)', defT:'Galmuri11-Bold', defB:'Galmuri11-Bold'},
+  dgm:{n:'둥근모꼴 (도트)', defT:'NeoDunggeunmoPro-Regular', defB:'NeoDunggeunmoPro-Regular'}
+};
+const PSMAP = {
+  'Pretendard-ExtraBold':{css:'Pretendard', weight:800},
+  'Pretendard-Bold':{css:'Pretendard', weight:700},
+  'Pretendard-Regular':{css:'Pretendard', weight:400},
+  'BlackHanSans-Regular':{css:'"Black Han Sans"', weight:400},
+  'Galmuri11-Bold':{css:'"Galmuri11 Bold","Galmuri11"', weight:400},
+  'NeoDunggeunmoPro-Regular':{css:'"NeoDunggeunmo","NeoDunggeunmo Pro","DungGeunMo"', weight:400}
+};
+function ensureFonts(){
+  return Promise.all(Object.keys(PSMAP).map(k =>
+    document.fonts.load(PSMAP[k].weight+' 40px '+PSMAP[k].css).catch(() => {})
+  )).catch(() => {});
+}
+const INK = '#111111';
+const FAMILY = 'Pretendard,"Pretendard Variable","Malgun Gothic","Apple SD Gothic Neo",sans-serif';
+const $ = id => document.getElementById(id);
+
+let pal = Object.assign({}, PAL[0].c);
+let tpl = 'basic';
+let layers = [], W = 1200, H = 600;
+const ADJ = {};
+let FILL = 1.15; // 전체 글자 채우기 (슬라이더)
+const FV = {}, CV = {};
+let adjSig = '';
+
+function hexToRgb(h){
+  h = h.replace('#','');
+  return {r:parseInt(h.slice(0,2),16), g:parseInt(h.slice(2,4),16), b:parseInt(h.slice(4,6),16)};
+}
+function lum(h){ const c = hexToRgb(h); return (0.299*c.r + 0.587*c.g + 0.114*c.b)/255; }
+function mkCanvas(){
+  const c = document.createElement('canvas'); c.width = W; c.height = H; return c;
+}
+function rnd(n){ const s = Math.sin(n*12.9898)*43758.5453; return s - Math.floor(s); }
+
+/* ---------- 도형 레이어 ---------- */
+function bgLayer(){
+  const c = mkCanvas(), x = c.getContext('2d');
+  x.fillStyle = pal.bg; x.fillRect(0,0,W,H);
+  x.strokeStyle = INK; x.lineWidth = 10; x.strokeRect(5,5,W-10,H-10);
+  return {name:'배경', canvas:c};
+}
+function boxLayer(name, box, color){
+  const c = mkCanvas(), x = c.getContext('2d');
+  x.fillStyle = color; x.fillRect(box.x, box.y, box.w, box.h);
+  x.strokeStyle = INK; x.lineWidth = Math.max(3, Math.round(Math.min(W,H)*0.006));
+  x.strokeRect(box.x, box.y, box.w, box.h);
+  return {name, canvas:c};
+}
+function burstPath(x, cx, cy, R, r, n, dx, dy){
+  x.beginPath();
+  for(let i=0;i<n*2;i++){
+    const a = Math.PI*i/n - Math.PI/2;
+    const rr = (i%2===0) ? R*(0.9 + 0.1*rnd(i+3)) : r*(0.96 + 0.04*rnd(i+91));
+    const px = cx + dx + rr*Math.cos(a), py = cy + dy + rr*Math.sin(a);
+    if(i===0) x.moveTo(px,py); else x.lineTo(px,py);
+  }
+  x.closePath();
+}
+// 바탕과 칸 색이 거의 같으면 검정 테두리 대신 제목 글자색으로 그려서 모양이 보이게 해요
+function edgeInk(){
+  const a = hexToRgb(pal.bg), b = hexToRgb(pal.titleBg);
+  return (Math.abs(a.r - b.r) + Math.abs(a.g - b.g) + Math.abs(a.b - b.b) < 90) ? pal.titleFg : INK;
+}
+function burstLayer(cx, cy, R){
+  const c = mkCanvas(), x = c.getContext('2d');
+  const off = Math.round(R*0.045);
+  x.lineJoin = 'round';
+  burstPath(x, cx, cy, R, R*0.78, 18, off, off); x.fillStyle = INK; x.fill();
+  burstPath(x, cx, cy, R, R*0.78, 18, 0, 0);
+  x.fillStyle = pal.titleBg; x.fill();
+  x.strokeStyle = edgeInk(); x.lineWidth = Math.max(5, Math.round(R*0.025)); x.stroke();
+  return {name:'폭발', canvas:c};
+}
+function ellipseLayers(cx, cy, rx, ry){
+  const c = mkCanvas(), x = c.getContext('2d');
+  const off = Math.round(Math.min(rx,ry)*0.04);
+  x.beginPath(); x.ellipse(cx+off, cy+off, rx, ry, 0, 0, Math.PI*2); x.fillStyle = INK; x.fill();
+  x.beginPath(); x.ellipse(cx, cy, rx, ry, 0, 0, Math.PI*2);
+  x.fillStyle = pal.titleBg; x.fill();
+  x.strokeStyle = edgeInk(); x.lineWidth = Math.max(6, Math.round(Math.min(rx,ry)*0.03)); x.stroke();
+  const c2 = mkCanvas(), x2 = c2.getContext('2d');
+  const gap = Math.round(Math.min(rx,ry)*0.07);
+  x2.beginPath(); x2.ellipse(cx, cy, rx-gap, ry-gap, 0, 0, Math.PI*2);
+  x2.strokeStyle = pal.titleFg; x2.lineWidth = Math.max(3, Math.round(Math.min(rx,ry)*0.015));
+  x2.setLineDash([14,10]); x2.stroke();
+  return [{name:'타원', canvas:c}, {name:'안쪽 점선 테두리', canvas:c2}];
+}
+
+/* ---------- 흑백 3단용 도형 ---------- */
+function mixHex(a, b, t){
+  const A = hexToRgb(a), B = hexToRgb(b);
+  const f = (p,q) => Math.round(p*(1-t) + q*t);
+  return '#' + [f(A.r,B.r), f(A.g,B.g), f(A.b,B.b)].map(v => v.toString(16).padStart(2,'0')).join('');
+}
+function roundRectPath(x, b, r){
+  x.beginPath();
+  x.moveTo(b.x + r, b.y);
+  x.arcTo(b.x + b.w, b.y, b.x + b.w, b.y + b.h, r);
+  x.arcTo(b.x + b.w, b.y + b.h, b.x, b.y + b.h, r);
+  x.arcTo(b.x, b.y + b.h, b.x, b.y, r);
+  x.arcTo(b.x, b.y, b.x + b.w, b.y, r);
+  x.closePath();
+}
+function monoBgLayer(paper, ink){
+  const c = mkCanvas(), x = c.getContext('2d');
+  x.fillStyle = paper; x.fillRect(0,0,W,H);
+  x.strokeStyle = ink; x.lineWidth = 6; x.strokeRect(3,3,W-6,H-6);
+  return {name:'배경', canvas:c};
+}
+function roundBoxLayer(name, box, fill, stroke){
+  const c = mkCanvas(), x = c.getContext('2d');
+  roundRectPath(x, box, box.h/2);
+  x.fillStyle = fill; x.fill();
+  x.strokeStyle = stroke; x.lineWidth = Math.max(3, Math.round(box.h*0.07)); x.stroke();
+  return {name, canvas:c};
+}
+function fillBoxLayer(name, box, color){
+  const c = mkCanvas(), x = c.getContext('2d');
+  x.fillStyle = color; x.fillRect(box.x, box.y, box.w, box.h);
+  return {name, canvas:c};
+}
+function monoOvalLayer(cx, cy, rx, ry, ink){
+  const c = mkCanvas(), x = c.getContext('2d');
+  x.beginPath(); x.ellipse(cx, cy, rx, ry, 0, 0, Math.PI*2);
+  x.fillStyle = ink; x.fill();
+  return {name:'타원', canvas:c};
+}
+function outlineLayer(name, geo, color, lw){
+  const c = mkCanvas(), x = c.getContext('2d');
+  const draw = x => {
+  x.font = geo.font; x.textBaseline = 'alphabetic';
+  x.lineJoin = 'round'; x.strokeStyle = color; x.lineWidth = geo.fs*(lw || 0.14);
+  if(geo.transform) x.transform(...geo.transform);
+  geo.lines.forEach((l,i) => {
+    x.save(); x.translate(geo.x0, geo.y0); x.rotate(geo.th || 0); x.translate(0, i*geo.fs*geo.lead); x.scale(geo.sc,1); x.strokeText(l,(geo.offs ? geo.offs[i] : 0),0); x.restore();
+  });
+  };
+  draw(x);
+  return {name, canvas:c, _draw:draw};
+}
+
+/* ---------- 패턴 테두리·검정 헤더용 부품 ---------- */
+function slashify(s){
+  return s.trim().split(/\s+/).map(w => w.split('').join('/')).join('*');
+}
+function stackChars(s){
+  return s.replace(/\s+/g,'').split('').join('\n');
+}
+function patternBorderLayer(box, glyph, fs, ink, ps){
+  const c = mkCanvas(), x = c.getContext('2d'), F = PSMAP[ps];
+  x.fillStyle = ink; x.textAlign = 'center'; x.textBaseline = 'middle';
+  x.font = (F ? F.weight : 800)+' '+fs+'px '+(F ? F.css + ',' : '')+FAMILY;
+  const step = fs*0.95;
+  const nx = Math.max(2, Math.round((box.w - fs)/step)), ny = Math.max(2, Math.round((box.h - fs)/step));
+  for(let i=0;i<=nx;i++){
+    const px = box.x + fs/2 + (box.w - fs)*i/nx;
+    x.fillText(glyph, px, box.y + fs/2);
+    x.fillText(glyph, px, box.y + box.h - fs/2);
+  }
+  for(let j=1;j<ny;j++){
+    const py = box.y + fs/2 + (box.h - fs)*j/ny;
+    x.fillText(glyph, box.x + fs/2, py);
+    x.fillText(glyph, box.x + box.w - fs/2, py);
+  }
+  x.strokeStyle = ink; x.lineWidth = 1; x.setLineDash([2,3]);
+  x.strokeRect(box.x - 8, box.y - 8, box.w + 16, box.h + 16);
+  return {name:'패턴 테두리', canvas:c};
+}
+function hatchEllipseLayer(cx, cy, rx, ry, ink, paper){
+  const c = mkCanvas(), x = c.getContext('2d');
+  const p = document.createElement('canvas'); p.width = p.height = 14;
+  const px = p.getContext('2d');
+  px.fillStyle = paper; px.fillRect(0,0,14,14);
+  px.strokeStyle = ink; px.lineWidth = 2;
+  px.beginPath(); px.moveTo(0,0); px.lineTo(14,14); px.moveTo(14,0); px.lineTo(0,14); px.stroke();
+  x.beginPath(); x.ellipse(cx, cy, rx, ry, 0, 0, Math.PI*2);
+  x.fillStyle = x.createPattern(p, 'repeat'); x.fill();
+  x.strokeStyle = ink; x.lineWidth = Math.max(5, Math.round(rx*0.08)); x.stroke();
+  return {name:'격자 타원', canvas:c};
+}
+function frameLayer8(F, headH, t, ink, paper){
+  const c = mkCanvas(), x = c.getContext('2d');
+  x.fillStyle = ink; x.fillRect(F.x, F.y, F.w, F.h);
+  x.strokeStyle = mixHex(ink, paper, 0.28); x.lineWidth = 1;
+  for(let gx = F.x; gx <= F.x + F.w; gx += t){ x.beginPath(); x.moveTo(gx, F.y + headH); x.lineTo(gx, F.y + F.h); x.stroke(); }
+  for(let gy = F.y + headH; gy <= F.y + F.h; gy += t){ x.beginPath(); x.moveTo(F.x, gy); x.lineTo(F.x + F.w, gy); x.stroke(); }
+  x.fillStyle = paper; x.fillRect(F.x + t, F.y + headH, F.w - 2*t, F.h - headH - t);
+  return {name:'검정 틀', canvas:c};
+}
+
+/* ---------- 칸별 색·입력칸이 자동으로 생기는 새 틀용 부품 ---------- */
+function fv(id){
+  const v = FV[tpl + ':' + id];
+  if(v !== undefined) return v;
+  const f = NT[tpl].fields.find(f => f[0] === id);
+  return f ? f[3] : '';
+}
+function cv(id){
+  const v = CV[tpl + ':' + id];
+  if(v !== undefined) return v;
+  const c = NT[tpl].colors.find(c => c[0] === id);
+  return c ? c[2] : '#000000';
+}
+function inset(b, fx, fy){
+  return {x:b.x + b.w*fx, y:b.y + b.h*fy, w:b.w*(1 - 2*fx), h:b.h*(1 - 2*fy)};
+}
+function rectL(name, box, fill, stroke, lw, r){
+  const c = mkCanvas(), x = c.getContext('2d');
+  if(r){ roundRectPath(x, box, r); } else { x.beginPath(); x.rect(box.x, box.y, box.w, box.h); }
+  if(fill){ x.fillStyle = fill; x.fill(); }
+  if(stroke && lw){ x.strokeStyle = stroke; x.lineWidth = lw; x.lineJoin = 'round'; x.stroke(); }
+  return {name, canvas:c};
+}
+function ovalL(name, box, fill, stroke, lw){
+  const c = mkCanvas(), x = c.getContext('2d');
+  x.beginPath(); x.ellipse(box.x + box.w/2, box.y + box.h/2, box.w/2, box.h/2, 0, 0, Math.PI*2);
+  if(fill){ x.fillStyle = fill; x.fill(); }
+  if(stroke && lw){ x.strokeStyle = stroke; x.lineWidth = lw; x.stroke(); }
+  return {name, canvas:c};
+}
+// assets/alien.svg와 같은 윤곽을 캔버스에서 직접 그려 확대 시 다시 렌더링해요.
+function alienLayer(box){
+  const canvas=mkCanvas();
+  const draw=x=>{
+    x.save();
+    const scale=Math.min(box.w/260,box.h/350);
+    x.translate(box.x+(box.w-260*scale)/2,box.y+(box.h-350*scale)/2);
+    x.scale(scale,scale);x.translate(-15,-5);
+    x.fillStyle='#aac6b8';x.strokeStyle='#30372a';x.lineWidth=5;x.lineJoin='round';
+    const body=new Path2D('M 112 15 C 76 4 43 18 30 51 C 17 82 23 112 37 140 C 51 169 73 184 98 198 C 113 208 116 221 108 231 C 100 240 82 229 77 222 L 80 211 Q 81 201 73 204 L 63 211 L 58 199 Q 52 190 47 201 L 45 211 L 37 208 Q 27 206 32 217 L 38 226 L 34 232 Q 29 241 39 242 L 48 241 L 49 249 Q 52 255 58 247 L 64 239 C 75 249 96 250 109 254 C 104 268 109 286 117 302 C 106 308 98 297 91 301 C 77 306 89 324 104 333 L 125 345 Q 136 351 144 337 L 154 322 C 173 330 195 329 210 322 C 222 337 235 343 249 337 C 263 331 265 317 259 310 Q 256 305 250 311 Q 239 316 235 302 C 229 287 232 272 226 259 C 220 249 225 239 236 239 C 250 240 260 234 262 220 L 265 195 Q 265 178 254 183 C 244 187 240 207 226 216 C 212 224 194 217 187 209 C 181 200 192 185 198 171 C 211 144 210 117 200 90 C 187 55 153 26 112 15 Z');x.fill(body);x.stroke(body);
+    x.fillStyle='#000';x.fill(new Path2D('M 58 111 C 43 112 51 139 66 153 C 81 167 100 172 111 166 C 121 158 103 137 88 125 C 76 115 65 111 58 111 Z'));x.fill(new Path2D('M 176 103 C 162 102 147 122 142 140 C 137 155 140 171 151 170 C 166 168 181 148 186 130 C 190 116 186 104 176 103 Z'));
+    for(const [cx,cy] of [[130,182],[141,180]]){x.beginPath();x.ellipse(cx,cy,2.5,3.5,0,0,Math.PI*2);x.fill();}
+    x.restore();
+  };
+  draw(canvas.getContext('2d'));return {name:'외계인',canvas,_draw:draw};
+}
+function burstL(name, cx, cy, R, fill, stroke, lw, n, ratio){
+  const c = mkCanvas(), x = c.getContext('2d');
+  x.lineJoin = 'round';
+  burstPath(x, cx, cy, R, R*(ratio || 0.74), n || 12, 0, 0);
+  x.fillStyle = fill; x.fill();
+  x.strokeStyle = stroke; x.lineWidth = lw; x.stroke();
+  return {name, canvas:c};
+}
+function buildDyn(k){
+  const spec = NT[k];
+  const fb = $('dynFields'), cb = $('dynColors');
+  fb.innerHTML = ''; cb.innerHTML = '';
+  spec.fields.forEach(f => {
+    const lab = document.createElement('label'); lab.textContent = f[1]; fb.appendChild(lab);
+    const el = document.createElement(f[2] === 'area' ? 'textarea' : 'input');
+    if(f[2] !== 'area'){ el.type = 'text'; } else { el.style.minHeight = '60px'; }
+    el.value = fv(f[0]);
+    el.addEventListener('input', () => { FV[k + ':' + f[0]] = el.value; render(); });
+    fb.appendChild(el);
+  });
+  const lab2 = document.createElement('label'); lab2.textContent = '칸별 색'; cb.appendChild(lab2);
+  const grid = document.createElement('div'); grid.className = 'colors';
+  spec.colors.forEach(c => {
+    const d = document.createElement('div');
+    const inp = document.createElement('input'); inp.type = 'color'; inp.value = cv(c[0]);
+    inp.addEventListener('input', () => { CV[k + ':' + c[0]] = inp.value; render(); });
+    d.appendChild(inp); d.appendChild(document.createElement('br')); d.appendChild(document.createTextNode(c[1]));
+    grid.appendChild(d);
+  });
+  cb.appendChild(grid);
+}
+
+/* ---------- 마트 라벨·핑크 인용용 부품 ---------- */
+function spacify(s){ return s.replace(/\s+/g,'').split('').join(' '); }
+function dotsL(name, y, x0, x1, r, color){
+  const c = mkCanvas(), x = c.getContext('2d');
+  x.fillStyle = color;
+  for(let px = x0 + r; px <= x1 - r; px += r*3.2){ x.beginPath(); x.arc(px, y, r, 0, Math.PI*2); x.fill(); }
+  return {name, canvas:c};
+}
+function tickRingL(name, cx, cy, R, color, lw){
+  const c = mkCanvas(), x = c.getContext('2d'), n = 72;
+  x.strokeStyle = color; x.lineWidth = Math.max(2, R*0.02);
+  for(let i=0;i<n;i++){
+    const a = i/n*Math.PI*2;
+    x.beginPath(); x.moveTo(cx + Math.cos(a)*R*0.86, cy + Math.sin(a)*R*0.86); x.lineTo(cx + Math.cos(a)*R, cy + Math.sin(a)*R); x.stroke();
+  }
+  x.lineWidth = lw; x.beginPath(); x.arc(cx, cy, R*0.78, 0, Math.PI*2); x.stroke();
+  return {name, canvas:c};
+}
+function arrowL(name, b, fill, stroke, lw){
+  const c = mkCanvas(), x = c.getContext('2d');
+  const sy = b.y + b.h*0.3, sh = b.h*0.4, hx = b.x + b.w*0.55;
+  x.beginPath();
+  x.moveTo(b.x, sy); x.lineTo(hx, sy); x.lineTo(hx, b.y); x.lineTo(b.x + b.w, b.y + b.h/2);
+  x.lineTo(hx, b.y + b.h); x.lineTo(hx, sy + sh); x.lineTo(b.x, sy + sh); x.closePath();
+  x.fillStyle = fill; x.fill(); x.strokeStyle = stroke; x.lineWidth = lw; x.lineJoin = 'miter'; x.stroke();
+  return {name, canvas:c};
+}
+function ellBurstL(name, b, fill, n){
+  // 가로로 길쭉한 폭발: 타원 둘레를 같은 간격으로 나눠 바깥으로 가시를 뻗고, 길이는 조금씩 들쭉날쭉
+  const c = mkCanvas(), x = c.getContext('2d');
+  const cx = b.x + b.w/2, cy = b.y + b.h/2, rx = b.w/2, ry = b.h/2;
+  const M = 720, cum = [0];
+  for(let k=1;k<=M;k++){
+    const a0 = (k-1)/M*Math.PI*2, a1 = k/M*Math.PI*2;
+    cum.push(cum[k-1] + Math.hypot(rx*(Math.cos(a1) - Math.cos(a0)), ry*(Math.sin(a1) - Math.sin(a0))));
+  }
+  const total = cum[M];
+  x.beginPath();
+  let k = 0;
+  for(let i=0;i<2*n;i++){
+    const target = total*(i + 0.5)/(2*n);
+    while(cum[k+1] < target) k++;
+    const t = (k + (target - cum[k])/(cum[k+1] - cum[k]))/M*Math.PI*2;
+    const r = i%2 ? 0.64 + rnd(i*5 + 2)*0.06 : 0.84 + rnd(i*3 + 1)*0.16;
+    const px = cx + Math.cos(t)*rx*r, py = cy + Math.sin(t)*ry*r;
+    i ? x.lineTo(px, py) : x.moveTo(px, py);
+  }
+  x.closePath(); x.fillStyle = fill; x.fill();
+  return {name, canvas:c};
+}
+function gradL(name, c1, c2){
+  const c = mkCanvas(), x = c.getContext('2d'), g = x.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, c1); g.addColorStop(0.55, c1); g.addColorStop(1, c2);
+  x.fillStyle = g; x.fillRect(0, 0, W, H);
+  return {name, canvas:c};
+}
+function qrL(name, b, color){
+  const c = mkCanvas(), x = c.getContext('2d'), n = 21, cs = b.w/n;
+  x.fillStyle = color;
+  const finder = (cx, cy) => {
+    x.fillRect(b.x + cx*cs, b.y + cy*cs, 7*cs, 7*cs);
+    x.clearRect(b.x + (cx+1)*cs, b.y + (cy+1)*cs, 5*cs, 5*cs);
+    x.fillRect(b.x + (cx+2)*cs, b.y + (cy+2)*cs, 3*cs, 3*cs);
+  };
+  for(let i=0;i<n;i++) for(let j=0;j<n;j++){
+    const inF = (i<8 && j<8) || (i>=n-8 && j<8) || (i<8 && j>=n-8);
+    if(!inF && rnd(i*31 + j*7 + 1) > 0.5) x.fillRect(b.x + i*cs, b.y + j*cs, Math.ceil(cs), Math.ceil(cs));
+  }
+  finder(0, 0); finder(n-7, 0); finder(0, n-7);
+  return {name, canvas:c};
+}
+function barcodeL(name, b, color){
+  const c = mkCanvas(), x = c.getContext('2d');
+  x.fillStyle = color;
+  let px = b.x, i = 0;
+  while(px < b.x + b.w){
+    const w = 2 + Math.floor(rnd(i*7 + 3)*5), gap = 2 + Math.floor(rnd(i*13 + 5)*4);
+    if(px + w > b.x + b.w) break;
+    x.fillRect(px, b.y, w, b.h);
+    px += w + gap; i++;
+  }
+  return {name, canvas:c};
+}
+
+/* ---------- 글자 레이어 ---------- */
+function textLayer(name, raw, box, o){
+  const lines = raw.split('\n').map(s => s.replace(/\s+$/,'')).filter(s => s.length);
+  if(!lines.length) return null;
+  const F = PSMAP[o.ps];
+  const fam = F ? F.css + ',' + FAMILY : FAMILY;
+  const fw = (o.italic ? 'italic ' : '') + (F ? F.weight : o.weight);
+  // FILL(전체 글자 채우기): 1이면 예전보다 조금 꽉, 클수록 칸을 더 채워요. 칸 밖으로는 넘치지 않아요.
+  const padX = Math.round(box.w*0.02), padY = Math.round(box.h*0.04);
+  const availW = box.w - 2*padX, availH = box.h - 2*padY;
+  const m = document.createElement('canvas').getContext('2d');
+  // 실제 글자 모양의 위·아래 높이(글꼴 크기에 대한 비율)를 재서, 글자가 칸 높이를 채우게 해요
+  const ref = 100;
+  m.font = fw+' '+ref+'px '+fam;
+  let kA = 0, kD = 0;
+  lines.forEach(l => {
+    const t = m.measureText(l);
+    kA = Math.max(kA, (t.actualBoundingBoxAscent !== undefined ? t.actualBoundingBoxAscent : 80)/ref);
+    kD = Math.max(kD, (t.actualBoundingBoxDescent !== undefined ? t.actualBoundingBoxDescent : 12)/ref);
+  });
+  if(kA + kD < 0.3){ kA = 0.8; kD = 0.12; }
+  const inkK = (lines.length - 1)*o.lead + kA + kD;
+  let fs = Math.min(o.maxFont*FILL, availH/inkK), wMax, sc;
+  for(let i=0;i<30;i++){
+    m.font = fw+' '+fs+'px '+fam;
+    wMax = Math.max.apply(null, lines.map(l => m.measureText(l).width));
+    sc = availW/wMax;
+    if(!o.fill) sc = Math.min(1, sc);
+    if(sc < 0.6 && fs > 10){ fs *= 0.92; continue; }
+    break;
+  }
+  sc = Math.max(0.5, Math.min((o.maxScale||2.2)*FILL, sc));
+  const A = ADJ[tpl + ':' + name.replace(/\s*그림자$/, '')];
+  if(A){ fs *= A.s/100; wMax *= A.s/100; sc *= A.w/100; }
+  const inkH = fs*inkK;
+  const top = box.y + (box.h - inkH)/2;
+  const base0 = top + fs*kA;
+  let x0 = (o.center ? box.x + (box.w - wMax*sc)/2 : box.x + padX) + (o.dx||0);
+  let y0 = base0 + (o.dy||0);
+  let th = 0;
+  if(o.rot){
+    th = o.rot*Math.PI/180;
+    const ccx = x0 + wMax*sc/2, ccy = box.y + box.h/2 + (o.dy||0);
+    const offx = wMax*sc/2, offy = ccy - y0;
+    x0 = ccx - (offx*Math.cos(th) - offy*Math.sin(th));
+    y0 = ccy - (offx*Math.sin(th) + offy*Math.cos(th));
+  }
+  // 가운데 정렬 여러 줄은 줄마다 가운데로
+  const midAlign = !!o.center && lines.length > 1;
+  m.font = fw+' '+fs+'px '+fam;
+  const ws = lines.map(l => m.measureText(l).width), wF = Math.max.apply(null, ws);
+  const offs = ws.map(w => midAlign ? (wF - w)/2 : 0);
+  const geo = {lines:lines, offs:offs, fs:fs, sc:sc, x0:x0, y0:y0, th:th, lead:o.lead, font:fw+' '+fs+'px '+fam, transform:o.transform};
+
+  const c = mkCanvas(), x = c.getContext('2d');
+  const draw = x => {
+  x.font = fw+' '+fs+'px '+fam;
+  x.fillStyle = o.fg; x.textBaseline = 'alphabetic';
+  if(o.transform) x.transform(...o.transform);
+  lines.forEach((l,i) => {
+    x.save(); x.translate(x0, y0); x.rotate(th); x.translate(0, i*fs*o.lead); x.scale(sc,1); x.fillText(l,offs[i],0); x.restore();
+  });
+  };
+  draw(x);
+  const half = midAlign ? wF*sc/2 : 0;
+  let transform = [Math.cos(th), Math.sin(th), -Math.sin(th), Math.cos(th), x0 + Math.cos(th)*half, y0 + Math.sin(th)*half];
+  // 미리보기·외곽선·PSD 문자 레이어에 같은 변환을 적용해요.
+  if(o.transform){
+    const [a,b,c,d,e,f] = o.transform, [u,v,w,z,tx,ty] = transform;
+    transform = [a*u+c*v, b*u+d*v, a*w+c*z, b*w+d*z, a*tx+c*ty+e, b*tx+d*ty+f];
+  }
+  return {
+    name, canvas:c, _geo:geo, _draw:draw,
+    text:{
+      text: lines.join('\r'),
+      transform,
+      style:{
+        font:{name:o.ps}, fontSize:fs, fillColor:hexToRgb(o.fg),
+        horizontalScale:sc, fauxItalic:!!o.italic, autoLeading:false, leading:fs*o.lead
+      },
+      paragraphStyle:{justification: midAlign ? 'center' : 'left'}
+    }
+  };
+}
+function decoLayer(name, ch, x0, base, fs, color, ps){
+  const c = mkCanvas(), x = c.getContext('2d');
+  const F = PSMAP[ps];
+  const draw = x => {
+  x.font = (F ? F.weight : 800)+' '+fs+'px '+(F ? F.css + ',' : '')+FAMILY; x.fillStyle = color; x.textBaseline = 'alphabetic';
+  x.fillText(ch, x0, base);
+  };
+  draw(x);
+  return {
+    name, canvas:c, _draw:draw,
+    text:{
+      text: ch, transform:[1,0,0,1,x0,base],
+      style:{font:{name:ps}, fontSize:fs, fillColor:hexToRgb(color)},
+      paragraphStyle:{justification:'left'}
+    }
+  };
+}
+
+/* ---------- 틀별 조립 ---------- */
+function build(){
+  const sz = $('size').value.split('x').map(Number);
+  W = sz[0]; H = sz[1];
+  const pad = Math.round(Math.min(W,H)*0.045), g = Math.round(pad*0.45);
+  const psT = $('psTitle').value.trim() || 'Pretendard-ExtraBold';
+  const psB = $('psBody').value.trim() || 'Pretendard-Bold';
+  const L = [];
+  const addT = (name, raw, box, o) => { const l = textLayer(name, raw, box, o); if(l) L.push(l); };
+
+  const oTitle = (box, fg, extra) => Object.assign({maxFont:box.h*0.8, lead:1.1, weight:800, ps:psT, fill:true, maxScale:2.2, center:true, fg:fg}, extra||{});
+  const oSub   = (box, fg) => ({maxFont:box.h*0.62, lead:1.1, weight:800, ps:psT, fill:true, maxScale:1.6, center:true, fg:fg});
+  const oBody  = (box, fg) => ({maxFont:box.h*0.3, lead:1.3, weight:700, ps:psB, fill:false, center:false, fg:fg});
+  const oPhone = (box, fg) => ({maxFont:box.h*0.7, lead:1.1, weight:800, ps:psT, fill:true, maxScale:1.5, center:true, fg:fg});
+  const titleWithShadow = (box, fg, raw) => {
+    const t = raw !== undefined ? raw : $('title').value;
+    const sh = Math.max(3, Math.round(box.h*0.03));
+    addT('제목그림자', t, box, oTitle(box, INK, {dx:sh, dy:sh}));
+    addT('제목', t, box, oTitle(box, fg));
+  };
+  // 줄바꿈 없는 긴 제목은 가운데에 가장 가까운 띄어쓰기에서 두 줄로 나눠요
+  const wrap2 = t => {
+    if(t.indexOf('\n') >= 0 || t.trim().length < 5) return t;
+    const mid = t.length/2; let best = -1;
+    for(let i=0;i<t.length;i++) if(t[i] === ' ' && (best < 0 || Math.abs(i - mid) < Math.abs(best - mid))) best = i;
+    return best > 0 ? t.slice(0, best) + '\n' + t.slice(best + 1) : t;
+  };
+  const deco = $('deco').value.trim();
+
+  if(tpl === 'basic' || tpl === 'vertical'){
+    const ih = H - 2*pad - 3*g, iw = W - 2*pad;
+    const fr = (tpl === 'basic') ? [0.42, 0.16, 0.24, 0.18] : [0.11, 0.33, 0.38, 0.18];
+    const bx = []; let y = pad;
+    fr.forEach(f => { const h = Math.round(ih*f); bx.push({x:pad, y:y, w:iw, h:h}); y += h + g; });
+    let bT, bS, bB, bP;
+    if(tpl === 'basic'){ bT = bx[0]; bS = bx[1]; bB = bx[2]; bP = bx[3]; }
+    else { bS = bx[0]; bT = bx[1]; bB = bx[2]; bP = bx[3]; }
+    L.push(bgLayer());
+    L.push(boxLayer('제목박스', bT, pal.titleBg));
+    L.push(boxLayer('부제박스', bS, pal.subBg));
+    const columnW = (bB.w - g)/2;
+    const bLeft = {x:bB.x, y:bB.y, w:columnW, h:bB.h};
+    const bRight = {x:bB.x + columnW + g, y:bB.y, w:columnW, h:bB.h};
+    if(tpl === 'basic'){
+      L.push(boxLayer('본문 왼쪽 박스', bLeft, pal.bodyBg));
+      L.push(boxLayer('본문 오른쪽 박스', bRight, pal.bodyBg));
+    }else L.push(boxLayer('본문박스', bB, pal.bodyBg));
+    L.push(boxLayer('전화박스', bP, pal.phoneBg));
+    titleWithShadow(bT, pal.titleFg);
+    addT('부제', $('sub').value, bS, oSub(bS, pal.subFg));
+    if(tpl === 'basic'){
+      addT('본문 왼쪽', $('bodyLeft').value, bLeft, oBody(bLeft, pal.bodyFg));
+      addT('본문 오른쪽', $('bodyRight').value, bRight, oBody(bRight, pal.bodyFg));
+    }else addT('본문', $('body').value, bB, oBody(bB, pal.bodyFg));
+    addT('전화번호', $('phone').value, bP, oPhone(bP, pal.phoneFg));
+    if(deco){
+      if(tpl === 'basic'){
+        const dfs = Math.round(bT.h*0.26);
+        L.push(decoLayer('장식 왼쪽', deco, bT.x + pad*0.4, bT.y + dfs, dfs, pal.titleFg, psT));
+        L.push(decoLayer('장식 오른쪽', deco, bT.x + bT.w - dfs*1.1 - pad*0.4, bT.y + bT.h - dfs*0.2, dfs, pal.titleFg, psT));
+      } else {
+        const dfs = Math.round(bS.h*0.7);
+        L.push(decoLayer('장식 왼쪽', deco, bS.x + pad*0.4, bS.y + bS.h*0.78, dfs, pal.subFg, psT));
+        L.push(decoLayer('장식 오른쪽', deco, bS.x + bS.w - dfs*1.1 - pad*0.4, bS.y + bS.h*0.78, dfs, pal.subFg, psT));
+      }
+    }
+  }
+  else if(tpl === 'strip'){
+    const iw = W - 2*pad, ih = H - 2*pad;
+    const lw = Math.round(iw*0.64), rw = iw - lw - g;
+    const th = Math.round((ih - g)*0.64), bh = Math.round((ih - g)*0.56);
+    const bT = {x:pad, y:pad, w:lw, h:th};
+    const bS = {x:pad, y:pad + th + g, w:lw, h:ih - th - g};
+    const bB = {x:pad + lw + g, y:pad, w:rw, h:bh};
+    const bP = {x:pad + lw + g, y:pad + bh + g, w:rw, h:ih - bh - g};
+    L.push(bgLayer());
+    L.push(boxLayer('제목박스', bT, pal.titleBg));
+    L.push(boxLayer('부제박스', bS, pal.subBg));
+    L.push(boxLayer('본문박스', bB, pal.bodyBg));
+    L.push(boxLayer('전화박스', bP, pal.phoneBg));
+    titleWithShadow(bT, pal.titleFg);
+    addT('부제', $('sub').value, bS, oSub(bS, pal.subFg));
+    addT('본문', $('body').value, bB, oBody(bB, pal.bodyFg));
+    addT('전화번호', $('phone').value, bP, oPhone(bP, pal.phoneFg));
+    if(deco){
+      const dfs = Math.round(bT.h*0.3);
+      L.push(decoLayer('장식 왼쪽', deco, bT.x + pad*0.4, bT.y + dfs, dfs, pal.titleFg, psT));
+      L.push(decoLayer('장식 오른쪽', deco, bT.x + bT.w - dfs*1.1 - pad*0.4, bT.y + bT.h - dfs*0.2, dfs, pal.titleFg, psT));
+    }
+  }
+  else if(tpl === 'burst'){
+    const cx = W/2, cy = H*0.40, R = Math.min(W*0.46, H*0.38), r = R*0.78*0.82;
+    const bT = {x:cx - R*0.62, y:cy - R*0.42, w:R*1.24, h:R*0.84};
+    const bS = {x:(W - W*0.86)/2, y:cy + R*0.85, w:W*0.86, h:H*0.1};
+    const bP = {x:(W - W*0.7)/2, y:cy + R*0.85 + H*0.1 + g, w:W*0.7, h:H*0.1};
+    L.push(bgLayer());
+    L.push(burstLayer(cx, cy, R));
+    L.push(boxLayer('부제박스', bS, pal.subBg));
+    L.push(boxLayer('전화박스', bP, pal.phoneBg));
+    titleWithShadow(bT, pal.titleFg, wrap2($('title').value));
+    addT('부제', $('sub').value, bS, oSub(bS, pal.subFg));
+    addT('전화번호', $('phone').value, bP, oPhone(bP, pal.phoneFg));
+    if(deco){
+      const dfs = Math.round(Math.min(W,H)*0.08), col = lum(pal.bg) > 0.5 ? INK : '#ffffff';
+      L.push(decoLayer('장식 왼쪽', deco, pad, pad + dfs, dfs, col, psT));
+      L.push(decoLayer('장식 오른쪽', deco, W - pad - dfs*1.1, pad + dfs, dfs, col, psT));
+    }
+  }
+  else if(tpl === 'oval'){
+    const cx = W/2, cy = H/2, rx = W/2 - pad*1.2, ry = H/2 - pad*1.2;
+    const bS = {x:cx - rx*0.5, y:cy - ry*0.72, w:rx, h:ry*0.27};
+    const bT = {x:cx - rx*0.8, y:cy - ry*0.38, w:rx*1.6, h:ry*0.76};
+    const bP = {x:cx - rx*0.5, y:cy + ry*0.46, w:rx, h:ry*0.27};
+    L.push(bgLayer());
+    ellipseLayers(cx, cy, rx, ry).forEach(l => L.push(l));
+    L.push(boxLayer('부제박스', bS, pal.subBg));
+    L.push(boxLayer('전화박스', bP, pal.phoneBg));
+    titleWithShadow(bT, pal.titleFg);
+    addT('부제', $('sub').value, bS, oSub(bS, pal.subFg));
+    addT('전화번호', $('phone').value, bP, oPhone(bP, pal.phoneFg));
+    if(deco){
+      const dfs = Math.round(Math.min(W,H)*0.08), col = lum(pal.bg) > 0.5 ? INK : '#ffffff';
+      L.push(decoLayer('장식 왼쪽', deco, pad*0.6, pad*0.6 + dfs, dfs, col, psT));
+      L.push(decoLayer('장식 오른쪽', deco, W - pad*0.6 - dfs*1.1, H - pad*0.6, dfs, col, psT));
+    }
+  }
+  const TT = (name, raw, box, fg, o) => addT(name, raw, box, Object.assign({maxFont:box.h*0.8, lead:1.1, weight:800, ps:psT, fill:true, maxScale:2, center:true, fg:fg}, o||{}));
+  const outlined = (name, raw, box, fg, oc, lw, o) => {
+    const gl = textLayer(name, raw, box, Object.assign({maxFont:box.h*0.8, lead:1.1, weight:800, ps:psT, fill:true, maxScale:2, center:true, fg:fg}, o||{}));
+    if(gl){ L.push(outlineLayer(name + ' 외곽선', gl._geo, oc, lw)); L.push(gl); }
+  };
+  const shadowed = (name, raw, box, fg, shc, oc, o) => {
+    const base = Object.assign({maxFont:box.h*0.8, lead:1.1, weight:800, ps:psT, fill:true, maxScale:2, center:true}, o||{});
+    const d = Math.max(3, Math.round(box.h*0.04));
+    const gs = textLayer(name + ' 그림자', raw, box, Object.assign({}, base, {fg:shc, dx:d, dy:d}));
+    const gm = textLayer(name, raw, box, Object.assign({}, base, {fg:fg}));
+    if(gs) L.push(gs);
+    if(gm){ L.push(outlineLayer(name + ' 외곽선', gm._geo, oc, 0.16)); L.push(gm); }
+  };
+
+  if(tpl === 'news'){
+    const bgc = cv('bg'), ink = cv('ink'), red = cv('red'), navy = cv('navy'), wh = cv('white');
+    const m = Math.round(H*0.035), lw = Math.max(3, Math.round(H*0.006));
+    const rB = {x:m, y:H*0.05, w:W - 2*m, h:H*0.25};
+    const bBadge = {x:rB.x, y:rB.y + rB.h*0.12, w:W*0.17, h:rB.h*0.72};
+    const tx = bBadge.x + bBadge.w + m*0.5;
+    const bTitle = {x:tx, y:rB.y, w:rB.x + rB.w - tx, h:rB.h};
+    const rBar = {x:m, y:H*0.33, w:W - 2*m, h:H*0.17};
+    const accW = rBar.w*0.24;
+    const bAcc = {x:rBar.x + rBar.w - accW - m*0.4, y:rBar.y + rBar.h*0.1, w:accW, h:rBar.h*0.8};
+    const bBarTxt = {x:rBar.x + m*0.5, y:rBar.y, w:rBar.w - accW - m*1.4, h:rBar.h};
+    const bBand = {x:m + W*0.05, y:H*0.52, w:W - 2*m - W*0.10, h:H*0.085};
+    const bBox = {x:m, y:H*0.645, w:W*0.20, h:H*0.30};
+    const px = bBox.x + bBox.w + m*0.8;
+    const bPhone = {x:px, y:H*0.645, w:W - m - px, h:H*0.30};
+    L.push(rectL('배경', {x:0, y:0, w:W, h:H}, bgc, ink, Math.round(H*0.04), 0));
+    L.push(ovalL('뱃지 타원', bBadge, red, ink, lw));
+    L.push(rectL('검정 줄', rBar, ink, null, 0, 0));
+    L.push(rectL('강조 박스', bAcc, red, ink, lw, 0));
+    L.push(rectL('남색 띠', bBand, navy, null, 0, 0));
+    L.push(rectL('왼쪽 박스', bBox, wh, ink, lw, 0));
+    TT('뱃지', fv('badge'), inset(bBadge, 0.08, 0.12), wh, {maxScale:1.3});
+    TT('제목', fv('title'), bTitle, ink, {maxScale:1.8});
+    TT('검정 줄 문구', fv('bar'), bBarTxt, wh, {maxScale:1.6});
+    TT('강조 문구', fv('acc'), inset(bAcc, 0.06, 0.12), bgc);
+    TT('띠 문구', fv('band'), bBand, wh, {maxFont:bBand.h*0.6, maxScale:1.3, ps:psB});
+    TT('왼쪽 박스 문구', fv('box'), inset(bBox, 0.05, 0.08), ink, {maxFont:bBox.h*0.3, lead:1.15, ps:psB});
+    TT('전화번호', $('phone').value, bPhone, red, {maxFont:bPhone.h*0.7, maxScale:1.8});
+  }
+  if(tpl === 'blackround'){
+    const paper = cv('paper'), frame = cv('frame'), txt = cv('txt'), panel = cv('panel');
+    const pill = cv('pill'), pillTxt = cv('pillTxt'), bdg = cv('badge'), bdgTxt = cv('badgeTxt');
+    const lw = Math.max(4, Math.round(H*0.007));
+    // 사용자가 조정한 1200×700 PSD 배치를 다른 출력 크기에도 비례 적용해요.
+    const titleTransform = [1, 0, 0, 1.1851917613636365, 0, -35.55681818181816*H/700];
+    const bigTransform = [1, 0, 0, 10/9, -10*W/1200, -55.44444444444446*H/700];
+    const footerTransform = [1.004746835443038, 0, 0, 1, -25.51582278481004*W/1200, 0];
+    const dbl = (name, raw, box, fg, c1, w1, c2, w2, o) => {
+      const gl = textLayer(name, raw, box, Object.assign({maxFont:box.h*0.8, lead:1.1, weight:800, ps:psT, fill:true, maxScale:2, center:true, fg:fg}, o||{}));
+      if(gl){
+        L.push(outlineLayer(name + ' 바깥 외곽선', gl._geo, c1, w1));
+        L.push(outlineLayer(name + ' 안쪽 외곽선', gl._geo, c2, w2));
+        L.push(gl);
+      }
+    };
+    L.push(rectL('배경', {x:0, y:0, w:W, h:H}, paper, null, 0, 0));
+    L.push(rectL('검정 둥근 틀', {x:6, y:6, w:W - 12, h:H - 12}, frame, null, 0, Math.round(H*0.05)));
+    const bPanel = {x:W*21/1200, y:H*204/700, w:W*1160/1200, h:H*213/700};
+    L.push(rectL('흰 패널', bPanel, panel, null, 0, 0));
+    L.push(rectL('안쪽 선', {x:20, y:20, w:W - 40, h:H - 40}, null, txt, 3, Math.round(H*0.04)));
+    const pw = W*0.172, pg = W*0.0625, px0 = W*(0.308 - 10/1200), py = H*(0.345 - 17/700), ph = H*0.09;
+    for(let i=0;i<3;i++){
+      L.push(ovalL('알약 ' + (i+1), {x:px0 + i*(pw + pg), y:py, w:pw, h:ph}, pill, null, 0));
+    }
+    const l1 = fv('line1'), hl = fv('hl'), l2 = fv('line2');
+    const wts = [Math.max(1, l1.length), Math.max(1, hl.length) + 1.5, Math.max(1, l2.length)];
+    const tot = wts[0] + wts[1] + wts[2], bw = W*0.92, bL3y = H*0.62, bL3h = H*0.085;
+    const segs = []; let sx = W*0.04;
+    wts.forEach(w => { segs.push({x:sx, y:bL3y, w:bw*w/tot, h:bL3h}); sx += bw*w/tot; });
+    L.push(rectL('강조 박스', segs[1], txt, null, 0, Math.round(bL3h*0.25)));
+    const bG = {x:W*0.05, y:H*0.71, w:W*0.35, h:H*0.22};
+    L.push(rectL('격자 박스', bG, frame, txt, lw*1.5, Math.round(H*0.025)));
+    const bcx = W*(0.125 - 10/1200), bcy = H*(0.49 - 17/700), R = H*0.27;
+    L.push(burstL('폭발 뱃지', bcx, bcy, R, bdg, frame, lw*1.6, 9, 0.55));
+
+    const bT = {x:W*0.05, y:H*0.07, w:W*0.90, h:H*0.22};
+    dbl('제목', fv('title'), inset(bT, 0.01, 0.05), txt, txt, 0.26, frame, 0.14, {transform:titleTransform});
+    TT('뱃지 글자', fv('badgeT'), {x:bcx - R*0.62, y:bcy - R*0.30, w:R*1.24, h:R*0.6}, bdgTxt, {rot:-20, maxScale:1.2});
+    for(let i=0;i<3;i++){
+      const bx = {x:px0 + i*(pw + pg), y:py, w:pw, h:ph};
+      TT('알약 ' + (i+1), fv('p' + (i+1)), inset(bx, 0.1, 0.1), pillTxt, {maxFont:ph*0.6, maxScale:1.3});
+      if(i < 2) TT('더하기 ' + (i+1), '+', {x:px0 + (i+1)*pw + i*pg, y:py, w:pg, h:ph}, pill, {fill:false, maxFont:ph*0.9});
+    }
+    outlined('큰 글씨', fv('big'), {x:W*0.26, y:H*0.45, w:W*0.71, h:H*0.14}, panel, frame, 0.2, {maxScale:1.8, transform:bigTransform});
+    outlined('한 줄 앞', l1, segs[0], txt, frame, 10/54.74, {maxScale:1.3, ps:psB, dy:-7*H/700});
+    TT('한 줄 강조', hl, inset(segs[1], 0.08, 0.12), frame, {maxScale:1.3});
+    TT('한 줄 뒤', l2, segs[2], txt, {maxScale:1.3, ps:psB});
+    const gridTxt = fv('grid').split('\n').map(l => l.trim() ? slashify(l) : '').join('\n');
+    TT('격자 글자', gridTxt, inset(bG, 0.06, 0.1), txt, {maxFont:bG.h*0.3, lead:1.15, ps:psB});
+    TT('작은 줄', fv('small'), {x:W*0.43, y:H*0.725, w:W*0.55, h:H*0.06}, txt, {maxScale:1.2, ps:psB, transform:footerTransform});
+    TT('전화번호', $('phone').value, {x:W*0.43, y:H*0.80, w:W*0.55, h:H*0.125}, txt, {maxFont:H*0.12, maxScale:1.8, transform:footerTransform});
+  }
+  if(tpl === 'mart'){
+    const paper = cv('paper'), green = cv('green'), ink = cv('ink'), num = cv('num');
+    const pretW = w => /^Pretendard/.test(psT) ? 'Pretendard-' + w : psT;
+    const REG = pretW('Regular'), BLD = pretW('Bold');
+    L.push(rectL('배경', {x:0, y:0, w:W, h:H}, paper, null, 0, 0));
+    const cols = [0, 0.185, 0.475, 0.775, 1];
+    const hc = mkCanvas(), hx = hc.getContext('2d');
+    hx.fillStyle = green;
+    hx.fillRect(0, H*0.235, W, H*0.0125);
+    for(let i=1;i<4;i++) hx.fillRect(W*cols[i] - 3, H*0.245, 6, H*0.095);
+    L.push({name:'초록 선·표 구분선', canvas:hc});
+    L.push(barcodeL('바코드', {x:W*0.03, y:H*0.37, w:W*0.45, h:H*0.27}, ink));
+    const pill = {x:W*0.55, y:H*0.37, w:W*0.42, h:H*0.085};
+    L.push(rectL('가격 제목 박스', pill, green, null, 0, pill.h/2));
+    L.push(rectL('초록 바', {x:0, y:H*0.775, w:W, h:H*0.225}, green, null, 0, 0));
+    TT('윗줄 1', fv('l1'), {x:W*0.03, y:H*0.025, w:W*0.94, h:H*0.11}, ink, {weight:400, ps:REG, maxScale:1.15});
+    TT('윗줄 2', fv('l2'), {x:W*0.03, y:H*0.14, w:W*0.94, h:H*0.085}, ink, {weight:400, ps:REG, maxScale:1.15});
+    for(let i=0;i<4;i++){
+      const bx = {x:W*cols[i] + 8, y:H*0.25, w:W*(cols[i+1] - cols[i]) - 16, h:H*0.075};
+      TT('표 머리 ' + (i+1), fv('th' + (i+1)), bx, green, {maxFont:H*0.06, maxScale:1.2, ps:BLD});
+    }
+    TT('바코드 숫자', fv('code'), {x:W*0.03, y:H*0.645, w:W*0.45, h:H*0.06}, ink, {ps:psB, maxScale:1.2});
+    TT('가격 제목', fv('plabel'), inset(pill, 0.08, 0.1), paper, {maxScale:1.2, ps:BLD});
+    TT('가격', fv('price'), {x:W*0.55, y:H*0.465, w:W*0.42, h:H*0.295}, num, {ps:psB, maxScale:1.4});
+    TT('초록 바 문구', spacify(fv('bar')), {x:W*0.03, y:H*0.79, w:W*0.94, h:H*0.195}, paper, {maxScale:1.8});
+  }
+  if(tpl === 'pinkq'){
+    const paper = cv('paper'), bgc = cv('bg'), pink = cv('pink'), wh = cv('white'), blk = cv('black');
+    const lw = Math.max(3, Math.round(H*0.006));
+    L.push(rectL('배경', {x:0, y:0, w:W, h:H}, paper, null, 0, 0));
+    L.push(rectL('어두운 틀', {x:10, y:10, w:W - 20, h:H - 20}, bgc, null, 0, 0));
+    L.push(rectL('핑크 띠', {x:10, y:H*0.31, w:W - 20, h:H*0.33}, pink, null, 0, 0));
+    const b1 = {x:W*0.575, y:H*0.355, w:W*0.40, h:H*0.075}, b2 = {x:W*0.575, y:H*0.46, w:W*0.40, h:H*0.16};
+    L.push(rectL('검정 박스 1', b1, blk, null, 0, 0));
+    L.push(rectL('검정 박스 2', b2, blk, null, 0, 0));
+    const be = {x:W*0.585, y:H*0.685, w:W*0.385, h:H*0.088};
+    L.push(ovalL('핑크 타원', be, pink, null, 0));
+    const bb = {x:W*0.012, y:H*0.795, w:W*0.976, h:H*0.155};
+    L.push(rectL('아래 핑크 박스', bb, pink, null, 0, Math.round(H*0.012)));
+    const bcx = W*0.115, bcy = H*0.16, R = H*0.27;
+    L.push(burstL('폭발 뱃지', bcx, bcy, R, pink, blk, lw*1.4, 9, 0.55));
+    outlined('큰 제목', fv('title'), {x:W*0.31, y:H*0.04, w:W*0.68, h:H*0.24}, pink, wh, 0.14, {maxScale:1.7});
+    TT('뱃지 글자', fv('badgeT'), {x:bcx - R*0.58, y:bcy - R*0.28, w:R*1.16, h:R*0.56}, blk, {rot:-20, maxScale:1.2});
+    TT('인용 1', fv('quote1'), {x:W*0.02, y:H*0.335, w:W*0.54, h:H*0.08}, wh, {center:false, maxScale:1.4});
+    outlined('큰 흰 글씨', fv('big'), {x:W*0.015, y:H*0.43, w:W*0.54, h:H*0.22}, wh, blk, 0.2, {center:false, maxScale:1.8});
+    outlined('인용 2', fv('quote2'), {x:W*0.01, y:H*0.68, w:W*0.55, h:H*0.12}, pink, wh, 0.12, {center:false, maxScale:1.5});
+    TT('박스 1 문구', fv('tag'), inset(b1, 0.03, 0.12), pink, {maxScale:1.3});
+    TT('박스 2 문구', fv('box2'), inset(b2, 0.04, 0.1), wh, {maxFont:b2.h*0.3, lead:1.2, maxScale:1.3});
+    TT('타원 문구', fv('ell'), inset(be, 0.1, 0.1), wh, {maxFont:be.h*0.4, lead:1.15, maxScale:1.2});
+    TT('아래 왼쪽 문구', fv('bl'), {x:W*0.04, y:H*0.80, w:W*0.41, h:H*0.145}, blk, {maxFont:H*0.06, lead:1.25, center:false, weight:700, ps:psB, maxScale:1.2});
+    TT('전화번호', $('phone').value, {x:W*0.46, y:H*0.805, w:W*0.52, h:H*0.14}, wh, {maxFont:H*0.12, maxScale:1.8});
+  }
+  if(tpl === 'navy'){
+    const bgc = cv('bg'), yel = cv('yellow'), red = cv('red'), blk = cv('black'), wh = cv('white'), ink = cv('ink');
+    const lw = Math.max(3, Math.round(H*0.005));
+    const bT = {x:W*0.04, y:H*0.05, w:W*0.92, h:H*0.20};
+    const bQ = {x:W*0.06, y:H*0.27, w:W*0.88, h:H*0.05};
+    const bK = {x:W*0.04, y:H*0.34, w:W*0.92, h:H*0.20};
+    const bS = {x:W*0.06, y:H*0.56, w:W*0.88, h:H*0.06};
+    const bR = {x:W*0.04, y:H*0.64, w:W*0.92, h:H*0.24};
+    const bRL = {x:bR.x + bR.w*0.02, y:bR.y, w:bR.w*0.34, h:bR.h};
+    const bRR = {x:bR.x + bR.w*0.40, y:bR.y, w:bR.w*0.58, h:bR.h};
+    const bBar = {x:W*0.04, y:H*0.90, w:W*0.92, h:H*0.075};
+    L.push(rectL('배경', {x:0, y:0, w:W, h:H}, bgc, null, 0, 0));
+    L.push(rectL('바깥 테두리', {x:5, y:5, w:W - 10, h:H - 10}, null, ink, 10, Math.round(H*0.04)));
+    L.push(rectL('노랑 제목박스', bT, yel, ink, lw*1.5, 0));
+    L.push(rectL('검정 박스', bK, blk, wh, lw, 0));
+    L.push(rectL('안내 박스', bR, null, wh, lw, 0));
+    L.push(rectL('전화 바', bBar, wh, null, 0, Math.round(H*0.015)));
+    outlined('제목', slashify(fv('title')), inset(bT, 0.03, 0.1), red, ink, 0.16, {italic:true});
+    TT('인용', fv('quote'), bQ, wh, {maxFont:bQ.h*0.7, maxScale:1.15, weight:700, ps:psB});
+    outlined('큰 글씨', fv('big'), inset(bK, 0.03, 0.1), red, wh, 0.14);
+    TT('작은 줄', fv('small'), bS, wh, {maxFont:bS.h*0.7, maxScale:1.1, weight:700, ps:psB});
+    TT('추천 제목', fv('rec'), inset(bRL, 0.04, 0.12), wh, {lead:1.15});
+    TT('추천 목록', fv('list'), inset(bRR, 0.02, 0.1), wh, {maxFont:bRR.h*0.26, lead:1.25, fill:false, center:false, weight:700, ps:psB});
+    TT('전화 바 문구', fv('bar'), inset(bBar, 0.02, 0.1), ink, {maxScale:1.4});
+  }
+  if(tpl === 'yslash'){
+    const bgc = cv('bg'), navy = cv('navy'), red = cv('red'), wh = cv('white'), ink = cv('ink');
+    const lw = Math.max(3, Math.round(H*0.006));
+    const bT = {x:W*0.04, y:H*0.04, w:W*0.62, h:H*0.36};
+    const bBadge = {x:W*0.70, y:H*0.06, w:W*0.26, h:H*0.30};
+    const bBand = {x:W*0.02, y:H*0.43, w:W*0.96, h:H*0.09};
+    const bTag = {x:W*0.04, y:H*0.56, w:W*0.50, h:H*0.12};
+    const bPara = {x:W*0.04, y:H*0.69, w:W*0.50, h:H*0.27};
+    const bPh = {x:W*0.57, y:H*0.56, w:W*0.39, h:H*0.12};
+    const bSlo = {x:W*0.57, y:H*0.70, w:W*0.39, h:H*0.26};
+    L.push(rectL('배경', {x:0, y:0, w:W, h:H}, bgc, ink, 12, 0));
+    L.push(ovalL('뱃지 타원', bBadge, red, ink, lw));
+    L.push(rectL('남색 띠', bBand, navy, null, 0, 0));
+    TT('제목', slashify(fv('title')), bT, navy, {maxScale:1.6, maxFont:bT.h*0.9});
+    TT('뱃지', fv('badge'), inset(bBadge, 0.1, 0.16), wh, {maxScale:1.2});
+    TT('띠 문구', fv('band'), bBand, wh, {maxFont:bBand.h*0.6, maxScale:1.2, weight:700, ps:psB});
+    TT('빨강 한 줄', fv('tag'), bTag, red, {maxScale:1.3, italic:true});
+    TT('빨강 본문', fv('para'), bPara, red, {maxFont:bPara.h*0.2, lead:1.3, fill:false, center:false, weight:700, ps:psB});
+    TT('상담 전화', fv('phone2'), bPh, ink, {maxScale:1.5});
+    TT('빨강 슬로건', fv('slogan'), bSlo, red, {maxScale:1.6, maxFont:bSlo.h*0.5});
+  }
+  if(tpl === 'pinkv'){
+    const bgc = cv('bg'), wh = cv('white'), ink = cv('ink');
+    L.push(rectL('배경', {x:0, y:0, w:W, h:H}, bgc, null, 0, 0));
+    const cx = W/2, cy = H*0.5, R = Math.min(W*0.46, H*0.25);
+    L.push(burstL('폭발', cx, cy, R, wh, wh, 1, 16, 0.78));
+    TT('윗 글씨', fv('top'), {x:W*0.06, y:H*0.04, w:W*0.88, h:H*0.21}, wh, {maxScale:1.6});
+    TT('폭발 안 글자', fv('badge'), {x:cx - R*0.6, y:cy - R*0.32, w:R*1.2, h:R*0.64}, ink, {maxScale:1.5});
+    TT('아래 글씨', fv('bottom'), {x:W*0.06, y:H*0.75, w:W*0.88, h:H*0.21}, wh, {maxScale:1.6});
+  }
+  if(tpl === 'alien'){
+    const bgc = cv('bg'), ink = cv('ink'), red = cv('red');
+    L.push(rectL('배경', {x:0, y:0, w:W, h:H}, bgc, null, 0, 0));
+    TT('첫째 줄', '외계인 침공시', {x:W*0.04, y:H*0.04, w:W*0.92, h:H*0.20}, ink, {maxScale:1.6});
+    TT('둘째 줄', (fv('trait').trim() || '[   ]') + ' 사람이', {x:W*0.04, y:H*0.25, w:W*0.92, h:H*0.22}, red, {maxScale:1.6});
+    TT('넷째 줄', '먼저 잡아', {x:W*0.42, y:H*0.49, w:W*0.54, h:H*0.20}, ink, {maxScale:1.6});
+    TT('마지막 큰 줄', '먹힌다', {x:W*0.40, y:H*0.70, w:W*0.56, h:H*0.26}, ink, {maxScale:1.6});
+    L.push(alienLayer({x:W*0.02, y:H*0.49, w:W*0.39, h:H*0.47}));
+  }
+  if(tpl === 'redsign'){
+    const bgc = cv('bg'), ink = cv('ink'), acc = cv('acc');
+    const lw = Math.max(3, Math.round(H*0.005));
+    L.push(rectL('배경', {x:0, y:0, w:W, h:H}, bgc, null, 0, 0));
+    const bBadge = {x:W*0.025, y:H*0.04, w:W*0.085, h:H*0.24};
+    L.push(ovalL('동그라미', bBadge, ink, null, 0));
+    const bTag = {x:W*0.315, y:H*0.06, w:W*0.085, h:H*0.19};
+    L.push(ovalL('작은 타원', bTag, ink, null, 0));
+    const bPill = {x:W*0.025, y:H*0.33, w:W*0.74, h:H*0.085};
+    L.push(rectL('가운데 줄 테두리', bPill, null, ink, lw, bPill.h/2));
+    const bBox = {x:W*0.025, y:H*0.47, w:W*0.42, h:H*0.48};
+    L.push(rectL('검정 박스', bBox, ink, null, 0, Math.round(H*0.025)));
+    const bIn = {x:W*0.305, y:H*0.505, w:W*0.125, h:H*0.41};
+    L.push(rectL('작은 칸 테두리', bIn, null, acc, lw, Math.round(H*0.015)));
+    const scx = W*0.615, scy = H*0.71, sR = H*0.25;
+    L.push(burstL('별 폭발', scx, scy, sR, ink, ink, 1, 8, 0.55));
+    TT('동그라미 글자', stackChars(fv('badge')), inset(bBadge, 0.12, 0.1), acc, {lead:1.0, fill:false, maxFont:bBadge.h*0.42});
+    TT('앞 문구', fv('pre'), {x:W*0.115, y:H*0.06, w:W*0.195, h:H*0.19}, ink, {maxScale:1.3, ps:psB});
+    TT('작은 타원 글자', fv('tag'), inset(bTag, 0.12, 0.14), acc, {lead:1.0, maxScale:1.2});
+    TT('큰 이름', fv('name'), {x:W*0.405, y:H*0.02, w:W*0.33, h:H*0.27}, ink, {maxScale:1.6});
+    TT('오른쪽 세로 글씨', stackChars(fv('vert')), {x:W*0.79, y:H*0.03, w:W*0.18, h:H*0.94}, ink, {lead:1.0, fill:false, maxFont:H*0.23});
+    TT('가운데 한 줄', fv('pill'), inset(bPill, 0.03, 0.1), ink, {maxScale:1.2, ps:psB});
+    TT('검정 박스 글자', fv('box1'), {x:W*0.04, y:H*0.5, w:W*0.255, h:H*0.42}, acc, {lead:1.12, maxScale:1.3});
+    TT('작은 칸 글자', fv('box2'), inset(bIn, 0.1, 0.06), acc, {lead:1.12, maxScale:1.3});
+    TT('별 폭발 글자', fv('star'), {x:scx - sR*0.5, y:scy - sR*0.5, w:sR, h:sR}, acc, {lead:1.05, maxScale:1.2});
+    TT('별 1', '★', {x:W*0.455, y:H*0.47, w:W*0.05, h:H*0.08}, ink, {fill:false});
+    TT('별 2', '★', {x:W*0.72, y:H*0.86, w:W*0.05, h:H*0.08}, ink, {fill:false});
+  }
+  if(tpl === 'greenintro'){
+    const bgc = cv('bg'), gr = cv('green'), wh = cv('white');
+    const lw = Math.max(3, Math.round(H*0.006));
+    L.push(rectL('배경', {x:0, y:0, w:W, h:H}, bgc, null, 0, 0));
+    L.push(rectL('바깥 테두리', {x:W*0.012, y:H*0.018, w:W*0.976, h:H*0.964}, null, gr, lw, Math.round(H*0.02)));
+    const bName = {x:W*0.355, y:H*0.035, w:W*0.23, h:H*0.125};
+    L.push(rectL('이름 알약', bName, gr, null, 0, bName.h/2));
+    const bBig = {x:W*0.035, y:H*0.185, w:W*0.385, h:H*0.245};
+    L.push(rectL('큰 글씨 상자', bBig, wh, gr, lw*1.5, Math.round(H*0.03)));
+    const bQ2 = {x:W*0.44, y:H*0.27, w:W*0.53, h:H*0.1};
+    L.push(rectL('둘째 줄 상자', bQ2, null, gr, lw, Math.round(H*0.02)));
+    const bList = {x:W*0.44, y:H*0.385, w:W*0.405, h:H*0.375};
+    L.push(rectL('목록 상자', bList, null, gr, lw, Math.round(H*0.03)));
+    const bObj = {x:W*0.855, y:H*0.40, w:W*0.115, h:H*0.345};
+    L.push(ovalL('오른쪽 타원', bObj, wh, gr, lw));
+    const bFoot = {x:W*0.44, y:H*0.775, w:W*0.53, h:H*0.185};
+    L.push(rectL('맨 아래 줄 테두리', bFoot, null, gr, lw, bFoot.h/2));
+    TT('왼쪽 위', fv('t1'), {x:W*0.025, y:H*0.035, w:W*0.33, h:H*0.125}, gr, {maxScale:1.3, ps:psB});
+    outlined('이름', fv('name'), inset(bName, 0.07, 0.06), wh, gr, 0.1, {italic:true, maxScale:1.4});
+    TT('오른쪽 위', fv('t2'), {x:W*0.59, y:H*0.035, w:W*0.385, h:H*0.125}, gr, {maxScale:1.3, ps:psB});
+    outlined('큰 글씨', fv('big'), inset(bBig, 0.04, 0.06), gr, wh, 0.12, {maxScale:1.6});
+    TT('큰 글씨 아래', fv('para'), {x:W*0.035, y:H*0.44, w:W*0.385, h:H*0.175}, gr, {lead:1.2, maxScale:1.3, ps:psB});
+    TT('작은 줄', fv('small'), {x:W*0.035, y:H*0.615, w:W*0.385, h:H*0.065}, gr, {maxScale:1.2, ps:psB});
+    outlined('아래 큰 글씨', fv('hanja'), {x:W*0.035, y:H*0.685, w:W*0.385, h:H*0.275}, gr, wh, 0.1, {maxScale:1.6});
+    TT('오른쪽 첫 줄', fv('q1'), {x:W*0.44, y:H*0.175, w:W*0.53, h:H*0.09}, gr, {maxScale:1.2, ps:psB});
+    TT('오른쪽 둘째 줄', fv('q2'), inset(bQ2, 0.025, 0.08), gr, {maxScale:1.2, ps:psB});
+    TT('목록', fv('list'), inset(bList, 0.04, 0.07), gr, {lead:1.3, center:false, maxScale:1.2, ps:psB});
+    TT('오른쪽 타원 글자', fv('obj'), inset(bObj, 0.12, 0.16), gr, {lead:1.05, maxScale:1.2});
+    TT('맨 아래 줄', fv('foot'), inset(bFoot, 0.05, 0.08), gr, {maxScale:1.4});
+  }
+
+  if(tpl === 'bluev'){
+    const paper = cv('paper'), bl = cv('blue'), wh = cv('white');
+    const lw = Math.max(3, Math.round(W*0.006));
+    L.push(rectL('배경', {x:0, y:0, w:W, h:H}, paper, null, 0, 0));
+    L.push(rectL('파랑 테두리', {x:W*0.015, y:W*0.015, w:W*0.97, h:H - W*0.03}, null, bl, W*0.03, 0));
+    const bSub = {x:W*0.07, y:H*0.165, w:W*0.86, h:H*0.05};
+    L.push(rectL('제목 아래 상자', bSub, null, bl, lw, 0));
+    const bcx = W*0.23, bcy = H*0.35, R = W*0.19;
+    L.push(burstL('폭발', bcx, bcy, R, paper, bl, lw*1.3, 12, 0.72));
+    const bPill = {x:W*0.07, y:H*0.485, w:W*0.86, h:H*0.05};
+    L.push(rectL('알약 테두리', bPill, null, bl, lw, bPill.h/2));
+    const bBox = {x:W*0.58, y:H*0.57, w:W*0.35, h:H*0.15};
+    L.push(rectL('파랑 상자', bBox, bl, null, 0, Math.round(H*0.01)));
+    const oy = H*0.845, oh = H*0.09, ow = W*0.27;
+    [0.07, 0.365, 0.66].forEach((fx, i) => L.push(ovalL('타원 ' + (i+1), {x:W*fx, y:oy, w:ow, h:oh}, bl, null, 0)));
+    shadowed('제목', fv('title'), {x:W*0.07, y:H*0.035, w:W*0.86, h:H*0.12}, bl, mixHex(bl, paper, 0.6), paper, {italic:true, maxScale:1.5});
+    TT('제목 아래 상자 글자', fv('sub'), inset(bSub, 0.03, 0.1), bl, {maxScale:1.2, ps:psB});
+    TT('폭발 안 글자', fv('burst'), {x:bcx - R*0.72, y:bcy - R*0.32, w:R*1.44, h:R*0.64}, bl, {maxScale:1.4});
+    TT('오른쪽 제목', fv('head'), {x:W*0.44, y:H*0.235, w:W*0.50, h:H*0.065}, bl, {maxScale:1.3});
+    TT('오른쪽 목록', fv('bullets'), {x:W*0.44, y:H*0.305, w:W*0.50, h:H*0.15}, bl, {lead:1.3, fill:false, center:false, maxFont:H*0.035, ps:psB});
+    TT('알약 글자', fv('pill'), inset(bPill, 0.04, 0.1), bl, {maxScale:1.2, ps:psB});
+    TT('왼쪽 목록', fv('list'), {x:W*0.07, y:H*0.56, w:W*0.50, h:H*0.17}, bl, {lead:1.35, fill:false, center:false, maxFont:H*0.04, ps:psB});
+    TT('파랑 상자 글자', fv('box'), inset(bBox, 0.06, 0.1), wh, {lead:1.15, maxScale:1.3});
+    TT('별 줄', fv('stars'), {x:W*0.07, y:H*0.755, w:W*0.42, h:H*0.06}, bl, {maxScale:1.3});
+    TT('전화번호', $('phone').value, {x:W*0.51, y:H*0.755, w:W*0.42, h:H*0.06}, bl, {maxScale:1.3, ps:psB});
+    ['o1','o2','o3'].forEach((f, i) => TT('타원 ' + (i+1) + ' 글자', fv(f), inset({x:W*[0.07, 0.365, 0.66][i], y:oy, w:ow, h:oh}, 0.14, 0.12), wh, {maxScale:1.3}));
+  }
+  if(tpl === 'rockeff'){
+    const paper = cv('paper'), ink = cv('ink');
+    const lw = Math.max(3, Math.round(H*0.006));
+    L.push(rectL('배경', {x:0, y:0, w:W, h:H}, paper, null, 0, 0));
+    L.push(rectL('아래 검정', {x:0, y:H*0.47, w:W, h:H*0.53}, ink, null, 0, 0));
+    L.push(rectL('바깥 테두리', {x:lw/2, y:lw/2, w:W - lw, h:H - lw}, null, ink, lw, 0));
+    L.push(dotsL('위 점선', H*0.035, W*0.03, W*0.97, H*0.008, ink));
+    L.push(dotsL('아래 점선', H*0.51, W*0.03, W*0.97, H*0.008, paper));
+    const bC = {x:W*0.035, y:H*0.08, w:W*0.11, h:H*0.17};
+    L.push(ovalL('동그라미', bC, ink, null, 0));
+    const bBar = {x:W*0.035, y:H*0.30, w:W*0.93, h:H*0.10};
+    L.push(rectL('검정 알약', bBar, ink, null, 0, bBar.h/2));
+    const bC2 = {x:W*0.035, y:H*0.555, w:W*0.07, h:H*0.105};
+    L.push(ovalL('아래 동그라미', bC2, paper, null, 0));
+    L.push(burstL('큰 별', W*0.075, H*0.83, H*0.11, ink, paper, lw*1.2, 5, 0.45));
+    L.push(burstL('작은 별', W*0.14, H*0.715, H*0.04, ink, paper, lw, 5, 0.45));
+    const bR = {x:W*0.66, y:H*0.55, w:W*0.31, h:H*0.41};
+    L.push(rectL('오른쪽 상자', bR, paper, null, 0, Math.round(H*0.02)));
+    const bName = {x:W*0.675, y:H*0.735, w:W*0.15, h:H*0.09};
+    L.push(rectL('이름 테두리', bName, null, ink, lw, Math.round(H*0.01)));
+    const qs = Math.min(W*0.12, H*0.19);
+    L.push(qrL('QR 느낌 격자', {x:W*0.84, y:H*0.735, w:qs, h:qs}, ink));
+    TT('동그라미 글자', fv('cbadge'), inset(bC, 0.16, 0.14), paper, {maxScale:1.2});
+    TT('제목', fv('title'), {x:W*0.15, y:H*0.07, w:W*0.30, h:H*0.19}, ink, {maxScale:1.5});
+    TT('오른쪽 위 질문', fv('q'), {x:W*0.46, y:H*0.12, w:W*0.50, h:H*0.11}, ink, {italic:true, maxScale:1.3, ps:psB});
+    TT('검정 알약 글자', fv('bar'), inset(bBar, 0.03, 0.12), paper, {maxScale:1.3, ps:psB});
+    TT('아래 동그라미 글자', fv('c2'), inset(bC2, 0.14, 0.12), ink, {maxScale:1.2});
+    TT('동그라미 옆 줄', fv('eq'), {x:W*0.115, y:H*0.56, w:W*0.52, h:H*0.10}, paper, {fill:false, center:false, maxScale:1.2});
+    TT('아래 본문', fv('para'), {x:W*0.17, y:H*0.68, w:W*0.47, h:H*0.29}, paper, {lead:1.25, maxScale:1.2, ps:psB});
+    TT('오른쪽 상자 글자', fv('rbox'), {x:W*0.67, y:H*0.565, w:W*0.29, h:H*0.16}, ink, {lead:1.2, maxScale:1.2, ps:psB});
+    TT('오른쪽 이름', fv('rname'), inset(bName, 0.06, 0.1), ink, {maxScale:1.4});
+    TT('이름 아래', fv('rsmall'), {x:W*0.675, y:H*0.83, w:W*0.15, h:H*0.12}, ink, {lead:1.1, maxScale:1.3});
+  }
+  if(tpl === 'greenbanner'){
+    const gr = cv('green'), wh = cv('white');
+    const lw = Math.max(3, Math.round(H*0.006));
+    L.push(rectL('배경', {x:0, y:0, w:W, h:H}, wh, null, 0, 0));
+    L.push(rectL('위 초록 띠', {x:0, y:0, w:W, h:H*0.34}, gr, null, 0, 0));
+    const stacks = (side, raw, x0, w0) => {
+      const cols = raw.split('\n').filter(l => l.trim());
+      const cw = w0/Math.max(1, cols.length);
+      const dot = mkCanvas(), dx = dot.getContext('2d'); dx.fillStyle = wh;
+      cols.forEach((col, i) => {
+        const bx = {x:x0 + i*cw, y:H*0.075, w:cw, h:H*0.245};
+        dx.beginPath(); dx.arc(bx.x + cw/2, H*0.045, H*0.013, 0, Math.PI*2); dx.fill();
+        TT(side + ' 세로 ' + (i+1), stackChars(col), bx, wh, {lead:1.0, fill:false, maxFont:bx.h});
+      });
+      L.push({name:side + ' 점', canvas:dot});
+    };
+    stacks('왼쪽', fv('lstack'), W*0.035, W*0.19);
+    stacks('오른쪽', fv('rstack'), W*0.775, W*0.19);
+    const chars = fv('title').replace(/\s+/g, '').split('');
+    if(chars.length){
+      const n = chars.length, span = W*0.54, d = Math.min(span/(n*0.94 + 0.06), H*0.33), step = d*0.94;
+      const x0 = W/2 - (step*(n - 1) + d)/2, cy = H*0.17;
+      chars.forEach((ch, i) => L.push(ovalL('동그라미 ' + (i+1), {x:x0 + i*step, y:cy - d/2, w:d, h:d}, wh, gr, lw)));
+      chars.forEach((ch, i) => shadowed('제목 ' + (i+1), ch, inset({x:x0 + i*step, y:cy - d/2, w:d, h:d}, 0.14, 0.12), gr, mixHex(gr, wh, 0.55), wh, {fill:false}));
+    }
+    const bPill = {x:W*0.03, y:H*0.38, w:W*0.94, h:H*0.095};
+    L.push(rectL('윗 상자', bPill, null, gr, lw, Math.round(H*0.02)));
+    const ecx = W*0.135, ecy = H*0.685, eR = H*0.175;
+    L.push(tickRingL('왼쪽 동그라미', ecx, ecy, eR, gr, lw*1.5));
+    const bBox = {x:W*0.28, y:H*0.52, w:W*0.69, h:H*0.335};
+    L.push(rectL('초록 상자', bBox, gr, null, 0, Math.round(H*0.04)));
+    const bFoot = {x:W*0.03, y:H*0.885, w:W*0.94, h:H*0.095};
+    L.push(rectL('맨 아래 상자', bFoot, null, gr, lw, Math.round(H*0.02)));
+    TT('윗 상자 글자', fv('pill'), inset(bPill, 0.02, 0.1), gr, {maxScale:1.3});
+    TT('왼쪽 동그라미 그림', fv('emblem'), {x:ecx - eR*0.6, y:ecy - eR*0.6, w:eR*1.2, h:eR*1.2}, gr, {fill:false, maxFont:eR});
+    TT('초록 상자 왼쪽', fv('para1'), {x:W*0.295, y:H*0.535, w:W*0.27, h:H*0.305}, wh, {lead:1.3, maxScale:1.15, ps:psB});
+    outlined('가운데 세로 글씨', stackChars(fv('vert')), {x:W*0.565, y:H*0.50, w:W*0.085, h:H*0.38}, wh, gr, 0.12, {lead:0.95, fill:false, italic:true, maxFont:H*0.15});
+    TT('초록 상자 오른쪽', fv('para2'), {x:W*0.66, y:H*0.535, w:W*0.295, h:H*0.305}, wh, {lead:1.3, maxScale:1.15, ps:psB});
+    TT('왼쪽 장식', '✦✦✦', {x:W*0.04, y:bFoot.y, w:W*0.11, h:bFoot.h}, gr, {fill:false});
+    TT('오른쪽 장식', '✦✦✦', {x:W*0.85, y:bFoot.y, w:W*0.11, h:bFoot.h}, gr, {fill:false});
+    TT('맨 아래 줄', fv('foot'), {x:W*0.16, y:bFoot.y, w:W*0.68, h:bFoot.h}, gr, {maxScale:1.4});
+  }
+  if(tpl === 'flyer'){
+    const paper = cv('paper'), ink = cv('ink'), gray = cv('gray'), light = cv('light');
+    const lw = Math.max(3, Math.round(W*0.008));
+    L.push(rectL('배경', {x:0, y:0, w:W, h:H}, paper, null, 0, 0));
+    const bBot = {x:lw*1.5, y:H*0.775, w:W - lw*3, h:H*0.21};
+    L.push(rectL('아래 띠', bBot, light, null, 0, 0));
+    L.push(rectL('테두리', {x:lw, y:lw, w:W - lw*2, h:H - lw*2}, null, ink, lw, 0));
+    const cd = W*0.17, bC1 = {x:W*0.045, y:H*0.035, w:cd, h:cd}, bC2 = {x:W*0.045, y:H*0.035 + cd*1.08, w:cd, h:cd};
+    L.push(ovalL('동그라미 1', bC1, gray, null, 0));
+    L.push(ovalL('동그라미 2', bC2, gray, null, 0));
+    L.push(arrowL('화살표', {x:W*0.41, y:H*0.36, w:W*0.18, h:H*0.09}, paper, ink, lw));
+    const bZ = {x:W*0.015, y:H*0.478, w:W*0.97, h:H*0.205};
+    L.push(ellBurstL('폭발 띠', bZ, gray, 24));
+    const bBox = {x:W*0.05, y:H*0.69, w:W*0.28, h:H*0.06};
+    L.push(rectL('작은 상자', bBox, paper, ink, 2, 0));
+    TT('동그라미 1 글자', fv('c1'), inset(bC1, 0.18, 0.18), ink, {maxScale:1.2});
+    TT('동그라미 2 글자', fv('c2'), inset(bC2, 0.18, 0.18), ink, {maxScale:1.2});
+    TT('큰 제목', fv('title'), {x:W*0.24, y:H*0.01, w:W*0.73, h:H*0.33}, ink, {maxFont:H*0.3, maxScale:2.5});
+    TT('화살표 앞', fv('from'), {x:W*0.03, y:H*0.335, w:W*0.38, h:H*0.14}, ink, {maxScale:1.6});
+    TT('화살표 뒤', fv('to'), {x:W*0.59, y:H*0.335, w:W*0.38, h:H*0.14}, ink, {maxScale:1.6});
+    { // 흰 글씨 + 두꺼운 검정 테두리 + 오른쪽 아래 검정 그림자
+      const bT = {x:W*0.12, y:bZ.y + bZ.h*0.25, w:W*0.76, h:bZ.h*0.5};
+      const o = {maxFont:bT.h*0.9, lead:1.1, weight:800, ps:psT, fill:true, maxScale:1.5, center:true};
+      const d = Math.max(3, Math.round(bT.h*0.06));
+      const gs = textLayer('폭발 띠 글자 그림자', fv('burst'), bT, Object.assign({}, o, {fg:ink, dx:d, dy:d}));
+      const gm = textLayer('폭발 띠 글자', fv('burst'), bT, Object.assign({}, o, {fg:paper}));
+      if(gs){ L.push(outlineLayer('폭발 띠 글자 그림자 외곽선', gs._geo, ink, 0.24)); L.push(gs); }
+      if(gm){ L.push(outlineLayer('폭발 띠 글자 외곽선', gm._geo, ink, 0.24)); L.push(gm); }
+    }
+    TT('작은 상자 글자', fv('box'), inset(bBox, 0.04, 0.1), ink, {maxScale:1.2, ps:psB});
+    TT('상자 옆 줄', fv('recruit'), {x:W*0.35, y:H*0.685, w:W*0.61, h:H*0.07}, ink, {maxScale:1.3});
+    TT('전화번호', $('phone').value, inset(bBot, 0.03, 0.06), ink, {maxFont:bBot.h*0.85, maxScale:2.2});
+  }
+  if(tpl === 'bluestar'){
+    const wh = cv('white'), bst = cv('burst'), ink = cv('ink');
+    L.push(gradL('배경', cv('bg'), cv('bg2')));
+    const cx = W/2, cy = H*0.5, R = Math.min(W*0.46, H*0.24);
+    L.push(burstL('폭발', cx, cy, R, bst, bst, 1, 18, 0.74));
+    TT('윗 글씨', fv('top'), {x:W*0.06, y:H*0.06, w:W*0.88, h:H*0.19}, wh, {maxScale:1.6});
+    TT('폭발 안 글자', fv('badge'), {x:cx - R*0.62, y:cy - R*0.32, w:R*1.24, h:R*0.64}, ink, {maxScale:1.5});
+    TT('아래 글씨', fv('bottom'), {x:W*0.06, y:H*0.75, w:W*0.88, h:H*0.19}, wh, {maxScale:1.6});
+  }
+  if(tpl === 'pinkhr'){
+    const pk = cv('pink'), nv = cv('navy'), wh = cv('white'), yl = cv('yellow');
+    const lw = Math.max(3, Math.round(H*0.005));
+    L.push(rectL('윗 바탕', {x:0, y:0, w:W, h:H}, pk, null, 0, 0));
+    L.push(rectL('아래 바탕', {x:0, y:H*0.56, w:W, h:H*0.44}, nv, null, 0, 0));
+    const bOv = {x:W*0.04, y:H*0.06, w:W*0.22, h:H*0.22};
+    L.push(ovalL('타원', bOv, nv, wh, lw));
+    const oy = H*0.725, oh = H*0.13, ow = W*0.21;
+    const oxs = [0.04, 0.28, 0.52, 0.76];
+    oxs.forEach((fx, i) => L.push(ovalL('타원 ' + (i+1), {x:W*fx, y:oy, w:ow, h:oh}, null, wh, lw)));
+    TT('타원 글자', fv('oval'), inset(bOv, 0.14, 0.16), wh, {maxScale:1.3});
+    TT('큰 제목', fv('title'), {x:W*0.28, y:H*0.03, w:W*0.69, h:H*0.27}, wh, {maxScale:1.6});
+    TT('작은 두 줄', fv('lines'), {x:W*0.05, y:H*0.31, w:W*0.90, h:H*0.23}, yl, {lead:1.2, maxScale:1.3, ps:psB});
+    TT('아래 한 줄', fv('band'), {x:W*0.05, y:H*0.585, w:W*0.90, h:H*0.12}, wh, {maxScale:1.4});
+    ['o1','o2','o3','o4'].forEach((f, i) => TT('타원 ' + (i+1) + ' 글자', fv(f), inset({x:W*oxs[i], y:oy, w:ow, h:oh}, 0.14, 0.14), wh, {maxScale:1.3}));
+    const ph = $('phone').value.trim(), ft = fv('foot').trim();
+    TT('전화번호 줄', [ph, ft].filter(Boolean).join('  '), {x:W*0.12, y:H*0.885, w:W*0.76, h:H*0.08}, pk, {maxScale:1.2, ps:psB});
+  }
+  if(tpl === 'yrecruit'){
+    const yl = cv('yellow'), gy = cv('gray'), red = cv('red'), ink = cv('ink'), wh = cv('white');
+    L.push(rectL('노랑 바탕', {x:0, y:0, w:W, h:H}, yl, null, 0, 0));
+    L.push(rectL('가운데 띠', {x:0, y:H*0.285, w:W, h:H*0.42}, gy, null, 0, 0));
+    const cd = Math.min(W*0.2, H*0.34), bC = {x:W*0.04, y:H*0.285 + (H*0.42 - cd)/2, w:cd, h:cd};
+    L.push(ovalL('빨간 동그라미', bC, red, null, 0));
+    const t = fv('title').replace(/\s+/g, '').split('').join(' /');
+    TT('제목', t, {x:W*0.04, y:H*0.03, w:W*0.92, h:H*0.24}, ink, {maxScale:1.5});
+    TT('빨간 동그라미 글자', fv('circle'), inset(bC, 0.16, 0.2), wh, {lead:1.05, maxScale:1.2});
+    TT('가운데 글', fv('lines'), {x:W*0.27, y:H*0.30, w:W*0.70, h:H*0.39}, ink, {lead:1.2, maxScale:1.2, ps:psB});
+    TT('전화번호', $('phone').value, {x:W*0.04, y:H*0.725, w:W*0.92, h:H*0.255}, ink, {maxScale:1.6, ps:psB});
+  }
+  if(tpl === 'gen' && GEN){
+    const bgc = cv('bg'), ink = cv('ink'), a1 = cv('acc1'), a2 = cv('acc2'), lt = cv('light');
+    const lw = Math.max(3, Math.round(Math.min(W, H)*0.007));
+    const roleC = k => ({acc1:a1, acc2:a2, ink:ink})[k] || a1;
+    const on = f => { let best = lt, bd = -1; [lt, ink, bgc, a2, a1].forEach(c => { if(c === f) return; const d = Math.abs(lum(c) - lum(f)); if(d > bd){ bd = d; best = c; } }); return best; };
+    const fg0 = Math.abs(lum(ink) - lum(bgc)) > 0.35 ? ink : on(bgc);
+    L.push(rectL('배경', {x:0, y:0, w:W, h:H}, bgc, null, 0, 0));
+    if(GEN.frame) L.push(rectL('테두리', {x:lw, y:lw, w:W - 2*lw, h:H - 2*lw}, null, fg0, lw*1.5, Math.round(Math.min(W, H)*0.02)));
+    GEN.comps.forEach((c, i) => {
+      const b = {x:c.x*W, y:c.y*H, w:c.w*W, h:c.h*H}, n = (i + 1) + '. ';
+      const txt = c.fid ? fv(c.fid) : '';
+      const f = roleC(c.fillRole), rr = Math.round(Math.min(b.w, b.h)*0.14);
+      const cx = b.x + b.w/2, cy = b.y + b.h/2, d = Math.min(b.w, b.h);
+      if(c.type === 'title'){
+        if(c.style === 'fill'){ L.push(rectL(n + '제목 상자', b, a1, fg0, lw, 0)); TT(n + '제목', txt, inset(b, 0.03, 0.06), on(a1), {maxScale:1.8}); }
+        else if(c.style === 'band'){ L.push(rectL(n + '제목 띠', b, fg0, null, 0, 0)); TT(n + '제목', txt, inset(b, 0.03, 0.06), Math.abs(lum(a2) - lum(fg0)) > 0.4 ? a2 : on(fg0), {maxScale:1.8}); }
+        else shadowed(n + '제목', txt, b, Math.abs(lum(a1) - lum(bgc)) > 0.25 ? a1 : fg0, fg0, on(fg0), {maxScale:1.8});
+      } else if(c.type === 'burst'){
+        const R = d/2;
+        L.push(burstL(n + '폭발', cx, cy, R, a2, fg0, lw, 14, 0.72));
+        TT(n + '폭발 글자', txt, {x:cx - R*0.6, y:cy - R*0.36, w:R*1.2, h:R*0.72}, on(a2), {rot:-10, maxScale:1.3});
+      } else if(c.type === 'circle'){
+        const bc = {x:cx - d/2, y:cy - d/2, w:d, h:d};
+        L.push(ovalL(n + '동그라미', bc, f, fg0, lw));
+        const t2 = txt.replace(/\s+/g, '').length <= 2 ? stackChars(txt) : txt;
+        TT(n + '동그라미 글자', t2, inset(bc, 0.2, 0.2), on(f), {lead:1.0, maxScale:1.2});
+      } else if(c.type === 'band'){
+        L.push(rectL(n + '띠', b, f, null, 0, 0));
+        TT(n + '띠 글자', txt, inset(b, 0.02, 0.08), on(f), {maxScale:1.6});
+      } else if(c.type === 'pill'){
+        if(c.fillRole === 'ink'){ L.push(rectL(n + '알약', b, null, fg0, lw, b.h/2)); TT(n + '알약 글자', txt, inset(b, 0.05, 0.1), fg0, {maxScale:1.5}); }
+        else { L.push(rectL(n + '알약', b, f, null, 0, b.h/2)); TT(n + '알약 글자', txt, inset(b, 0.05, 0.1), on(f), {maxScale:1.5}); }
+      } else if(c.type === 'box'){
+        L.push(rectL(n + '상자', b, f, fg0, lw, rr));
+        TT(n + '상자 글자', txt, inset(b, 0.05, 0.08), on(f), {lead:1.15, maxScale:1.4});
+      } else if(c.type === 'list'){
+        L.push(rectL(n + '목록 상자', b, null, fg0, lw, rr));
+        TT(n + '목록', txt, inset(b, 0.05, 0.08), fg0, {lead:1.25, center:false, maxScale:1.3, ps:psB});
+      } else if(c.type === 'bigword'){
+        const fc = Math.abs(lum(f) - lum(bgc)) > 0.25 ? f : fg0;
+        outlined(n + '큰 글씨', txt, b, fc, on(fc), 0.12, {maxScale:1.6});
+      } else if(c.type === 'emoji'){
+        const bc = {x:cx - d/2, y:cy - d/2, w:d, h:d};
+        L.push(ovalL(n + '그림 테두리', bc, null, fg0, lw));
+        TT(n + '그림', txt, inset(bc, 0.16, 0.16), fg0, {fill:false});
+      } else if(c.type === 'vert'){
+        L.push(rectL(n + '세로 상자', b, f, null, 0, rr));
+        TT(n + '세로 글씨', stackChars(txt), inset(b, 0.1, 0.05), on(f), {lead:1.0, fill:false, maxFont:b.w*0.9});
+      } else if(c.type === 'ovals'){
+        const lines = txt.split('\n').filter(l => l.trim()), k = Math.max(1, lines.length);
+        const gp = b.w*0.025, ow = (b.w - gp*(k - 1))/k;
+        lines.forEach((l, j) => {
+          const bo = {x:b.x + j*(ow + gp), y:b.y, w:ow, h:b.h};
+          if(c.fillRole === 'ink'){ L.push(ovalL(n + '타원 ' + (j + 1), bo, null, fg0, lw)); TT(n + '타원 글자 ' + (j + 1), l, inset(bo, 0.16, 0.16), fg0, {maxScale:1.3}); }
+          else { L.push(ovalL(n + '타원 ' + (j + 1), bo, f, null, 0)); TT(n + '타원 글자 ' + (j + 1), l, inset(bo, 0.16, 0.16), on(f), {maxScale:1.3}); }
+        });
+      } else if(c.type === 'stars'){
+        TT(n + '별 줄', '★'.repeat(Math.max(5, Math.round(b.w/b.h*0.9))), b, fg0, {maxScale:1.2});
+      } else if(c.type === 'phone'){
+        if(c.style === 'fill'){ L.push(rectL(n + '전화 띠', b, fg0, null, 0, rr)); TT('전화번호', $('phone').value, inset(b, 0.03, 0.08), on(fg0), {maxScale:2, ps:psB}); }
+        else TT('전화번호', $('phone').value, b, fg0, {maxScale:2, ps:psB});
+      }
+    });
+  }
+  if(tpl === 'pattern'){
+    const ink = $('monoInk').value, paper = $('monoPaper').value;
+    const mp = Math.round(H*0.05);
+    const B = {x:mp, y:mp, w:W - 2*mp, h:H - 2*mp};
+    const gfs = Math.round(H*0.05);
+    const I = {x:B.x + gfs*1.6, y:B.y + gfs*1.6, w:B.w - gfs*3.2, h:B.h - gfs*3.2};
+    const ry = I.h*0.5, rx = ry*0.42, cx = I.x + rx, cy = I.y + I.h/2;
+    const gap = I.h*0.06;
+    const R = {x:cx + rx + gap, y:I.y, w:I.x + I.w - (cx + rx + gap), h:I.h};
+    const bTop = {x:R.x, y:R.y, w:R.w, h:R.h*0.25};
+    const bBig = {x:R.x, y:R.y + R.h*0.28, w:R.w, h:R.h*0.72};
+    const bBadge = {x:cx - rx*0.78, y:cy - ry*0.86, w:rx*1.56, h:ry*1.72};
+    L.push(monoBgLayer(paper, ink));
+    L.push(patternBorderLayer(B, $('p7Glyph').value, gfs, ink, psT));
+    L.push(monoOvalLayer(cx, cy, rx, ry, ink));
+    let top = $('p7Top').value;
+    if($('p7Slash').checked) top = slashify(top);
+    addT('윗줄', top, bTop, {maxFont:bTop.h*0.7, lead:1.1, weight:800, italic:true, ps:psB, fill:true, maxScale:1.8, center:true, fg:ink});
+    addT('배지글자', stackChars($('p7Badge').value), bBadge, {maxFont:bBadge.w*1.05, lead:1.0, weight:800, italic:true, ps:psT, fill:false, center:true, fg:paper});
+    const bigBox = {x:bBig.x + bBig.h*0.05, y:bBig.y + bBig.h*0.05, w:bBig.w - bBig.h*0.1, h:bBig.h*0.9};
+    const gBig = textLayer('큰 글씨', $('p7Big').value, bigBox, {maxFont:bigBox.h*0.5, lead:1.12, weight:800, ps:psT, fill:true, maxScale:1.6, center:true, fg:ink});
+    if(gBig){
+      L.push(outlineLayer('큰글씨 바깥 외곽선', gBig._geo, ink, 0.24));
+      L.push(outlineLayer('큰글씨 안쪽 흰 외곽선', gBig._geo, paper, 0.13));
+      L.push(gBig);
+    }
+  }
+  if(tpl === 'grid'){
+    const ink = $('monoInk').value, paper = $('monoPaper').value;
+    const mp = Math.round(H*0.05);
+    const F = {x:mp, y:mp, w:W - 2*mp, h:H - 2*mp};
+    const headH = Math.round(F.h*0.27), t = Math.round(F.h*0.045);
+    const P = {x:F.x + t, y:F.y + headH, w:F.w - 2*t, h:F.h - headH - t};
+    const ry = P.h*0.46, rx = ry*0.42, cx = P.x + t*0.8 + rx, cy = P.y + P.h/2;
+    const R = {x:cx + rx + t, y:P.y + P.h*0.04, w:P.x + P.w - (cx + rx + t) - t, h:P.h*0.92};
+    const bHead = {x:F.x + t, y:F.y + headH*0.06, w:F.w - 2*t, h:headH*0.88};
+    const bDots = {x:R.x, y:R.y, w:R.w, h:R.h*0.5};
+    const bBul = {x:R.x, y:R.y + R.h*0.5, w:R.w, h:R.h*0.24};
+    const bPh = {x:R.x, y:R.y + R.h*0.74, w:R.w, h:R.h*0.26};
+    const bBadge = {x:cx - rx*0.78, y:cy - ry*0.86, w:rx*1.56, h:ry*1.72};
+    L.push(monoBgLayer(paper, ink));
+    L.push(frameLayer8(F, headH, t, ink, paper));
+    L.push(hatchEllipseLayer(cx, cy, rx, ry, ink, paper));
+    addT('헤더 제목', $('p8Head').value, bHead, {maxFont:bHead.h*0.8, lead:1.05, weight:800, italic:true, ps:psT, fill:true, maxScale:2.6, center:true, fg:paper});
+    const gb = textLayer('배지글자', stackChars($('p8Badge').value), bBadge, {maxFont:bBadge.w*1.05, lead:1.0, weight:800, ps:psT, fill:false, center:true, fg:paper});
+    if(gb){ L.push(outlineLayer('배지글자 외곽선', gb._geo, ink, 0.2)); L.push(gb); }
+    const dOpt = {maxFont:bDots.h*0.5, lead:1.15, weight:700, ps:psB, fill:true, maxScale:1.6, center:true};
+    const dsh = Math.max(3, Math.round(bDots.h*0.035));
+    const dShadow = textLayer('도트글씨 그림자', $('p8Lines').value, bDots, Object.assign({}, dOpt, {fg:ink, dx:dsh, dy:dsh}));
+    const dMain = textLayer('도트글씨', $('p8Lines').value, bDots, Object.assign({}, dOpt, {fg:paper}));
+    if(dShadow) L.push(dShadow);
+    if(dMain){ L.push(outlineLayer('도트글씨 외곽선', dMain._geo, ink, 0.2)); L.push(dMain); }
+    addT('▶ 줄', $('p8Bullet').value, bBul, {maxFont:bBul.h*0.62, lead:1.1, weight:700, ps:psT, fill:true, maxScale:1.5, center:true, fg:ink});
+    addT('전화번호', $('phone').value, bPh, {maxFont:bPh.h*0.78, lead:1.1, weight:800, ps:psT, fill:true, maxScale:1.6, center:true, fg:ink});
+  }
+  if(tpl === 'mono'){
+    const ink = $('monoInk').value, paper = $('monoPaper').value, gray = mixHex(ink, paper, 0.5);
+    const mp = Math.round(Math.min(W,H)*0.03), mg = Math.round(mp*0.45);
+    const bTop = {x:mp, y:mp, w:W-2*mp, h:Math.round(H*0.09)};
+    const midY = bTop.y + bTop.h + mg, midH = Math.round(H*0.47);
+    const bBar = {x:mp, y:midY + midH + mg, w:W-2*mp, h:Math.round(H*0.17)};
+    const phY = bBar.y + bBar.h + mg;
+    const bPh = {x:mp, y:phY, w:W-2*mp, h:H - mp - phY};
+    const colW = Math.round(W*0.295);
+    const bL = {x:mp, y:midY, w:colW, h:midH}, bR = {x:W-mp-colW, y:midY, w:colW, h:midH};
+    const cx = W/2, cy = midY + midH/2, rx = W*0.18, ry = midH*0.5;
+    const bC = {x:cx - rx*0.78, y:cy - ry*0.52, w:rx*1.56, h:ry*1.04};
+
+    L.push(monoBgLayer(paper, ink));
+    L.push(roundBoxLayer('윗줄박스', bTop, paper, ink));
+    L.push(fillBoxLayer('검정바', bBar, ink));
+    L.push(monoOvalLayer(cx, cy, rx, ry, ink));
+
+    addT('윗줄', $('monoTop').value, bTop, {maxFont:bTop.h*0.62, lead:1.1, weight:800, italic:true, ps:psB, fill:true, maxScale:1.4, center:true, fg:ink});
+    const side = box => ({maxFont:box.h/3, lead:1.02, weight:800, ps:psB, fill:true, maxScale:1.5, center:false, fg:ink});
+    addT('왼쪽 3줄', $('monoLeft').value, bL, side(bL));
+    addT('오른쪽 3줄', $('monoRight').value, bR, side(bR));
+
+    const sh = Math.max(3, Math.round(bC.h*0.05));
+    const co = {maxFont:bC.h*0.85, lead:1.05, weight:800, ps:psT, fill:true, maxScale:2.2, center:true};
+    const gShadow = textLayer('가운데글자 그림자', $('monoCenter').value, bC, Object.assign({}, co, {fg:gray, dx:sh, dy:sh}));
+    const gMain = textLayer('가운데글자', $('monoCenter').value, bC, Object.assign({}, co, {fg:paper}));
+    if(gShadow) L.push(gShadow);
+    if(gMain){ L.push(outlineLayer('가운데글자 외곽선', gMain._geo, ink)); L.push(gMain); }
+
+    addT('검정바 문구', $('monoBar').value, bBar, {maxFont:bBar.h*0.62, lead:1.1, weight:800, ps:psT, fill:true, maxScale:1.8, center:true, fg:paper});
+    addT('전화번호', $('phone').value, bPh, {maxFont:bPh.h*0.78, lead:1.1, weight:800, ps:psT, fill:true, maxScale:1.6, center:true, fg:ink});
+  }
+  layers = applyRegionEdits(L);
+}
+
+function render(){
+  build();
+  const v = $('view'); v.width = W; v.height = H;
+  const x = v.getContext('2d');
+  x.clearRect(0,0,W,H);
+  layers.forEach(l => x.drawImage(l.canvas,0,0));
+  renderAdjList();
+  scheduleThumbs();
+  drawRegionEditor();
+  saveLayouts();
+  rememberLayout();
+}
+
+/* ---------- 틀 썸네일 ---------- */
+let thumbTimer = null;
+function scheduleThumbs(){
+  clearTimeout(thumbTimer);
+  thumbTimer = setTimeout(drawThumbs, 350);
+}
+function drawThumbs(){
+  const keep = {tpl, size:$('size').value, psT:$('psTitle').value, psB:$('psBody').value};
+  try{
+    saveCurSlot();
+    Object.keys(TPL).filter(k => k !== 'gen').forEach(k => {
+      tpl = k;
+      if(k === keep.tpl){
+        $('size').value = keep.size; $('psTitle').value = keep.psT; $('psBody').value = keep.psB;
+      } else {
+        $('size').value = TPL[k].size;
+        $('psTitle').value = FONTS[TPL[k].fontT || 'pretendard'].defT;
+        $('psBody').value = FONTS[TPL[k].fontB || 'pretendard'].defB;
+      }
+      build();
+      const c = document.querySelector('#tplbtns canvas[data-k="'+k+'"]');
+      if(!c) return;
+      const tw = 240, s = tw / W;
+      c.width = tw; c.height = Math.round(H*s);
+      const x = c.getContext('2d');
+      x.clearRect(0, 0, c.width, c.height);
+      layers.forEach(l => x.drawImage(l.canvas, 0, 0, c.width, c.height));
+    });
+  } finally {
+    tpl = keep.tpl; $('size').value = keep.size; $('psTitle').value = keep.psT; $('psBody').value = keep.psB;
+    build();
+  }
+}
+
+/* ---------- 미리보기에서 영역 이동·크기 편집 ---------- */
+const REGION_EDITS = {};
+let regionSelected = '', regionDrag = null;
+let regionGroup = new Set();
+const LAYOUT_STORAGE = 'jjirashy:template-layouts:v1';
+let layoutSaved = '';
+try{
+  const saved=JSON.parse(localStorage.getItem(LAYOUT_STORAGE)||'{}');
+  for(const [key,v] of Object.entries(saved.regions||{})) if(key.split(':')[0]!=='gen' && v && ['sx','sy','dx','dy'].every(k=>Number.isFinite(v[k])) && v.sx>0 && v.sy>0) REGION_EDITS[key]=v;
+  for(const [key,v] of Object.entries(saved.text||{})) if(key.split(':')[0]!=='gen' && v && Number.isFinite(v.s) && Number.isFinite(v.w)) ADJ[key]=v;
+}catch(e){}
+function saveLayouts(){
+  const standard=obj=>Object.fromEntries(Object.entries(obj).filter(([k])=>k.split(':')[0]!=='gen'));
+  const data=JSON.stringify({regions:standard(REGION_EDITS),text:standard(ADJ)});
+  if(data===layoutSaved)return;
+  try{localStorage.setItem(LAYOUT_STORAGE,data);layoutSaved=data;}catch(e){msg('브라우저 저장 공간을 사용할 수 없어 배치를 저장하지 못했어요.');}
+}
+const layoutUndo = [], layoutRedo = [];
+let historyCurrent = null, historyRestoring = false, rangeEditing = false;
+function layoutSnapshot(){
+  return JSON.stringify({regions:REGION_EDITS,text:ADJ,fill:FILL});
+}
+function rememberLayout(){
+  if(historyRestoring || regionDrag || rangeEditing)return;
+  const next=layoutSnapshot();
+  if(historyCurrent===null){historyCurrent=next;return;}
+  if(next===historyCurrent)return;
+  layoutUndo.push(historyCurrent);if(layoutUndo.length>100)layoutUndo.shift();
+  layoutRedo.length=0;historyCurrent=next;
+}
+function restoreLayout(direction){
+  const from=direction==='undo'?layoutUndo:layoutRedo, to=direction==='undo'?layoutRedo:layoutUndo;
+  if(!from.length)return;
+  to.push(historyCurrent);const snapshot=from.pop(), state=JSON.parse(snapshot);
+  historyRestoring=true;
+  for(const [target,source] of [[REGION_EDITS,state.regions],[ADJ,state.text]]){
+    Object.keys(target).forEach(k=>delete target[k]);Object.assign(target,source);
+  }
+  FILL=state.fill;$('fillAll').value=Math.round(FILL*100);$('fillAllV').textContent=Math.round(FILL*100)+'%';
+  historyCurrent=snapshot;adjSig='';render();historyRestoring=false;
+  msg(direction==='undo'?'배치 실행 취소':'배치 다시 실행');
+}
+function initLayoutHistory(){
+  document.addEventListener('keydown',e=>{
+    if(!(e.ctrlKey||e.metaKey)||e.altKey)return;
+    const target=e.target;
+    if(target.isContentEditable||target.closest('textarea,input:not([type=range]):not([type=button])'))return;
+    const key=e.key.toLowerCase();
+    if(key!=='z'&&!(key==='y'&&e.ctrlKey))return;
+    e.preventDefault();
+    if(regionDrag)return;
+    rangeEditing=false;rememberLayout();restoreLayout(e.shiftKey||key==='y'?'redo':'undo');
+  });
+  document.addEventListener('pointerdown',e=>{if(e.target.matches('input[type=range]'))rangeEditing=true;});
+  const finishRange=()=>{if(rangeEditing){rangeEditing=false;rememberLayout();}};
+  document.addEventListener('pointerup',finishRange);document.addEventListener('pointercancel',finishRange);
+  document.addEventListener('change',e=>{if(e.target.matches('input[type=range]'))finishRange();});
+}
+
+function groupBox(){
+  const boxes=layers.filter(l=>l.regionSelectable&&regionGroup.has(l.regionId)).map(regionBox).filter(Boolean);
+  if(!boxes.length)return null;
+  const x=Math.min(...boxes.map(b=>b.x)), y=Math.min(...boxes.map(b=>b.y));
+  return {x,y,w:Math.max(...boxes.map(b=>b.x+b.w))-x,h:Math.max(...boxes.map(b=>b.y+b.h))-y};
+}
+function regionBounds(canvas){
+  const ctx = canvas.getContext('2d'), data = ctx.getImageData(0,0,W,H).data;
+  let left=W, top=H, right=-1, bottom=-1;
+  for(let y=0;y<H;y++) for(let x=0;x<W;x++) if(data[(y*W+x)*4+3]>16){
+    left=Math.min(left,x); top=Math.min(top,y); right=Math.max(right,x); bottom=Math.max(bottom,y);
+  }
+  return right<left ? null : {x:left,y:top,w:right-left+1,h:bottom-top+1};
+}
+const REGION_BOUNDS = new WeakMap();
+function applyRegionEdits(list){
+  const counts = {};
+  return list.map(l => {
+    const count = counts[l.name] || 0; counts[l.name] = count+1;
+    l.regionId = l.name + ':' + count;
+    // 바탕·외곽선은 독립 선택에서 제외하고 글자의 외곽선은 함께 변환해요.
+    const outline = / (?:바깥 |안쪽 )?외곽선$/.test(l.name) || /그림자$/.test(l.name);
+    l.regionSelectable = !outline && !['배경','바깥 테두리','안쪽 선','검정 둥근 틀'].includes(l.name);
+    if(!l.regionSelectable && !outline) return l;
+    const editName = outline ? l.name.replace(/ (?:바깥 |안쪽 )?외곽선$|\s*그림자$/, '') : l.name;
+    const edit = REGION_EDITS[tpl + ':' + editName + ':' + count];
+    if(edit){
+      const c=mkCanvas(), x=c.getContext('2d');
+      x.setTransform(edit.sx,0,0,edit.sy,edit.dx*W,edit.dy*H);
+      // 글자와 외곽선은 원래 윤곽을 다시 그려 확대 시 픽셀 보간을 피합니다.
+      if(l._draw) l._draw(x); else x.drawImage(l.canvas,0,0);
+      l.canvas=c;
+      if(l.text){
+        const [a,b,c,d,e,f]=l.text.transform;
+        l.text.transform=[edit.sx*a,edit.sy*b,edit.sx*c,edit.sy*d,edit.sx*e+edit.dx*W,edit.sy*f+edit.dy*H];
+      }
+    }
+    return l;
+  });
+}
+function regionBox(l){
+  if(!REGION_BOUNDS.has(l.canvas)) REGION_BOUNDS.set(l.canvas,regionBounds(l.canvas));
+  return REGION_BOUNDS.get(l.canvas);
+}
+function drawRegionEditor(){
+  const overlay=$('regionOverlay'); overlay.width=W; overlay.height=H;
+  const sel=$('regionSelect'), available=layers.filter(l=>l.regionSelectable);
+  const signature=tpl+'|'+available.map(l=>l.regionId).join('|');
+  if(sel.dataset.signature!==signature){
+    sel.dataset.signature=signature; sel.replaceChildren();
+    available.forEach(l=>{
+      const button=document.createElement('button');button.type='button';button.className='small';button.dataset.id=l.regionId;
+      button.textContent=l.name+(l.text?' (글자)':' (상자·그림)');
+      sel.appendChild(button);
+    });
+    regionSelected=''; regionGroup.clear();
+  }
+  sel.querySelectorAll('button').forEach(b=>{const active=regionGroup.has(b.dataset.id);b.setAttribute('aria-pressed',String(active));b.style.background=active?'#ffe600':'#fff';});
+  const box=groupBox();
+  if(!box)return;
+  const x=overlay.getContext('2d'), scale=W/overlay.getBoundingClientRect().width, handle=12*scale;
+  x.strokeStyle='#007aff'; x.lineWidth=2*scale; x.setLineDash([5*scale,3*scale]); x.strokeRect(box.x,box.y,box.w,box.h);
+  x.setLineDash([]); x.fillStyle='#007aff'; x.fillRect(box.x+box.w-handle/2,box.y+box.h-handle/2,handle,handle);
+}
+function initRegionEditor(){
+  const overlay=$('regionOverlay');
+  const point=e=>{const r=overlay.getBoundingClientRect();return {x:(e.clientX-r.left)*W/r.width,y:(e.clientY-r.top)*H/r.height};};
+  $('regionSelect').addEventListener('click',e=>{
+    const button=e.target.closest('button[data-id]');if(!button)return;
+    const id=button.dataset.id;if(regionGroup.has(id))regionGroup.delete(id);else regionGroup.add(id);
+    regionSelected=[...regionGroup][0]||'';drawRegionEditor();
+  });
+  $('regionReset').addEventListener('click',()=>{regionGroup.forEach(id=>delete REGION_EDITS[tpl+':'+id]);render();});
+  $('regionsReset').addEventListener('click',()=>{Object.keys(REGION_EDITS).filter(k=>k.startsWith(tpl+':')).forEach(k=>delete REGION_EDITS[k]);render();});
+  overlay.addEventListener('pointerdown',e=>{
+    const p=point(e), selected=layers.find(l=>regionGroup.has(l.regionId)), box=groupBox();
+    const tolerance=16*W/overlay.getBoundingClientRect().width;
+    let resize=box&&Math.abs(p.x-box.x-box.w)<tolerance&&Math.abs(p.y-box.y-box.h)<tolerance;
+    let hit=resize?selected:null;
+    if(!hit) hit=[...layers].reverse().find(l=>{
+      if(!l.regionSelectable)return false;
+      const b=regionBox(l); if(!b||p.x<b.x||p.x>b.x+b.w||p.y<b.y||p.y>b.y+b.h)return false;
+      return l.canvas.getContext('2d').getImageData(Math.min(W-1,Math.max(0,Math.floor(p.x))),Math.min(H-1,Math.max(0,Math.floor(p.y))),1,1).data[3]>16;
+    });
+    if(!hit){regionGroup.clear();regionSelected='';drawRegionEditor();return;}
+    const wasSelected=regionGroup.has(hit.regionId), toggle=e.shiftKey&&!resize;
+    if(!regionGroup.has(hit.regionId)){if(toggle)regionGroup.add(hit.regionId);else regionGroup=new Set([hit.regionId]);}
+    regionSelected=hit.regionId;drawRegionEditor();
+    const entries=[...regionGroup].map(id=>{const key=tpl+':'+id;return {key,edit:{sx:1,sy:1,dx:0,dy:0,...REGION_EDITS[key]}};});
+    regionDrag={entries,start:p,box:groupBox(),resize,toggle,wasSelected,id:hit.regionId,moved:false};
+    overlay.setPointerCapture(e.pointerId);e.preventDefault();
+  });
+  overlay.addEventListener('pointermove',e=>{
+    if(!regionDrag)return;
+    const p=point(e), d=regionDrag;
+    let dx=p.x-d.start.x, dy=p.y-d.start.y;
+    if(Math.hypot(dx,dy)>3*W/overlay.getBoundingClientRect().width)d.moved=true;
+    if(!d.moved)return;
+    if(e.shiftKey&&!d.resize){if(Math.abs(dx)>=Math.abs(dy))dy=0;else dx=0;}
+    d.entries.forEach(({key,edit:a})=>{
+    if(d.resize){
+      let sx=Math.max(0.1,(d.box.w+dx)/d.box.w), sy=Math.max(0.1,(d.box.h+dy)/d.box.h);
+      if(e.ctrlKey||e.metaKey){const scale=Math.abs(sx-1)>=Math.abs(sy-1)?sx:sy;sx=sy=scale;}
+      REGION_EDITS[key]={sx:a.sx*sx,sy:a.sy*sy,dx:a.dx*sx+d.box.x/W*(1-sx),dy:a.dy*sy+d.box.y/H*(1-sy)};
+    }else REGION_EDITS[key]={...a,dx:a.dx+dx/W,dy:a.dy+dy/H};
+    });
+    render();
+  });
+  const end=e=>{
+    if(e.type==='pointerup'&&regionDrag&&regionDrag.toggle&&!regionDrag.moved){
+      // Shift 클릭은 선택을 토글하고, Shift 드래그는 선택을 유지합니다.
+      if(regionDrag.entries.some(entry=>entry.key===tpl+':'+regionDrag.id)&&regionDrag.wasSelected)regionGroup.delete(regionDrag.id);
+      drawRegionEditor();
+    }
+    regionDrag=null;
+    rememberLayout();
+  };
+  overlay.addEventListener('pointerup',end);overlay.addEventListener('pointercancel',end);
+}
+
+/* ---------- UI ---------- */
+function renderAdjList(){
+  const keys = [];
+  layers.forEach(l => {
+    if(l.text){ const k = l.name.replace(/\s*그림자$/, ''); if(keys.indexOf(k) < 0) keys.push(k); }
+  });
+  const sig = tpl + '|' + keys.join(',');
+  if(sig === adjSig) return;
+  adjSig = sig;
+  const box = $('adjList'); box.innerHTML = '';
+  keys.forEach(k => {
+    const ak = tpl + ':' + k, cur = ADJ[ak] || {s:100, w:100};
+    const row = document.createElement('div'); row.className = 'adjrow';
+    const title = document.createElement('b'); title.textContent = k; row.appendChild(title);
+    [['s','크기',30,200], ['w','가로폭',40,200]].forEach(f => {
+      const wrap = document.createElement('div');
+      const lab = document.createElement('span'); lab.textContent = f[1];
+      const r = document.createElement('input'); r.type = 'range'; r.min = f[2]; r.max = f[3]; r.value = cur[f[0]];
+      const val = document.createElement('span'); val.className = 'v'; val.textContent = cur[f[0]] + '%';
+      r.addEventListener('input', () => {
+        const a = ADJ[ak] || (ADJ[ak] = {s:100, w:100});
+        a[f[0]] = +r.value; val.textContent = r.value + '%'; render();
+      });
+      wrap.appendChild(lab); wrap.appendChild(r); wrap.appendChild(val); row.appendChild(wrap);
+    });
+    box.appendChild(row);
+  });
+}
+function msg(t){ $('msg').textContent = t; }
+
+function setTpl(k){
+  tpl = k;
+  if(k !== 'gen') CUR_SLOT = null;
+  document.querySelectorAll('#tplbtns button').forEach(b => b.classList.toggle('on', b.dataset.k === k));
+  $('size').value = TPL[k].size;
+  $('tplHint').textContent = TPL[k].hint;
+  $('tplHint').style.display = TPL[k].hint ? '' : 'none';
+  $('curTpl').textContent = '선택한 틀: ' + TPL[k].n;
+  // 그 틀에서 안 쓰는 칸은 숨기기
+  $('bodyWrap').style.display = (k === 'basic' || k === 'burst' || k === 'oval') ? 'none' : '';
+  $('basicBodyFields').style.display = k === 'basic' ? '' : 'none';
+  $('decoWrap').style.display = ['basic','strip','vertical','burst','oval'].indexOf(k) >= 0 ? '' : 'none';
+  $('phoneWrap').style.display = ['pattern','mart','navy','yslash','pinkv','alien','redsign','greenintro','rockeff','greenbanner','bluestar'].indexOf(k) >= 0 ? 'none' : '';
+  const std = ['basic','strip','vertical','burst','oval'].indexOf(k) >= 0;
+  $('stdFields').style.display = std ? '' : 'none';
+  $('colors').style.display = std ? '' : 'none';
+  fillPalSel();
+  $('monoFields').style.display = (k === 'mono') ? '' : 'none';
+  $('patFields').style.display = (k === 'pattern') ? '' : 'none';
+  $('gridFields').style.display = (k === 'grid') ? '' : 'none';
+  const isNew = !!NT[k];
+  $('monoColors').style.display = (std || isNew) ? 'none' : '';
+  $('dynFields').style.display = isNew ? '' : 'none';
+  $('dynColors').style.display = isNew ? '' : 'none';
+  if(isNew) buildDyn(k);
+  if(TPL[k].fontT){ $('fontT').value = TPL[k].fontT; $('psTitle').value = FONTS[TPL[k].fontT].defT; }
+  if(TPL[k].fontB){ $('fontB').value = TPL[k].fontB; $('psBody').value = FONTS[TPL[k].fontB].defB; }
+  updateSlotCards();
+  render();
+  ensureFonts().then(render);
+}
+/* ---------- 랜덤 찌라시 저장 칸 ---------- */
+// 랜덤으로 만든 배치·문구·색·글꼴을 브라우저에 3개까지 저장해요. 불러온 칸은 고칠 때마다 자동 저장.
+const SLOT_KEY = 'jjirasi_genSlots', SLOT_N = 3;
+let SLOTS = (() => { try{ const a = JSON.parse(localStorage.getItem(SLOT_KEY)); if(Array.isArray(a)) return a; }catch(e){} return []; })();
+let CUR_SLOT = null, GEN_FRESH = false;
+function slotsWrite(){ try{ localStorage.setItem(SLOT_KEY, JSON.stringify(SLOTS)); }catch(e){ msg('브라우저 저장 공간이 부족해서 저장하지 못했어요.'); } }
+function genState(){
+  const pick = o => { const r = {}; Object.keys(o).forEach(k => { if(k.indexOf('gen:') === 0) r[k] = o[k]; }); return r; };
+  const thumb = document.createElement('canvas'), v = $('view'), s = 240 / v.width;
+  thumb.width = 240; thumb.height = Math.round(v.height*s);
+  thumb.getContext('2d').drawImage(v, 0, 0, thumb.width, thumb.height);
+  return {gen:GEN, fv:pick(FV), cv:pick(CV), adj:pick(ADJ), pal:PALIDX.gen || 0, size:$('size').value,
+    fontT:$('fontT').value, fontB:$('fontB').value, psT:$('psTitle').value, psB:$('psBody').value, thumb:thumb.toDataURL('image/png')};
+}
+function saveCurSlot(){
+  if(CUR_SLOT === null || tpl !== 'gen' || !GEN) return;
+  SLOTS[CUR_SLOT] = genState(); slotsWrite(); updateSlotCards();
+}
+function loadSlot(i){
+  const d = SLOTS[i]; if(!d) return;
+  GEN = d.gen; TPL.gen.size = GEN.size; NT.gen.fields = GEN.fields;
+  [FV, CV, ADJ].forEach(o => Object.keys(o).forEach(k => { if(k.indexOf('gen:') === 0) delete o[k]; }));
+  Object.assign(FV, d.fv); Object.assign(CV, d.cv); Object.assign(ADJ, d.adj || {});
+  PALIDX.gen = d.pal || 0; adjSig = '';
+  CUR_SLOT = i; GEN_FRESH = false;
+  setTpl('gen');
+  CUR_SLOT = i;
+  if(FONTS[d.fontT]) $('fontT').value = d.fontT;
+  if(FONTS[d.fontB]) $('fontB').value = d.fontB;
+  $('psTitle').value = d.psT; $('psBody').value = d.psB; $('size').value = d.size || GEN.size;
+  buildDyn('gen'); updateSlotCards();
+  render(); ensureFonts().then(render);
+}
+function clickSlot(i){
+  if(SLOTS[i]){ loadSlot(i); return; }
+  if(tpl !== 'gen' || !GEN_FRESH){ msg('먼저 🎲 랜덤 찌라시를 돌리고, 마음에 들면 빈 칸을 눌러 저장하세요.'); return; }
+  SLOTS[i] = genState(); slotsWrite();
+  CUR_SLOT = i; GEN_FRESH = false;
+  updateSlotCards(); msg('저장 ' + (i + 1) + '에 저장했어요. 이제 고치는 내용도 자동으로 저장돼요.');
+}
+function delSlot(i){
+  if(!confirm('저장 ' + (i + 1) + '을 지울까요?')) return;
+  SLOTS[i] = null; slotsWrite();
+  if(CUR_SLOT === i){ CUR_SLOT = null; GEN_FRESH = true; }
+  updateSlotCards();
+}
+function updateSlotCards(){
+  const ready = tpl === 'gen' && GEN_FRESH;
+  document.querySelectorAll('#tplbtns .slot').forEach(b => {
+    const i = +b.dataset.slot, d = SLOTS[i], th = b.querySelector('.th'), nm = b.querySelector('span');
+    b.classList.toggle('empty', !d);
+    b.classList.toggle('ready', !d && ready);
+    b.classList.toggle('on', tpl === 'gen' && CUR_SLOT === i);
+    if(d){
+      if(th.dataset.src !== d.thumb){ th.innerHTML = ''; const im = new Image(); im.src = d.thumb; im.style.cssText = 'max-width:100%;max-height:100%;display:block'; th.appendChild(im); th.dataset.src = d.thumb; }
+      nm.textContent = '저장 ' + (i + 1);
+      b.title = '저장 ' + (i + 1) + ' 불러오기';
+    } else {
+      th.innerHTML = ready ? '＋<br>여기 저장' : '빈 칸'; th.dataset.src = '';
+      nm.textContent = '저장 ' + (i + 1);
+      b.title = ready ? '지금 랜덤 찌라시를 여기에 저장' : '🎲 랜덤 찌라시를 돌린 뒤 눌러 저장';
+    }
+  });
+  if(tpl === 'gen'){
+    const h = CUR_SLOT !== null ? '저장 ' + (CUR_SLOT + 1) + ' — 고친 내용은 자동으로 저장돼요.' : '마음에 들면 갤러리 끝의 빈 칸을 눌러 저장하세요. 저장하지 않으면 다음 랜덤에서 사라져요.';
+    $('tplHint').textContent = h; $('tplHint').style.display = '';
+  }
+}
+/* ---------- 로컬 글꼴 추가 ---------- */
+// 추가한 글꼴은 'LF_번호' 이름으로 브라우저에 등록하고, PSD에는 PostScript 이름을 넣어요.
+const LF_KEY = 'jjirasi_localFonts';
+let lfCount = 0, lfAvail = null;
+function addFontOption(k){
+  ['fontT','fontB'].forEach(id => {
+    const o = document.createElement('option'); o.value = k; o.textContent = FONTS[k].n; $(id).appendChild(o);
+  });
+}
+function lfSaved(){ try{ return JSON.parse(localStorage.getItem(LF_KEY)) || []; }catch(e){ return []; } }
+function lfSave(list){ try{ localStorage.setItem(LF_KEY, JSON.stringify(list)); }catch(e){} }
+function lfMsg(t){ $('lfMsg').textContent = t; }
+// src: ArrayBuffer(파일·내 컴퓨터 글꼴) 또는 'local("이름")' 문자열(다시 열 때)
+async function registerFont(name, ps, src, remember){
+  if(PSMAP[ps]){ lfMsg('「' + name + '」은(는) 이미 목록에 있어요.'); return false; }
+  const fam = 'LF_' + (++lfCount);
+  const face = new FontFace(fam, src, {weight:'1 1000'});
+  await face.load();
+  document.fonts.add(face);
+  PSMAP[ps] = {css:'"' + fam + '"', weight:400};
+  const k = 'local' + lfCount;
+  FONTS[k] = {n:'📌 ' + name, defT:ps, defB:ps, local:true};
+  addFontOption(k);
+  if(remember){ const l = lfSaved(); if(!l.some(f => f.ps === ps)){ l.push({n:name, ps:ps}); lfSave(l); } }
+  return true;
+}
+// 글꼴 파일 안의 name 표에서 PostScript 이름(6번)·전체 이름(4번, 한국어 우선)을 읽어요. ttf·otf·ttc만.
+function readFontNames(buf){
+  try{
+    const dv = new DataView(buf);
+    let off = 0;
+    if(dv.getUint32(0) === 0x74746366) off = dv.getUint32(12);
+    const n = dv.getUint16(off + 4);
+    for(let i=0;i<n;i++){
+      const r = off + 12 + i*16;
+      if(dv.getUint32(r) !== 0x6e616d65) continue;
+      const t = dv.getUint32(r + 8), cnt = dv.getUint16(t + 2), so = t + dv.getUint16(t + 4);
+      let ps = '', full = '', fullKo = '';
+      for(let j=0;j<cnt;j++){
+        const e = t + 6 + j*12;
+        const pid = dv.getUint16(e), lang = dv.getUint16(e + 4), nid = dv.getUint16(e + 6), len = dv.getUint16(e + 8), o = dv.getUint16(e + 10);
+        if(nid !== 4 && nid !== 6) continue;
+        let s = '';
+        if(pid === 0 || pid === 3){ for(let k=0;k<len;k+=2) s += String.fromCharCode(dv.getUint16(so + o + k)); }
+        else { for(let k=0;k<len;k++) s += String.fromCharCode(dv.getUint8(so + o + k)); }
+        if(nid === 6 && !ps) ps = s;
+        if(nid === 4){ if(pid === 3 && lang === 0x412) fullKo = s; else if(!full) full = s; }
+      }
+      return {ps:ps, full:fullKo || full};
+    }
+  }catch(e){}
+  return {};
+}
+async function addFontFiles(files){
+  const added = [];
+  for(const f of files){
+    try{
+      const buf = await f.arrayBuffer();
+      const nm = readFontNames(buf);
+      const base = f.name.replace(/\.[^.]+$/, '');
+      if(await registerFont(nm.full || base, nm.ps || base, buf, false)) added.push(nm.full || base);
+    }catch(e){ console.error(e); lfMsg('「' + f.name + '」을(를) 읽지 못했어요. 글꼴 파일이 맞는지 확인해 주세요.'); return; }
+  }
+  if(added.length) lfMsg('추가했어요: ' + added.join(', ') + ' — 위 제목/본문 목록에서 📌 표시로 골라요. (파일로 추가한 글꼴은 새로고침하면 다시 추가해야 해요)');
+}
+async function openLocalFonts(){
+  if(!window.queryLocalFonts){ lfMsg('이 브라우저는 내 컴퓨터 글꼴 목록을 못 읽어요. 크롬·엣지·웨일에서 열거나, 「글꼴 파일 추가」를 써 주세요.'); return; }
+  try{
+    if(!lfAvail){
+      const list = await window.queryLocalFonts();
+      lfAvail = {};
+      list.forEach(fd => { if(!lfAvail[fd.fullName]) lfAvail[fd.fullName] = fd; });
+      const dl = $('lfList'); dl.innerHTML = '';
+      Object.keys(lfAvail).sort((a, b) => a.localeCompare(b, 'ko')).forEach(n => { const o = document.createElement('option'); o.value = n; dl.appendChild(o); });
+    }
+    $('lfPick').style.display = '';
+    $('lfSearch').focus();
+    lfMsg('글꼴 ' + Object.keys(lfAvail).length + '개를 찾았어요. 이름을 적으면 목록이 좁혀져요.');
+  }catch(e){ console.error(e); lfMsg('글꼴 목록을 읽을 권한이 없어요. 주소창 옆 권한 설정에서 「글꼴」을 허용해 주세요.'); }
+}
+async function pickLocalFont(){
+  const fd = lfAvail && lfAvail[$('lfSearch').value];
+  if(!fd) return;
+  try{
+    const buf = await (await fd.blob()).arrayBuffer();
+    if(await registerFont(fd.fullName, fd.postscriptName, buf, true)){
+      lfMsg('추가했어요: ' + fd.fullName + ' — 위 제목/본문 목록에서 📌 표시로 골라요. 다음에 열 때도 남아 있어요.');
+    }
+    $('lfSearch').value = '';
+  }catch(e){ console.error(e); lfMsg('「' + fd.fullName + '」을(를) 불러오지 못했어요.'); }
+}
+function restoreLocalFonts(){
+  lfSaved().forEach(f => {
+    registerFont(f.n, f.ps, 'local("' + f.ps.replace(/"/g, '') + '")', false)
+      .then(() => render())
+      .catch(() => {});
+  });
+}
+
+function initUI(){
+  Object.keys(FONTS).forEach(addFontOption);
+  $('lfLocal').addEventListener('click', openLocalFonts);
+  $('lfFile').addEventListener('click', () => $('lfInput').click());
+  $('lfInput').addEventListener('change', e => { addFontFiles([...e.target.files]); e.target.value = ''; });
+  $('lfSearch').addEventListener('change', pickLocalFont);
+  restoreLocalFonts();
+  $('fontT').addEventListener('change', () => { $('psTitle').value = FONTS[$('fontT').value].defT; render(); ensureFonts().then(render); });
+  $('fontB').addEventListener('change', () => { $('psBody').value = FONTS[$('fontB').value].defB; render(); ensureFonts().then(render); });
+  Object.keys(TPL).filter(k => k !== 'gen').forEach(k => {
+    const b = document.createElement('button');
+    b.className = 'tplcard'; b.dataset.k = k; b.title = TPL[k].n;
+    const th = document.createElement('div'); th.className = 'th';
+    const tc = document.createElement('canvas'); tc.dataset.k = k;
+    th.appendChild(tc); b.appendChild(th);
+    const nm = document.createElement('span'); nm.textContent = TPL[k].n; b.appendChild(nm);
+    b.addEventListener('click', () => setTpl(k));
+    $('tplbtns').appendChild(b);
+  });
+  for(let i = 0; i < SLOT_N; i++){
+    const b = document.createElement('button');
+    b.className = 'tplcard slot'; b.dataset.slot = i;
+    b.innerHTML = '<div class="th"></div><span></span><span class="del" title="지우기">✕</span>';
+    b.addEventListener('click', e => {
+      if(e.target.classList.contains('del')){ e.stopPropagation(); delSlot(i); return; }
+      clickSlot(i);
+    });
+    $('tplbtns').appendChild(b);
+  }
+  updateSlotCards();
+  KEYS.forEach(k => {
+    const d = document.createElement('div');
+    d.innerHTML = '<input type="color" data-k="'+k+'" value="'+pal[k]+'"><br>'+LABEL[k];
+    $('colors').appendChild(d);
+  });
+  document.querySelectorAll('#colors input').forEach(inp => inp.addEventListener('input', () => { pal[inp.dataset.k] = inp.value; render(); }));
+  $('palSel').addEventListener('change', () => setPal(+$('palSel').value));
+  $('rand').addEventListener('click', () => {
+    const n = palNames(tpl).length, cur = PALIDX[palGroup(tpl)] || 0;
+    let i = Math.floor(Math.random()*n);
+    if(n > 1 && i === cur) i = (i + 1 + Math.floor(Math.random()*(n - 1))) % n;
+    $('palSel').value = i; setPal(i);
+  });
+  ['title','sub','body','bodyLeft','bodyRight','phone','deco','size','psTitle','psBody','monoTop','monoLeft','monoCenter','monoRight','monoBar','monoInk','monoPaper','p7Top','p7Slash','p7Big','p7Badge','p7Glyph','p8Head','p8Badge','p8Lines','p8Bullet'].forEach(id => $(id).addEventListener('input', render));
+  $('fillAll').addEventListener('input', () => {
+    FILL = +$('fillAll').value/100; $('fillAllV').textContent = $('fillAll').value + '%'; render();
+  });
+  $('adjReset').addEventListener('click', () => {
+    Object.keys(ADJ).forEach(k => { if(k.indexOf(tpl + ':') === 0) delete ADJ[k]; });
+    adjSig = ''; render();
+  });
+  $('randAll').addEventListener('click', randomAll);
+  $('randText').addEventListener('click', randomizeText);
+  $('randGen').addEventListener('click', randomGen);
+  $('dlPng').addEventListener('click', savePng);
+  $('cpPng').addEventListener('click', copyPng);
+  $('dlPsd').addEventListener('click', savePsd);
+}
+/* 색 조합: 기본 5틀은 PAL, 흑백 3틀은 MONO_PAL(잉크·종이), 나머지는 NT_PAL(칸별 색) */
+const PALIDX = {};
+function palGroup(k){ return NT[k] ? k : (['mono','pattern','grid'].indexOf(k) >= 0 ? 'mono' : 'std'); }
+function palNames(k){
+  const g = palGroup(k);
+  if(g === 'std') return PAL.map(p => p.n);
+  if(g === 'mono') return MONO_PAL.map(p => p[0]);
+  return ['기본'].concat(NT_PAL[k].map(p => p[0]));
+}
+function fillPalSel(){
+  const sel = $('palSel'); sel.innerHTML = '';
+  palNames(tpl).forEach((n, i) => { const o = document.createElement('option'); o.value = i; o.textContent = n; sel.appendChild(o); });
+  sel.value = PALIDX[palGroup(tpl)] || 0;
+}
+/* ---------- 랜덤 찌라시 ---------- */
+// 주제 하나를 골라 A(핵심어)·B(곁들임 말)·P(사람) 단어로 문장 틀을 채워요
+const R_THEMES = [
+  {A:['잔루','병살','뜬공','무득점'], B:['득점권','무사 만루','마지막 아웃','타석'], P:['잔루 수집가','득점 목격자','한숨 부자']},
+  {A:['볼넷','밀어내기','폭투','풀카운트'], B:['불펜','마운드','투아웃','스트라이크존'], P:['불펜 관찰자','리모컨 수호자','천장 감상가']},
+  {A:['실책','주루사','견제사','헛스윙'], B:['글러브','베이스','전광판','리플레이'], P:['직관 생존자','야구 피해자','탄식 전문가']},
+  {A:['야구','문자중계','희망고문','탈야구'], B:['내일 선발','라인업','경기 알림','하이라이트'], P:['탈야구 실패자','자발적 시청자','내일의 나']}
+];
+const R_PH = {
+  s:['{A}','한숨','탄식','잔루','병살','볼넷','실책','왜요','또요','설마','제발','환장'],
+  m:['또 {A}','{A} 실존','{A} 그만','{P}','{A} 수집중','{A} 풀코스','{A} 무한리필','이걸 또 봄','안본다며','내일 또 봄'],
+  l:['{A} 그만 보고 싶다','오늘도 {A} 엔딩','{P}의 깊은 한숨','{A}까지 봐야겠냐','{B} 보고 말문 막힘','이걸 보려고 일찍 왔다','안 본다면서 또 켰다','한 점이 그렇게 어렵냐'],
+  x:['{A:은} 이제 충분히 봤습니다','{P:은} 오늘도 천장을 봅니다','{B} 앞에서 또 기대한 내 잘못','{A} 구경하려고 돈 낸 건 아닌데','{A} 말고 다른 건 준비 안 됐나요','안 본다고 했지 안 궁금하다고는 안 했다'],
+  xx:['{A} 관람이 끝났습니다. 고객님의 평정심은 반환되지 않습니다','{P}의 탈야구 선언, 내일 경기 시작과 동시에 자동 철회됩니다','{B} 확인만 하려 했는데 어느새 마지막 아웃까지 보고 있습니다','오늘도 {A}, 내일은 다르겠지 싶어서 또 보는 내가 제일 문제다','{A:은} 충분히 봤으니 이제 편하게 이기는 경기도 보여주세요']
+};
+const R_EMOJI = ['⚾','🫠','🙃','😭','😇','🤦','😵‍💫','🧯'];
+const R_HANJA = {1:['怒','忍','嘆','苦'], 2:['殘壘','四球','失策','憤怒','歎息'], 4:['喜怒哀樂','五里霧中','自業自得','忍忍忍忍']};
+const R_DECO = ['★','☆','✦','♥','♣','◆','✚','※','♪'];
+const pick = a => a[Math.floor(Math.random()*a.length)];
+function josa(w, a){
+  const pair = {'을':'를','이':'가','은':'는','과':'와'}[a];
+  const c = w.charCodeAt(w.length - 1);
+  const bat = c >= 0xAC00 && c <= 0xD7A3 && (c - 0xAC00) % 28 > 0;
+  return w + (pair ? (bat ? a : pair) : a);
+}
+function rPhrase(th, bucket){
+  const v = {A:pick(th.A), B:pick(th.B), P:pick(th.P)};
+  return pick(R_PH[bucket]).replace(/\{([ABP])(?::(.))?\}/g, (m, k, j) => j ? josa(v[k], j) : v[k]);
+}
+function rLine(th, ref){
+  const t = ref.trim();
+  if(!t) return ref;
+  if(/^[\d\s\-.,()]+$/.test(t) && /\d/.test(t)){
+    if(/^\d+$/.test(t)) return String(Math.floor(Math.random()*9 + 1)) + t.slice(1).replace(/\d/g, (d, i) => i < t.length - 3 ? String(Math.floor(Math.random()*10)) : '0');
+  }
+  if(/\d{3,}/.test(t) && /\d+-\d+/.test(t)) return ref.replace(/\d{4}/g, () => String(Math.floor(1000 + Math.random()*9000)));
+  if(/^[\d\s]+$/.test(t)) return ref.replace(/\d/g, () => String(Math.floor(Math.random()*10)));
+  if(/^[★☆✦\s]+$/.test(t)) return ref;
+  if(/^\d+%$/.test(t)) return pick(['100%','200%','300%','999%','120%']);
+  if(/\p{Extended_Pictographic}/u.test(t) && [...t].length <= 2) return pick(R_EMOJI);
+  const han = (t.match(/[\u4e00-\u9fff]/g) || []).length;
+  if(han && han >= t.replace(/\s/g, '').length*0.6) return pick(R_HANJA[han] || R_HANJA[han >= 4 ? 4 : han >= 2 ? 2 : 1]);
+  // 앞뒤 기호(※ • ▶ ☎ ♣ 등)는 그대로 두고 가운데만 바꿔요
+  const mm = t.match(/^([\s※•▶·☎♣♧★☆✦♥◆■▼▲!~♪]*)(.*?)([\s※•▶·☎♣♧★☆✦♥◆■▼▲!~♪]*)$/);
+  const pre = mm ? mm[1] : '', core = mm ? mm[2] : t, suf = mm ? mm[3] : '';
+  const L = core.replace(/\s/g, '').length;
+  const bucket = L <= 3 ? 's' : L <= 6 ? 'm' : L <= 12 ? 'l' : L <= 22 ? 'x' : 'xx';
+  let best = '', bd = 1e9;
+  for(let i=0;i<24;i++){
+    const c = rPhrase(th, bucket), d = Math.abs(c.replace(/\s/g, '').length - L);
+    if(d < bd){ best = c; bd = d; if(!d) break; }
+  }
+  return pre + best + suf;
+}
+function rText(th, ref){
+  // 한 칸 안에서는 같은 문구가 겹치지 않게 몇 번 다시 뽑아요
+  const used = new Set();
+  return ref.split('\n').map(l => {
+    let out = rLine(th, l);
+    for(let i=0;i<8 && used.has(out) && out.trim();i++) out = rLine(th, l);
+    used.add(out); return out;
+  }).join('\n');
+}
+const R_DOM = ['title','sub','body','bodyLeft','bodyRight','monoTop','monoLeft','monoCenter','monoRight','monoBar','p7Top','p7Big','p7Badge','p8Head','p8Badge','p8Lines','p8Bullet'];
+function randomizeText(){
+  const th = pick(R_THEMES);
+  R_DOM.forEach(id => { const el = $(id); el.value = rText(th, el.defaultValue); });
+  $('phone').value = '☎ 010-' + Math.floor(1000 + Math.random()*9000) + '-' + Math.floor(1000 + Math.random()*9000);
+  $('deco').value = pick(R_DECO);
+  const gl = $('p7Glyph'); gl.selectedIndex = Math.floor(Math.random()*gl.options.length);
+  if(NT[tpl]){
+    NT[tpl].fields.forEach(f => { FV[tpl + ':' + f[0]] = tpl === 'alien' ? pick(['야구 안 보는','만루에 병살 치는','초구에 팝플 치는','볼넷 주는','내일 또 보는','잔루만 쌓는','귀여운']) : rText(th, f[3]); });
+    buildDyn(tpl);
+  }
+  render();
+}
+/* ---------- 랜덤 틀 생성 ---------- */
+let GEN = null;
+function mulberry(a){ return function(){ a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0)/4294967296; }; }
+const GEN_SIZES = ['1200x700','1200x800','1200x600','900x900','600x900'];
+function genLayout(seed){
+  const r = mulberry(seed), ch = a => a[Math.floor(r()*a.length)], rng = (a, b) => a + (b - a)*r();
+  const size = ch(GEN_SIZES), GW = +size.split('x')[0], GH = +size.split('x')[1];
+  const m = Math.min(GW, GH)*0.035, g = Math.min(GW, GH)*0.018;
+  const comps = [];
+  const add = (type, x, y, w, h, extra) => comps.push(Object.assign({type, x:x/GW, y:y/GH, w:w/GW, h:h/GH, fillRole:ch(['acc1','acc2','ink'])}, extra || {}));
+  // 1) 맨 위 제목 줄 (+ 옆 뱃지)
+  const port = GH > GW*1.2;
+  const hh = GH*(port ? rng(0.16, 0.22) : rng(0.2, 0.28));
+  let tx = m, tw = GW - 2*m;
+  const side = r() < 0.55 ? (r() < 0.5 ? 'L' : 'R') : '';
+  if(side){
+    const bs = Math.min(hh*1.15, tw*0.3);
+    add(ch(['burst','circle']), side === 'L' ? m : GW - m - bs, m, bs, hh);
+    tw -= bs + g; if(side === 'L') tx += bs + g;
+  }
+  add('title', tx, m, tw, hh, {style:ch(['fill','shadow','band'])});
+  let top = m + hh + g;
+  // 2) 제목 아래 띠 (가끔)
+  if(r() < 0.6){ const sh = GH*rng(0.06, 0.085); add(ch(['band','pill']), m, top, GW - 2*m, sh); top += sh + g; }
+  // 3) 맨 아래 전화번호 줄
+  const ph = GH*rng(0.1, 0.14), pTop = GH - m - ph;
+  add('phone', m, pTop, GW - 2*m, ph, {style:ch(['fill','plain'])});
+  // 4) 가운데를 빈틈없이 나누고, 칸 모양에 맞는 요소를 넣어요
+  const minW = GW*0.15, minH = GH*0.085, maxD = 2 + Math.floor(r()*2);
+  const leaf = (x, y, w, h) => {
+    const ar = w/h; let t;
+    if(ar > 5) t = h < GH*0.06 ? ch(['stars','band','pill']) : ch(['band','pill','ovals']);
+    else if(ar > 3) t = ch(['band','pill','ovals','box']);
+    else if(ar > 1.6) t = ch(['box','list','list','pill']);
+    else if(ar > 0.6) t = ch(['burst','circle','bigword','emoji','list','box']);
+    else t = ch(['vert','vert','list']);
+    add(t, x, y, w, h);
+  };
+  const split = (x, y, w, h, d) => {
+    const canV = w >= 2*minW + g, canH = h >= 2*minH + g;
+    if(d >= maxD || (!canV && !canH) || (d >= 1 && r() < 0.18)) return leaf(x, y, w, h);
+    let vert = w/h > 1.4 ? true : h/w > 1.2 ? false : r() < 0.5;
+    if(vert && !canV) vert = false;
+    if(!vert && !canH) vert = true;
+    const t = rng(0.35, 0.65);
+    if(vert){ const w1 = Math.max(minW, Math.min(w - minW - g, (w - g)*t)); split(x, y, w1, h, d + 1); split(x + w1 + g, y, w - w1 - g, h, d + 1); }
+    else { const h1 = Math.max(minH, Math.min(h - minH - g, (h - g)*t)); split(x, y, w, h1, d + 1); split(x, y + h1 + g, w, h - h1 - g, d + 1); }
+  };
+  split(m, top, GW - 2*m, pTop - g - top, 0);
+  // 칸마다 입력칸 만들기: 기본 문구는 길이·줄 수 견본이에요
+  const H1 = n => '가'.repeat(Math.max(1, Math.round(n)));
+  const cl = (v, a, b) => Math.max(a, Math.min(b, v));
+  const NAMES = {title:'제목', burst:'폭발', circle:'동그라미', band:'띠', pill:'알약', box:'상자', list:'목록', bigword:'큰 글씨', emoji:'그림', vert:'세로 글씨', ovals:'타원들'};
+  const fields = [];
+  comps.forEach((c, i) => {
+    const ar = (c.w*GW)/(c.h*GH);
+    let ref = null;
+    switch(c.type){
+      case 'title': ref = H1(cl(ar*0.9, 3, 8)); break;
+      case 'burst': case 'circle': ref = H1(2); break;
+      case 'band': case 'pill': ref = H1(cl(ar*1.1, 4, 24)); break;
+      case 'box': ref = H1(cl(ar*1.3, 3, 12)) + '\n' + H1(cl(ar*1.3, 3, 12)); break;
+      case 'list': { const k = cl(Math.round(4/ar), 2, 4); ref = Array.from({length:k}, () => '• ' + H1(cl(ar*k*1.2, 4, 14))).join('\n'); break; }
+      case 'bigword': ref = H1(cl(ar*1.5, 2, 4)); break;
+      case 'emoji': ref = '⚾'; break;
+      case 'vert': ref = H1(cl(1/ar*1.1, 2, 5)); break;
+      case 'ovals': { const k = cl(Math.round(ar/1.8), 2, 4); c.k = k; ref = Array.from({length:k}, () => H1(2)).join('\n'); break; }
+    }
+    if(ref){ c.fid = 'c' + i; fields.push([c.fid, (fields.length + 1) + '. ' + NAMES[c.type], ref.indexOf('\n') >= 0 ? 'area' : 'text', ref]); }
+  });
+  return {seed, size, comps, fields, frame:r() < 0.6};
+}
+function newGen(){
+  GEN = genLayout(Math.floor(Math.random()*1e9));
+  TPL.gen.size = GEN.size;
+  NT.gen.fields = GEN.fields;
+  Object.keys(FV).forEach(k => { if(k.indexOf('gen:') === 0) delete FV[k]; });
+  Object.keys(ADJ).forEach(k => { if(k.indexOf('gen:') === 0) delete ADJ[k]; });
+  const th = pick(R_THEMES);
+  GEN.fields.forEach(f => { FV['gen:' + f[0]] = rText(th, f[3]); });
+}
+function randomGen(){
+  newGen();
+  CUR_SLOT = null; GEN_FRESH = true;
+  setTpl('gen');
+  const n = palNames('gen').length, i = Math.floor(Math.random()*n);
+  $('palSel').value = i; setPal(i);
+  ensureFonts().then(render);
+}
+function randomAll(){
+  const keys = Object.keys(TPL).filter(k => k !== tpl && k !== 'gen');
+  setTpl(pick(keys));
+  const n = palNames(tpl).length, i = Math.floor(Math.random()*n);
+  $('palSel').value = i; setPal(i);
+  randomizeText();
+  ensureFonts().then(render);
+}
+
+function setPal(i){
+  const g = palGroup(tpl);
+  PALIDX[g] = i;
+  if(g === 'std'){
+    pal = Object.assign({}, PAL[i].c);
+    document.querySelectorAll('#colors input').forEach(inp => inp.value = pal[inp.dataset.k]);
+  } else if(g === 'mono'){
+    $('monoInk').value = MONO_PAL[i][1]; $('monoPaper').value = MONO_PAL[i][2];
+  } else {
+    const cols = NT[tpl].colors;
+    const vals = i === 0 ? cols.map(c => c[2]) : NT_PAL[tpl][i - 1][1];
+    cols.forEach((c, j) => { CV[tpl + ':' + c[0]] = vals[j]; });
+    buildDyn(tpl);
+  }
+  render();
+}
+function download(blob, name){
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+function fname(ext){
+  const t = ((tpl === 'mono' ? $('monoCenter').value : tpl === 'pattern' ? $('p7Badge').value : tpl === 'grid' ? $('p8Badge').value : NT[tpl] ? (fv('title') || fv('bar')) : $('title').value) || 'jjirasi').replace(/[\\/:*?"<>|\s]+/g,'_').slice(0,20);
+  return '찌라시_'+TPL[tpl].n.replace(/\s+/g,'')+'_'+t+'.'+ext;
+}
+function savePng(){
+  $('view').toBlob(b => { download(b, fname('png')); msg('PNG 저장 완료'); }, 'image/png');
+}
+function copyPng(){
+  if(!navigator.clipboard || !window.ClipboardItem){ msg('이 브라우저는 이미지 복사를 지원하지 않아요. PNG 저장을 써 주세요.'); return; }
+  // Safari는 클릭 직후 동기적으로 write를 호출해야 해서 Blob 대신 Promise를 넘긴다
+  const blob = new Promise((res, rej) => $('view').toBlob(b => b ? res(b) : rej(new Error('이미지 생성 실패')), 'image/png'));
+  navigator.clipboard.write([new ClipboardItem({'image/png': blob})])
+    .then(() => msg('PNG 복사 완료 · 원하는 곳에 붙여넣기 하세요'))
+    .catch(e => { console.error(e); msg('PNG 복사 실패: '+e.message); });
+}
+function savePsd(){
+  if(!window.agPsd){ msg('PSD 라이브러리를 못 불러왔어요. 인터넷 연결을 확인하고 새로고침해 주세요.'); return; }
+  try{
+    const psd = {
+      width:W, height:H,
+      children: layers.map(l => {
+        const o = {name:l.name, canvas:l.canvas, left:0, top:0};
+        if(l.text) o.text = l.text;
+        return o;
+      }),
+      canvas: $('view')
+    };
+    const buf = window.agPsd.writePsd(psd, {generateThumbnail:true});
+    download(new Blob([buf], {type:'image/vnd.adobe.photoshop'}), fname('psd'));
+    msg('PSD 저장 완료 (글자는 문자 레이어)');
+  }catch(e){
+    console.error(e); msg('PSD 저장 실패: '+e.message);
+  }
+}
+
+newGen();
+initUI();
+initRegionEditor();
+initLayoutHistory();
+setTpl('basic');
+ensureFonts().then(render);
+</script>
+</body>
+</html>
