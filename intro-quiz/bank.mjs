@@ -204,6 +204,8 @@ const rows = [
   [232, 1995, "残酷な天使のテーゼ (잔혹한 천사의 테제)", "高橋洋子 (다카하시 요코)", "o6wtDPVkKqI", "", "J-pop", "신세기 에반게리온"],
   [233, 2002, "빠이빠이야", "소명", "KYvKCuNMV8M", "", "트로트"],
   [234, 2006, "몽키매직", "이박사", "1GHp3GRt2BU", "", "트로트"],
+  [235, 1980, "Eldorado", "Goombay Dance Band", "PCMA6KzQGZc", "", "팝"],
+  [236, 2003, "달빛소년", "체리필터", "g4tJZSlIAYs", "", "밴드·인디"],
 ];
 const defaultRows = rows.map(([number,year,title,artist,answerVideo,introVideo,genre = 'K-pop',work])=>({
   id:`song-${number}`,year,title,artist,genre,introVideo:introVideo||answerVideo,

@@ -6,10 +6,10 @@ import {videoId,validateBank,mergeSavedSongs,pickSongs,publicState} from './core
 
 const releaseBank = BANK.filter(song => questionYear(song, 'release') !== undefined);
 
-test('182 active default songs including film, animation, and requested songs', () => {
+test('184 active default songs including film, animation, and requested songs', () => {
   validateBank(BANK);
   const songs = releaseBank;
-  assert.equal(songs.length, 182);
+  assert.equal(songs.length, 184);
   assert.equal(songs.filter(song => song.genre === 'K-pop').length, 139);
   assert.equal(songs.filter(song => song.genre === '힙합').length, 6);
   assert.equal(songs.find(song => song.title === 'HAPPY').id, 'song-6');
@@ -17,7 +17,7 @@ test('182 active default songs including film, animation, and requested songs', 
   assert.ok(songs.every(song => !RETIRED_SONG_IDS.has(song.id)));
   assert.equal(BANK.find(song => song.title === 'Golden').genre, '영화 수록곡');
   // 밴드·인디 곡은 요청함 신청곡(202번 이후)으로만 들어온다.
-  assert.deepEqual(songs.filter(song => song.genre === '밴드·인디').map(song => song.id), ['song-205', 'song-206', 'song-224']);
+  assert.deepEqual(songs.filter(song => song.genre === '밴드·인디').map(song => song.id), ['song-205', 'song-206', 'song-224', 'song-236']);
   assert.equal(new Set(songs.map(song => `${song.title}|${song.artist}`)).size, songs.length);
   const added = songs.filter(song => Number(song.id.slice(5)) >= 109 && Number(song.id.slice(5)) <= 178);
   for (let year = 2020; year <= 2026; year++) {
@@ -52,8 +52,8 @@ test('existing browser banks gain new default songs without losing teacher edits
   const edited = {...original[0], introStart: 4.5, checked: true};
   const added = {...original[1], id: 'teacher-song', title: '추가곡'};
   const merged = mergeSavedSongs(BANK, [edited, ...original.slice(1), added]);
-  assert.equal(merged.length, 206);
-  assert.equal(merged.filter(song => questionYear(song, 'release') < 2024).length, 110);
+  assert.equal(merged.length, 208);
+  assert.equal(merged.filter(song => questionYear(song, 'release') < 2024).length, 112);
   assert.deepEqual(merged.find(song => song.id === edited.id), edited);
   assert.deepEqual(merged.find(song => song.id === added.id), added);
 });
@@ -85,7 +85,7 @@ test('old backups cannot restore retired defaults but keep teacher additions', (
   const retired = {...BANK[0], id: 'song-20', title: 'Golden'};
   const custom = {...BANK[0], id: 'teacher-ost', genre: 'OST', work: '수업용 작품'};
   const merged = mergeSavedSongs(BANK, [retired, custom], RETIRED_SONG_IDS);
-  assert.equal(merged.length, 206);
+  assert.equal(merged.length, 208);
   assert.equal(merged.find(song => song.id === retired.id), undefined);
   assert.deepEqual(merged.find(song => song.id === custom.id), custom);
 });
