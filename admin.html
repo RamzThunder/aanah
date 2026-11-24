@@ -70,6 +70,18 @@
     .field.wide{grid-column:1/-1}
     .field input,.field select{width:100%;font-weight:500}
     .field label.check{display:flex;gap:8px;align-items:center;font-weight:700}
+    .listen{border:1px solid var(--line);border-radius:14px;padding:12px;margin:0 0 12px;background:#f8fbff}
+    .listen-player{border-radius:10px;overflow:hidden;background:#101828;aspect-ratio:16/9;max-height:220px;margin:0 auto 10px}
+    .listen-player iframe{width:100%;height:100%;display:block}
+    .listen-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:6px}
+    .listen-row .btn{padding:6px 10px;font-size:13px}
+    .listen-target{display:flex;gap:4px}
+    .listen-target label{position:relative}
+    .listen-target input{position:absolute;opacity:0;inset:0}
+    .listen-target span{display:block;padding:6px 11px;border:1.5px solid var(--line);border-radius:999px;font-size:13px;font-weight:700;cursor:pointer;background:#fff}
+    .listen-target input:checked+span{background:#eaf3ff;border-color:var(--blue);color:var(--navy)}
+    .listen-target input:focus-visible+span{outline:3px solid #80b4ff}
+    .now{margin-left:auto;font-variant-numeric:tabular-nums;font-size:13px;color:var(--muted)}
     .dialog-actions{display:flex;justify-content:space-between;gap:8px;align-items:center}
     @media(max-width:560px){.fields{grid-template-columns:1fr}}
   </style>
@@ -129,7 +141,36 @@
       <label class="field">정답 시작 (초)<input name="answerStart" type="number" min="0" max="86400" step="0.1" required></label>
       <div class="field"><span>&nbsp;</span><label class="check"><input name="checked" type="checkbox"> 준비 완료</label></div>
     </div>
-    <p class="muted" style="margin:0 0 12px"><a id="introLink" target="_blank" rel="noopener noreferrer">전주 시작 지점 유튜브에서 확인</a></p>
+    <section class="listen" aria-label="시작 지점 들어보기">
+      <div class="listen-player"><div id="adminPlayer"></div></div>
+      <div class="listen-row">
+        <div class="listen-target" role="radiogroup" aria-label="들을 구간">
+          <label><input type="radio" name="listenTarget" value="introStart" checked><span>전주</span></label>
+          <label><input type="radio" name="listenTarget" value="shortformStart"><span>숏폼</span></label>
+          <label><input type="radio" name="listenTarget" value="answerStart"><span>정답</span></label>
+        </div>
+        <span class="now" id="listenNow" aria-live="off"></span>
+      </div>
+      <div class="listen-row">
+        <button class="btn primary" type="button" data-play="0.5">0.5초</button>
+        <button class="btn primary" type="button" data-play="1">1초</button>
+        <button class="btn primary" type="button" data-play="3">3초</button>
+        <button class="btn" type="button" data-play="0">계속 재생</button>
+        <button class="btn" type="button" id="listenStop">정지</button>
+        <button class="btn" type="button" id="listenMark" title="재생 중인 위치를 선택한 구간의 시작 시간으로 넣어요">지금 위치를 시작으로</button>
+      </div>
+      <div class="listen-row" aria-label="시작 시간 미세 조정">
+        <span class="muted" style="font-size:13px">시작 조정</span>
+        <button class="btn" type="button" data-nudge="-1">−1</button>
+        <button class="btn" type="button" data-nudge="-0.5">−0.5</button>
+        <button class="btn" type="button" data-nudge="-0.1">−0.1</button>
+        <button class="btn" type="button" data-nudge="0.1">+0.1</button>
+        <button class="btn" type="button" data-nudge="0.5">+0.5</button>
+        <button class="btn" type="button" data-nudge="1">+1</button>
+      </div>
+      <p class="err" id="listenError" role="alert" style="margin-top:6px"></p>
+      <p class="muted" style="margin:4px 0 0;font-size:12px"><a id="introLink" target="_blank" rel="noopener noreferrer">유튜브에서 열기</a> · 유튜브 탐색 지연으로 실제 재생 구간에 약간 오차가 있어요.</p>
+    </section>
     <p class="err" id="editError" role="alert"></p>
     <div class="dialog-actions">
       <button class="btn danger" type="button" id="editRevert">수정안 취소</button>
@@ -151,6 +192,7 @@
 // 퀴즈가 쓰는 기본 문제은행과 검증 함수를 먼저 불러온 뒤 화면을 연결한다.
 import { BANK } from '/intro-quiz/bank.mjs';
 import { validateBank, videoId } from '/intro-quiz/core.mjs';
+import { createPlayer, playerError } from '/intro-quiz/player.mjs';
 const KINDS = { bug: '오류 신고', idea: '기능 제안', song: '곡 신청', etc: '기타' };
 const STATUSES = { new: '새 요청', seen: '확인함', done: '반영함', hold: '보류' };
 const KEY = 'aanah-admin-key';
@@ -319,17 +361,74 @@ function openEditor(id) {
   f.answerVideo.value = `https://www.youtube.com/watch?v=${s.answerVideo}`;
   f.checked.checked = s.checked;
   $('#editRevert').hidden = !drafts.has(id);
-  $('#editError').textContent = '';
+  $('#editError').textContent = ''; $('#listenError').textContent = '';
+  f.listenTarget.value = 'introStart';
   updateIntroLink();
   $('#editDialog').showModal();
 }
 function updateIntroLink() {
-  const id = videoId(form.elements.introVideo.value), t = Math.floor(Number(form.elements.introStart.value) || 0);
-  $('#introLink').hidden = !id;
-  if (id) $('#introLink').href = `https://www.youtube.com/watch?v=${id}&t=${t}s`;
+  const { video, start } = listenTarget(), t = Math.floor(start);
+  $('#introLink').hidden = !video;
+  if (video) $('#introLink').href = `https://www.youtube.com/watch?v=${video}&t=${t}s`;
 }
-form.elements.introVideo.oninput = updateIntroLink; form.elements.introStart.oninput = updateIntroLink;
+for (const name of ['introVideo', 'introStart', 'shortformStart', 'answerVideo', 'answerStart']) form.elements[name].addEventListener('input', updateIntroLink);
 $('#editCancel').onclick = () => $('#editDialog').close();
+
+// ---- 수정 창에서 바로 들어보기 ----
+// 퀴즈와 같은 유튜브 플레이어로, 선택한 구간(전주·숏폼·정답)의 시작 시간부터 정해진 길이만 재생한다.
+let player, playerPromise, clip = null, ticker = null, lastSeconds = 1;
+function getPlayer() {
+  playerPromise ??= createPlayer('adminPlayer', {
+    onError: e => { stopListening(); $('#listenError').textContent = playerError(e.data); },
+  }).then(p => (player = p)).catch(e => { playerPromise = null; throw e; });
+  return playerPromise;
+}
+function listenTarget() {
+  const f = form.elements, field = f.listenTarget.value;
+  const video = videoId(field === 'answerStart' ? f.answerVideo.value : f.introVideo.value);
+  // 숏폼 시작을 비워 두면 퀴즈처럼 전주 시작에서 재생한다.
+  const raw = f[field].value === '' && field === 'shortformStart' ? f.introStart.value : f[field].value;
+  return { field, video, start: Math.max(0, Number(raw) || 0) };
+}
+function tick() {
+  if (!player?.getCurrentTime) return;
+  const now = player.getCurrentTime();
+  $('#listenNow').textContent = `재생 위치 ${now.toFixed(1)}초`;
+  if (!clip) return;
+  // 이전 위치가 남아 바로 멈추지 않도록, 재생이 이번 구간에 들어온 뒤에만 끝을 판정한다.
+  if (!clip.reached && now >= clip.start - 0.3 && now < clip.end) clip.reached = true;
+  if (clip.reached && now >= clip.end) { player.pauseVideo(); clip = null; }
+}
+async function listen(seconds) {
+  const { video, start } = listenTarget();
+  $('#listenError').textContent = '';
+  if (!video) { $('#listenError').textContent = '유튜브 주소를 확인해 주세요.'; return; }
+  if (seconds) lastSeconds = seconds;
+  try {
+    const p = await getPlayer();
+    clip = { start, end: seconds ? start + seconds : Infinity, reached: false };
+    p.unMute(); p.setVolume(80);
+    p.loadVideoById({ videoId: video, startSeconds: start });
+    ticker ??= setInterval(tick, 16);
+  } catch (e) { $('#listenError').textContent = e.message; }
+}
+function stopListening() { clip = null; player?.pauseVideo?.(); }
+for (const b of document.querySelectorAll('[data-play]')) b.onclick = () => listen(Number(b.dataset.play));
+$('#listenStop').onclick = stopListening;
+for (const b of document.querySelectorAll('[data-nudge]')) b.onclick = () => {
+  const { field, start } = listenTarget();
+  form.elements[field].value = Math.max(0, Math.round((start + Number(b.dataset.nudge)) * 10) / 10);
+  updateIntroLink();
+  listen(lastSeconds);
+};
+$('#listenMark').onclick = () => {
+  if (!player?.getCurrentTime) { $('#listenError').textContent = '먼저 재생해 주세요.'; return; }
+  const { field } = listenTarget();
+  form.elements[field].value = Math.max(0, Math.round(player.getCurrentTime() * 10) / 10);
+  updateIntroLink();
+};
+form.addEventListener('change', e => { if (e.target.name === 'listenTarget') { stopListening(); updateIntroLink(); } });
+$('#editDialog').addEventListener('close', () => { stopListening(); clearInterval(ticker); ticker = null; $('#listenNow').textContent = ''; });
 $('#editRevert').onclick = async () => { await revert(editing.id); $('#editDialog').close(); };
 form.onsubmit = async e => {
   e.preventDefault();
