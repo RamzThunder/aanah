@@ -31,6 +31,7 @@
     .kinds input:focus-visible+span{outline:3px solid #80b4ff;outline-offset:2px}
     input[type=text],input[type=url],select,textarea{width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;background:#fbfdff}
     textarea{min-height:150px;resize:vertical;line-height:1.55}
+    textarea.short{min-height:76px}
     .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
     .song-head,.song-row{display:grid;grid-template-columns:1fr 1.2fr 1.4fr 36px;gap:8px;align-items:center}
     .song-head{font-size:13px;font-weight:700;color:var(--muted);margin-bottom:6px}
@@ -47,8 +48,9 @@
     button[type=submit]:disabled{opacity:.55;cursor:wait}
     #error{margin:0;color:var(--red);font-weight:700;min-height:1em}
     .notice{background:#fff8e6;border:1px solid #f1dfa9;border-radius:14px;padding:14px 16px;line-height:1.6;margin-bottom:18px}
-    .done{background:#fff;border:1px solid var(--line);border-radius:22px;padding:40px 26px;text-align:center}
-    .done h2{color:var(--navy);margin:0 0 10px}
+    .done{background:#fff;border:2px solid #9fd3b4;border-radius:22px;padding:40px 26px;text-align:center;box-shadow:0 12px 36px rgba(35,119,74,.12)}
+    .done-mark{width:56px;height:56px;margin:0 auto 14px;border-radius:50%;background:#e8f7ee;color:#23774a;display:grid;place-items:center;font-size:28px;font-weight:900}
+    .done h2{color:var(--navy);margin:0 0 10px;outline:none}
     .done p{color:var(--muted);margin:0 0 22px;line-height:1.6}
     .done button{padding:11px 18px;border:1.5px solid var(--line);border-radius:12px;background:#fff;font-weight:700;cursor:pointer}
     @media (max-width:520px){.kinds{grid-template-columns:repeat(2,1fr)}.row{grid-template-columns:1fr}form{padding:20px}
@@ -99,8 +101,9 @@
     <button type="submit" id="submit">보내기</button>
   </form>
 
-  <section class="done" id="done" hidden>
-    <h2>보냈어요, 고마워요!</h2>
+  <section class="done" id="done" hidden role="status">
+    <div class="done-mark" aria-hidden="true">✓</div>
+    <h2 id="doneTitle" tabindex="-1">보냈어요, 고마워요!</h2>
     <p id="doneText">꼼꼼히 읽어 보고 반영할게요.</p>
     <button type="button" id="again">하나 더 보내기</button>
   </section>
@@ -163,6 +166,8 @@ function sync() {
   $('#titleField').hidden = song;
   $('#bodyLabel').innerHTML = song ? '하고 싶은 말 <small>선택 · 쓰고 싶은 학년, 유행한 구간 등</small>' : '내용';
   $('#bodyHint').hidden = form.elements.kind.value !== 'bug';
+  form.elements.body.classList.toggle('short', song);
+  form.elements.body.rows = song ? 2 : 6;
 }
 form.addEventListener('change', e => { if (e.target.name === 'kind') sync(); });
 sync();
@@ -206,6 +211,9 @@ form.addEventListener('submit', async e => {
     if (!res.ok) throw new Error(out.error || '보내지 못했어요. 잠시 뒤 다시 시도해 주세요.');
     $('#doneText').textContent = kind === 'song' && data.songs.length > 1 ? `${data.songs.length}곡을 신청했어요. 꼼꼼히 확인하고 반영할게요.` : '꼼꼼히 읽어 보고 반영할게요.';
     form.hidden = true; $('#done').hidden = false;
+    // 긴 양식 아래쪽에서 보내도 완료 안내가 바로 보이도록 맨 위로 올린다.
+    window.scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    $('#doneTitle').focus({ preventScroll: true });
   } catch (err) {
     $('#error').textContent = err.message;
   } finally {
