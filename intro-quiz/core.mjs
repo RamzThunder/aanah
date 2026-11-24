@@ -13,7 +13,7 @@ export function videoId(value) {
   } catch { return null; }
 }
 export function validateBank(input) {
-  if(!Array.isArray(input)||!input.length||input.length>500) throw Error('1~500곡의 목록이 필요합니다.');
+  if(!Array.isArray(input)||!input.length) throw Error('한 곡 이상 담긴 목록이 필요합니다.');
   const ids=new Set();
   return input.map(s=>{
     if(!s||typeof s!=='object') throw Error('곡 형식이 올바르지 않습니다.');
@@ -37,6 +37,12 @@ export function validateBank(input) {
     return r;
   });
 }
+export function mergeSavedSongs(defaults, savedSongs) {
+  const songs = new Map(defaults.map(song => [song.id, song]));
+  for (const song of savedSongs) songs.set(song.id, song);
+  return [...songs.values()];
+}
+
 export function pickSongs(bank,years,genre,count,random=Math.random) {
   const pool=bank.filter(s=>years.includes(s.year)&&(!genre||s.genre===genre));
   for(let i=pool.length-1;i>0;i--){const j=Math.floor(random()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]];}

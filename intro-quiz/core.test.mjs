@@ -1,11 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {BANK} from './bank.mjs';
-import {videoId,validateBank,pickSongs,publicState} from './core.mjs';
+import {videoId,validateBank,mergeSavedSongs,pickSongs,publicState} from './core.mjs';
 
-test('30 valid songs with ten per year',()=>{
-  assert.equal(validateBank(BANK).length,30);
-  for(const year of [2024,2025,2026])assert.equal(BANK.filter(s=>s.year===year).length,10);
+test('70 valid songs with ten per year',()=>{
+  assert.equal(validateBank(BANK).length,70);
+  for(const year of [2020,2021,2022,2023,2024,2025,2026])assert.equal(BANK.filter(s=>s.year===year).length,10);
 });
 test('accept supported YouTube URLs and reject impostors',()=>{
   for(const value of ['phuiiNCxRMg','https://youtu.be/phuiiNCxRMg?t=3','https://www.youtube.com/watch?v=phuiiNCxRMg','https://music.youtube.com/watch?v=phuiiNCxRMg','https://youtube.com/shorts/phuiiNCxRMg'])assert.equal(videoId(value),'phuiiNCxRMg');
@@ -28,4 +28,15 @@ test('question state never includes answers or video identifiers',()=>{
 test('invalid imports fail before persistence',()=>{
   for(const change of [{introStart:-1},{answerStart:Infinity},{year:2024.5},{answerVideo:'bad'},{title:''}])assert.throws(()=>validateBank([{...BANK[0],...change}]));
   assert.throws(()=>validateBank([BANK[0],BANK[0]]));assert.throws(()=>validateBank([]));
+});
+
+test('existing browser banks gain new default songs without losing teacher edits', () => {
+  const original = BANK.filter(song => song.year >= 2024);
+  const edited = {...original[0], introStart: 4.5, checked: true};
+  const added = {...original[1], id: 'teacher-song', title: '추가곡'};
+  const merged = mergeSavedSongs(BANK, [edited, ...original.slice(1), added]);
+  assert.equal(merged.length, 71);
+  assert.equal(merged.filter(song => song.year < 2024).length, 40);
+  assert.deepEqual(merged.find(song => song.id === edited.id), edited);
+  assert.deepEqual(merged.find(song => song.id === added.id), added);
 });

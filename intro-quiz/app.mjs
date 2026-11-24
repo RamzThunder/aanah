@@ -1,10 +1,10 @@
 import {BANK} from './bank.mjs';
-import {validateBank,pickSongs,publicState} from './core.mjs';
+import {validateBank,mergeSavedSongs,pickSongs,publicState} from './core.mjs';
 import {createPlayer,playerError} from './player.mjs';
 const $=s=>document.querySelector(s), KEY='aanah-intro-bank-v1';
 const defaultSongs = new Map(BANK.map(song => [song.id, song]));
 let bank=BANK.map(s=>({...s}));
-try{const saved=localStorage.getItem(KEY);if(saved)bank=validateBank(JSON.parse(saved));}catch{$('#status').textContent='저장된 목록을 불러오지 못해 기본 목록을 열었어요.';}
+try{const saved=localStorage.getItem(KEY);if(saved)bank=mergeSavedSongs(BANK,validateBank(JSON.parse(saved)));}catch{$('#status').textContent='저장된 목록을 불러오지 못해 기본 목록을 열었어요.';}
 let playlist=[],index=-1,phase='idle',stage=0,duration=0,player,playerPromise,active=null,tv=null,lastSeen=0,editing=null;
 const room=crypto.randomUUID(), channel=typeof BroadcastChannel!=='undefined'?new BroadcastChannel(`intro-quiz-${room}`):null;
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
