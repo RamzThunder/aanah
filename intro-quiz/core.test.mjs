@@ -40,3 +40,13 @@ test('existing browser banks gain new default songs without losing teacher edits
   assert.deepEqual(merged.find(song => song.id === edited.id), edited);
   assert.deepEqual(merged.find(song => song.id === added.id), added);
 });
+
+test('excluded artists do not appear in the playlist', () => {
+  const years = [2020, 2021, 2022, 2023, 2024, 2025, 2026];
+  const excluded = new Set(['IVE', 'aespa']);
+  const pool = BANK.filter(song => !excluded.has(song.artist));
+  const playlist = pickSongs(BANK, years, 'K-pop', 70, () => 0.5, excluded);
+  assert.equal(playlist.length, pool.length);
+  assert.ok(playlist.every(song => !excluded.has(song.artist)));
+  assert.deepEqual(pickSongs(BANK, years, '', 10, Math.random, new Set(BANK.map(song => song.artist))), []);
+});

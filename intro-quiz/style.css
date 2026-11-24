@@ -11,3 +11,16 @@
 }
 .added .song-label { background: #d4eddb; color: #245c37; }
 .modified .song-label { background: #e4d9fa; color: #52348b; }
+
+.artist-exclusions {
+  margin-top: 16px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px;
+}
+.artist-exclusions summary { cursor: pointer; font-weight: 700; font-size: 14px; }
+.artist-exclusions summary span { color: var(--muted); font-weight: 500; margin-left: 6px; }
+#excludedArtists { max-height: 220px; overflow: auto; margin: 8px 0; }
+#excludedArtists label { display: flex; align-items: center; gap: 6px; padding: 4px 2px; cursor: pointer; }
+#excludedArtists input { flex-shrink: 0; }
+#clearExcluded { font-size: 13px; padding: 6px 10px; }

@@ -13,7 +13,12 @@
 <aside class="panel setup"><div class="section-title"><h2>오늘의 플레이리스트</h2><span class="pill">출제 설정</span></div>
 <fieldset id="years"><legend>발매 연도 <span>여러 개 선택 가능</span></legend></fieldset>
 <div class="row"><label>장르<select id="genre"><option value="">전체 장르</option></select></label><label>문제 수<select id="count"><option>5</option><option selected>10</option><option>15</option><option>20</option><option>30</option></select></label></div>
-<p id="poolCount" class="muted"></p><button id="start" class="primary wide">문제 섞고 시작하기</button><p class="hint">진행 중 다시 시작하면 새 문제로 교체됩니다.</p>
+<details class="artist-exclusions">
+  <summary>제외할 가수 <span id="excludedCount">없음</span></summary>
+  <div id="excludedArtists" role="group" aria-label="출제에서 제외할 가수"></div>
+  <button id="clearExcluded" type="button" disabled>선택 해제</button>
+</details>
+<p id="poolCount" aria-live="polite" class="muted"></p><button id="start" class="primary wide">문제 섞고 시작하기</button><p class="hint">진행 중 다시 시작하면 새 문제로 교체됩니다.</p>
 <hr><h3>TV 연결, 이렇게 해요</h3><ol class="guide"><li>디스플레이를 <b>확장 모드</b>로 설정해요.</li><li>TV 화면을 열어 TV 쪽으로 옮겨요.</li><li>TV 창에서 <b>전체 화면</b>을 눌러요.</li><li>컴퓨터 소리 출력을 <b>TV / HDMI</b>로 맞춰요.</li></ol><p id="connection" class="connection">TV 화면 연결 전</p><p class="hint">다른 기기와의 원격 연결은 지원하지 않아요.</p>
 </aside>
 <section class="panel console"><div class="section-title"><h2>진행 콘솔</h2><span id="progress" class="pill">시작 전</span></div>
