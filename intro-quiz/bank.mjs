@@ -2,6 +2,8 @@
 // require a classroom preflight; availability is controlled by YouTube.
 import {OFFICIAL_INTRO_AUDIO} from './intro-audio.mjs';
 import {SHORTFORM_ADDITIONS} from './shortform-bank.mjs';
+import {BANK_EDITS} from './bank-edits.mjs';
+import {applyBankEdit, migrateSavedSong} from './core.mjs';
 
 const HIP_HOP = '힙합';
 const FILM = '영화 수록곡';
@@ -216,10 +218,13 @@ const previousDefaults = new Map(defaultRows.map(song => [song.id, song]));
 export const BANK = [...defaultRows.map(song => {
   const audio = OFFICIAL_INTRO_AUDIO.get(song.id);
   return audio ? {...song, introVideo: audio} : song;
-}), ...SHORTFORM_ADDITIONS];
+}), ...SHORTFORM_ADDITIONS].map(song => applyBankEdit(song, BANK_EDITS[song.id]));
 
 // Update older saved copies that still use the original defaults.
 export function updateLegacySong(song) {
+  return migrateSavedSong(updateLegacyDefaults(song), BANK_EDITS[song.id]);
+}
+function updateLegacyDefaults(song) {
   if (song.id === 'song-36' && song.title === '아무노래' &&
       song.artist === '지코 (ZICO)' && song.genre === 'K-pop') {
     song = {...song, genre: HIP_HOP};

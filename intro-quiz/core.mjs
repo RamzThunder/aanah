@@ -47,6 +47,26 @@ export function validateBank(input) {
     return r;
   });
 }
+// 관리 페이지에서 고친 기본값(bank-edits.mjs)을 적용한다.
+const same = (a, b) => (a ?? null) === (b ?? null);
+function setField(song, field, value) {
+  const next = {...song};
+  if (value === null) delete next[field]; else next[field] = value;
+  return next;
+}
+export function applyBankEdit(song, edit) {
+  if (!edit) return song;
+  for (const [field, {to}] of Object.entries(edit)) song = setField(song, field, to);
+  return song;
+}
+// 저장된 곡은 선생님이 직접 바꾸지 않은 필드(예전 기본값 그대로인 필드)만 새 기본값으로 바꾼다.
+export function migrateSavedSong(song, edit) {
+  if (!edit) return song;
+  for (const [field, {to, from}] of Object.entries(edit)) {
+    if (!same(song[field], to) && from.some(value => same(song[field], value))) song = setField(song, field, to);
+  }
+  return song;
+}
 export function mergeSavedSongs(defaults, savedSongs, retiredIds = new Set()) {
   const songs = new Map(defaults.map(song => [song.id, song]));
   for (const song of savedSongs) {

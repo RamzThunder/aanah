@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="robots" content="noindex, nofollow" />
   <link rel="icon" href="favicon.ico" sizes="any" />
-  <title>요청함 관리 · 아나!</title>
+  <title>관리 · 아나!</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
   <style>
     :root{--navy:#193f7c;--ink:#203a60;--muted:#74849e;--blue:#4c91eb;--pale:#f6faff;--line:#e0eaf4;--red:#c8423b}
@@ -43,6 +43,35 @@
     .actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
     .actions select{padding:7px 10px;border:1.5px solid var(--line);border-radius:10px}
     .empty{text-align:center;padding:40px 0;color:var(--muted)}
+    .tabs{display:flex;gap:6px;margin-bottom:18px;border-bottom:1.5px solid var(--line)}
+    .tabs button{padding:10px 16px;border:0;border-bottom:3px solid transparent;background:none;font-weight:800;color:var(--muted);cursor:pointer;margin-bottom:-1.5px}
+    .tabs button[aria-selected=true]{color:var(--navy);border-bottom-color:var(--navy)}
+    .tabs .count{display:inline-block;min-width:20px;padding:0 6px;margin-left:4px;border-radius:999px;background:#ffe9a8;color:#7a5600;font-size:12px}
+    .pending{border-color:#f1d98a;background:#fffbea}
+    .pending ul{margin:0 0 12px;padding-left:18px;line-height:1.7}
+    .pending li button{margin-left:6px;padding:2px 8px;font-size:12px}
+    .diff{color:var(--muted)}.diff b{color:var(--ink)}
+    .toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px}
+    .toolbar input,.toolbar select,.field input,.field select{padding:9px 12px;border:1.5px solid var(--line);border-radius:10px;background:#fff}
+    .toolbar input[type=search]{flex:1;min-width:180px}
+    .bulk{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 12px;border-radius:12px;background:#eef4fb;margin-bottom:10px}
+    .bulk input{padding:8px 10px;border:1.5px solid var(--line);border-radius:10px;width:160px}
+    .bank-table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden;font-size:14px}
+    .bank-table th{background:#f5f8fc;color:var(--muted);font-weight:700;text-align:left;padding:10px 8px}
+    .bank-table td{padding:9px 8px;border-top:1px solid var(--line);vertical-align:top}
+    .bank-table td small{display:block;color:var(--muted)}
+    .bank-table tr.drafted td{background:#fffbea}
+    .bank-table .draft-tag{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:999px;background:#ffe9a8;color:#7a5600;font-size:11px;font-weight:800}
+    .table-wrap{overflow:auto}
+    dialog{border:1px solid var(--line);border-radius:18px;padding:22px;width:min(560px,calc(100% - 24px));color:var(--ink)}
+    dialog::backdrop{background:#15203c80}
+    .fields{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0}
+    .field{display:grid;gap:5px;font-size:13px;font-weight:700}
+    .field.wide{grid-column:1/-1}
+    .field input,.field select{width:100%;font-weight:500}
+    .field label.check{display:flex;gap:8px;align-items:center;font-weight:700}
+    .dialog-actions{display:flex;justify-content:space-between;gap:8px;align-items:center}
+    @media(max-width:560px){.fields{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
@@ -54,8 +83,61 @@
 </form>
 
 <main id="app" hidden>
-  <div class="top"><h1>요청함 관리</h1><div><button class="btn" id="refresh">새로고침</button> <button class="btn" id="logout">나가기</button></div></div>
+  <div class="top"><h1>아나! 관리</h1><div><button class="btn" id="refresh">새로고침</button> <button class="btn" id="logout">나가기</button></div></div>
+  <nav class="tabs" role="tablist">
+    <button role="tab" data-tab="requests" aria-selected="true">요청함</button>
+    <button role="tab" data-tab="bank" aria-selected="false">전주 퀴즈 문제은행 <span class="count" id="pendingCount" hidden></span></button>
+  </nav>
 
+  <section id="bankTab" hidden>
+    <section class="panel pending" id="pendingPanel" hidden>
+      <h2>반영 대기 <span id="pendingTitle"></span></h2>
+      <ul id="pendingList"></ul>
+      <p class="muted" style="margin:0">아직 퀴즈에는 적용되지 않았어요. Claude에게 <b>“문제은행 반영해 줘”</b>라고 하면 모든 선생님 화면의 기본 문제은행에 반영돼요. 선생님이 직접 고친 값은 그대로 지켜요.</p>
+    </section>
+    <div class="toolbar">
+      <input type="search" id="bankSearch" placeholder="제목·가수·작품명 검색" aria-label="곡 검색">
+      <select id="bankGenre" aria-label="장르"></select>
+      <label class="muted"><input type="checkbox" id="onlyDrafts"> 반영 대기만</label>
+    </div>
+    <div class="bulk">
+      <span id="selectedCount">선택 0곡</span>
+      <input id="bulkGenre" list="genreList" placeholder="바꿀 장르 (예: 야구)" aria-label="선택한 곡에 넣을 장르">
+      <button class="btn primary" id="bulkApply" disabled>선택한 곡 장르 바꾸기</button>
+      <button class="btn" id="clearSelection" disabled>선택 해제</button>
+    </div>
+    <datalist id="genreList"></datalist>
+    <div class="table-wrap"><table class="bank-table">
+      <thead><tr><th><input type="checkbox" id="selectAll" aria-label="보이는 곡 모두 선택"></th><th>연도</th><th>노래 / 가수</th><th>장르</th><th>전주 시작</th><th>준비</th><th></th></tr></thead>
+      <tbody id="bankRows"></tbody>
+    </table></div>
+    <p class="err" id="bankError" role="alert"></p>
+  </section>
+
+  <dialog id="editDialog"><form id="editForm" method="dialog" novalidate>
+    <h2 id="editTitle">곡 수정</h2>
+    <div class="fields">
+      <label class="field">노래 제목<input name="title" maxlength="150" required></label>
+      <label class="field">가수<input name="artist" maxlength="150" required></label>
+      <label class="field">발매 연도<input name="year" type="number" min="1900" max="2100" required></label>
+      <label class="field">장르<input name="genre" list="genreList" maxlength="150" required></label>
+      <label class="field wide">작품명 (선택)<input name="work" maxlength="150"></label>
+      <label class="field wide">전주용 유튜브 주소<input name="introVideo" required></label>
+      <label class="field">전주 시작 (초)<input name="introStart" type="number" min="0" max="86400" step="0.1" required></label>
+      <label class="field">숏폼 시작 (초, 선택)<input name="shortformStart" type="number" min="0" max="86400" step="0.1"></label>
+      <label class="field wide">정답용 유튜브 주소<input name="answerVideo" required></label>
+      <label class="field">정답 시작 (초)<input name="answerStart" type="number" min="0" max="86400" step="0.1" required></label>
+      <div class="field"><span>&nbsp;</span><label class="check"><input name="checked" type="checkbox"> 준비 완료</label></div>
+    </div>
+    <p class="muted" style="margin:0 0 12px"><a id="introLink" target="_blank" rel="noopener noreferrer">전주 시작 지점 유튜브에서 확인</a></p>
+    <p class="err" id="editError" role="alert"></p>
+    <div class="dialog-actions">
+      <button class="btn danger" type="button" id="editRevert">수정안 취소</button>
+      <span><button class="btn" type="button" id="editCancel">닫기</button> <button class="btn primary" type="submit">반영 대기에 저장</button></span>
+    </div>
+  </form></dialog>
+
+  <section id="requestsTab">
   <section class="panel" id="songPanel" hidden>
     <h2>곡 신청 모아 보기 <small class="muted">반영 전 신청만</small></h2>
     <table class="songs"><tbody id="songs"></tbody></table>
@@ -63,8 +145,12 @@
 
   <div class="filters" id="filters"></div>
   <div id="list"></div>
+  </section>
 </main>
-<script>
+<script type="module">
+// 퀴즈가 쓰는 기본 문제은행과 검증 함수를 먼저 불러온 뒤 화면을 연결한다.
+import { BANK } from '/intro-quiz/bank.mjs';
+import { validateBank, videoId } from '/intro-quiz/core.mjs';
 const KINDS = { bug: '오류 신고', idea: '기능 제안', song: '곡 신청', etc: '기타' };
 const STATUSES = { new: '새 요청', seen: '확인함', done: '반영함', hold: '보류' };
 const KEY = 'aanah-admin-key';
@@ -94,8 +180,175 @@ async function load() {
     requests = out.requests;
     $('#login').hidden = true; $('#app').hidden = false; $('#password').value = '';
     render();
+    await loadBank();
   } catch (e) { showLogin(e.message); }
 }
+
+for (const tab of document.querySelectorAll('[data-tab]')) tab.onclick = () => {
+  for (const t of document.querySelectorAll('[data-tab]')) t.setAttribute('aria-selected', t === tab);
+  $('#requestsTab').hidden = tab.dataset.tab !== 'requests';
+  $('#bankTab').hidden = tab.dataset.tab !== 'bank';
+  location.hash = tab.dataset.tab === 'bank' ? 'bank' : '';
+};
+
+// ---- 전주 퀴즈 문제은행 ----
+// 기본 문제은행에 수정안(반영 대기)을 얹어 보여 준다.
+const FIELDS = { title: '제목', artist: '가수', year: '연도', genre: '장르', work: '작품명', introVideo: '전주 영상', introStart: '전주 시작',
+  shortformStart: '숏폼 시작', answerVideo: '정답 영상', answerStart: '정답 시작', checked: '준비 완료' };
+const PRESET_GENRES = ['야구', '응원가'];
+const same = (a, b) => (a ?? null) === (b ?? null);
+const show = v => v === null || v === undefined || v === '' ? '(없음)' : v === true ? '예' : v === false ? '아니요' : String(v);
+let drafts = new Map(), selected = new Set(), editing = null;
+
+async function bankApi(method, body, query = '') {
+  const res = await fetch('/api/admin/bank' + query, {
+    method, headers: { authorization: 'Bearer ' + sessionStorage.getItem(KEY), 'content-type': 'application/json' },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const out = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(out.error || '저장에 실패했어요.');
+  return out;
+}
+async function loadBank() {
+  const { edits } = await bankApi('GET');
+  drafts = new Map(edits.map(e => [e.song_id, e]));
+  renderBank();
+}
+function effective(song) {
+  const d = drafts.get(song.id);
+  if (!d) return song;
+  const next = { ...song };
+  for (const [k, v] of Object.entries(d.changes)) { if (v === null) delete next[k]; else next[k] = v; }
+  return next;
+}
+const allGenres = () => [...new Set([...BANK.map(s => effective(s).genre), ...PRESET_GENRES])].sort((a, b) => a.localeCompare(b, 'ko'));
+
+function renderBank() {
+  const genres = allGenres();
+  $('#genreList').innerHTML = genres.map(g => `<option value="${g.replace(/"/g, '&quot;')}">`).join('');
+  const genreSel = $('#bankGenre'), keep = genreSel.value;
+  genreSel.replaceChildren(new Option('모든 장르', ''), ...genres.map(g => new Option(g, g)));
+  genreSel.value = genres.includes(keep) ? keep : '';
+
+  const n = drafts.size;
+  $('#pendingCount').hidden = !n; $('#pendingCount').textContent = n;
+  $('#pendingPanel').hidden = !n; $('#pendingTitle').textContent = `${n}곡`;
+  const list = $('#pendingList'); list.replaceChildren();
+  for (const [id, d] of drafts) {
+    const song = BANK.find(s => s.id === id);
+    const li = document.createElement('li');
+    const name = document.createElement('b'); name.textContent = song ? `${song.title} · ${song.artist}` : id;
+    const diff = document.createElement('span'); diff.className = 'diff';
+    diff.textContent = ' — ' + Object.entries(d.changes).map(([k, v]) => `${FIELDS[k] || k}: ${show(d.base[k])} → ${show(v)}`).join(', ');
+    const undo = document.createElement('button'); undo.className = 'btn'; undo.textContent = '취소';
+    undo.onclick = () => revert(id);
+    li.append(name, diff, undo); list.append(li);
+  }
+
+  const q = $('#bankSearch').value.trim().toLowerCase(), genre = genreSel.value, onlyDrafts = $('#onlyDrafts').checked;
+  const rows = BANK.map(effective).filter(s => (!genre || s.genre === genre) && (!onlyDrafts || drafts.has(s.id)) &&
+    (!q || `${s.title} ${s.artist} ${s.work || ''}`.toLowerCase().includes(q)));
+  const tbody = $('#bankRows'); tbody.replaceChildren();
+  for (const s of rows) {
+    const tr = tbody.insertRow(); tr.className = drafts.has(s.id) ? 'drafted' : '';
+    const cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = selected.has(s.id);
+    cb.setAttribute('aria-label', `${s.title} 선택`);
+    cb.onchange = () => { cb.checked ? selected.add(s.id) : selected.delete(s.id); updateSelection(); };
+    tr.insertCell().append(cb);
+    tr.insertCell().textContent = s.year;
+    const name = tr.insertCell();
+    const b = document.createElement('b'); b.textContent = s.title; name.append(b);
+    if (drafts.has(s.id)) { const t = document.createElement('span'); t.className = 'draft-tag'; t.textContent = '반영 대기'; name.append(t); }
+    const small = document.createElement('small'); small.textContent = s.artist + (s.work ? ` · ${s.work}` : ''); name.append(small);
+    tr.insertCell().textContent = s.genre;
+    tr.insertCell().textContent = `${s.introStart}초`;
+    tr.insertCell().textContent = s.checked ? '완료' : '-';
+    const btn = document.createElement('button'); btn.className = 'btn'; btn.textContent = '수정';
+    btn.onclick = () => openEditor(s.id);
+    tr.insertCell().append(btn);
+  }
+  if (!rows.length) tbody.innerHTML = '<tr><td colspan="7" class="empty">해당하는 곡이 없어요.</td></tr>';
+  $('#selectAll').checked = rows.length > 0 && rows.every(s => selected.has(s.id));
+  $('#selectAll').onchange = () => { for (const s of rows) $('#selectAll').checked ? selected.add(s.id) : selected.delete(s.id); renderBank(); };
+  updateSelection();
+}
+function updateSelection() {
+  $('#selectedCount').textContent = `선택 ${selected.size}곡`;
+  $('#bulkApply').disabled = !selected.size; $('#clearSelection').disabled = !selected.size;
+}
+$('#bankSearch').oninput = renderBank; $('#bankGenre').onchange = renderBank; $('#onlyDrafts').onchange = renderBank;
+$('#clearSelection').onclick = () => { selected.clear(); renderBank(); };
+
+// 곡의 원래 기본값과 새 값을 비교해 바뀐 필드만 수정안으로 저장한다(원래대로 되돌린 필드는 빠진다).
+function draftFor(original, next) {
+  const changes = {}, base = {};
+  for (const k of Object.keys(FIELDS)) {
+    if (!same(next[k], original[k])) { changes[k] = next[k] ?? null; base[k] = original[k] ?? null; }
+  }
+  return { id: original.id, changes, base };
+}
+async function saveDrafts(list) {
+  await bankApi('PUT', { edits: list });
+  await loadBank();
+}
+$('#bulkApply').onclick = async () => {
+  const genre = $('#bulkGenre').value.trim();
+  $('#bankError').textContent = '';
+  if (!genre) { $('#bankError').textContent = '바꿀 장르를 적어 주세요.'; return; }
+  if (!confirm(`선택한 ${selected.size}곡의 장르를 ‘${genre}’(으)로 바꿀까요? 반영 대기에 저장돼요.`)) return;
+  try {
+    await saveDrafts([...selected].map(id => {
+      const original = BANK.find(s => s.id === id);
+      return draftFor(original, { ...effective(original), genre });
+    }));
+    selected.clear(); $('#bulkGenre').value = ''; renderBank();
+  } catch (e) { $('#bankError').textContent = e.message; }
+};
+async function revert(id) {
+  try { await bankApi('DELETE', null, `?id=${encodeURIComponent(id)}`); await loadBank(); }
+  catch (e) { $('#bankError').textContent = e.message; }
+}
+
+const form = $('#editForm');
+function openEditor(id) {
+  editing = BANK.find(s => s.id === id);
+  const s = effective(editing), f = form.elements;
+  $('#editTitle').textContent = `${editing.title} 수정`;
+  for (const k of ['title', 'artist', 'year', 'genre', 'work', 'introStart', 'shortformStart', 'answerStart']) f[k].value = s[k] ?? '';
+  f.introVideo.value = `https://www.youtube.com/watch?v=${s.introVideo}`;
+  f.answerVideo.value = `https://www.youtube.com/watch?v=${s.answerVideo}`;
+  f.checked.checked = s.checked;
+  $('#editRevert').hidden = !drafts.has(id);
+  $('#editError').textContent = '';
+  updateIntroLink();
+  $('#editDialog').showModal();
+}
+function updateIntroLink() {
+  const id = videoId(form.elements.introVideo.value), t = Math.floor(Number(form.elements.introStart.value) || 0);
+  $('#introLink').hidden = !id;
+  if (id) $('#introLink').href = `https://www.youtube.com/watch?v=${id}&t=${t}s`;
+}
+form.elements.introVideo.oninput = updateIntroLink; form.elements.introStart.oninput = updateIntroLink;
+$('#editCancel').onclick = () => $('#editDialog').close();
+$('#editRevert').onclick = async () => { await revert(editing.id); $('#editDialog').close(); };
+form.onsubmit = async e => {
+  e.preventDefault();
+  const f = form.elements, num = v => v === '' ? NaN : Number(v);
+  const next = {
+    ...editing, title: f.title.value.trim(), artist: f.artist.value.trim(), year: num(f.year.value), genre: f.genre.value.trim(),
+    introVideo: videoId(f.introVideo.value), answerVideo: videoId(f.answerVideo.value),
+    introStart: num(f.introStart.value), answerStart: num(f.answerStart.value), checked: f.checked.checked,
+  };
+  const work = f.work.value.trim(); if (work) next.work = work; else delete next.work;
+  if (f.shortformStart.value === '') delete next.shortformStart; else next.shortformStart = num(f.shortformStart.value);
+  try {
+    if (!next.introVideo || !next.answerVideo) throw new Error('유튜브 주소를 확인해 주세요.');
+    validateBank([next]);
+    await saveDrafts([draftFor(editing, next)]);
+    $('#editDialog').close();
+  } catch (err) { $('#editError').textContent = err.message; }
+};
+if (location.hash === '#bank') document.querySelector('[data-tab=bank]').click();
 
 function renderFilters() {
   const count = k => requests.filter(r => (k === 'all' || r.kind === k) && matchStatus(r)).length;

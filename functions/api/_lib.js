@@ -1,7 +1,7 @@
 // 요청함(의견·오류·곡 신청) 공용 코드. 라우트가 아니라 다른 함수들이 import해서 쓴다.
 //
 // Cloudflare Pages 설정에서 필요한 것
-//   D1 바인딩  DB                  요청을 저장한다. 표는 처음 쓸 때 자동으로 만든다.
+//   D1 바인딩  DB                  요청과 문제은행 수정안을 저장한다. 표는 처음 쓸 때 자동으로 만든다.
 //   비밀 값    ADMIN_PASSWORD      /admin 관리 페이지 비밀번호
 //   (선택)     TURNSTILE_SITE_KEY / TURNSTILE_SECRET  로봇 확인. 둘 다 있을 때만 켜진다.
 
@@ -22,6 +22,9 @@ export function db(env) {
       contact TEXT NOT NULL DEFAULT '', status TEXT NOT NULL DEFAULT 'new',
       ip_hash TEXT NOT NULL DEFAULT '')`),
     env.DB.prepare('CREATE INDEX IF NOT EXISTS requests_ip_time ON requests (ip_hash, created_at)'),
+    // 관리 페이지에서 고친 기본 문제은행 수정안. Claude가 코드(intro-quiz/bank-edits.mjs)에 반영하면 지운다.
+    env.DB.prepare(`CREATE TABLE IF NOT EXISTS bank_edits (
+      song_id TEXT PRIMARY KEY, changes TEXT NOT NULL, base TEXT NOT NULL, updated_at INTEGER NOT NULL)`),
   ]).catch(e => { ready = undefined; throw e; });
   return ready.then(() => env.DB);
 }

@@ -2,7 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {BANK, RETIRED_SONG_IDS, updateLegacySong} from './bank.mjs';
 import {questionYear, clipStart} from './shortform-bank.mjs';
-import {videoId,validateBank,mergeSavedSongs,pickSongs,publicState} from './core.mjs';
+import {videoId,validateBank,mergeSavedSongs,pickSongs,publicState,applyBankEdit,migrateSavedSong} from './core.mjs';
+import {BANK_EDITS} from './bank-edits.mjs';
 
 const releaseBank = BANK.filter(song => questionYear(song, 'release') !== undefined);
 
@@ -147,4 +148,26 @@ test('shortform rounds contain five unique tracks per trend year without alterin
   assert.equal(clipStart(cake, 'shortform'), 46.4);
   assert.equal(clipStart({...cake, introVideo: 'aaaaaaaaaaa'}, 'shortform'), cake.introStart);
   assert.equal(clipStart(cake, 'release'), cake.introStart);
+});
+
+test('admin bank edits update defaults and untouched saved copies only', () => {
+  const song = {...BANK.find(s => s.id === 'song-225')};
+  const edit = {genre: {to: '야구', from: ['응원가']}, introStart: {to: 3.5, from: [0]}, work: {to: null, from: ['옛 작품']}};
+  const updated = applyBankEdit({...song, work: '옛 작품'}, edit);
+  assert.equal(updated.genre, '야구');
+  assert.equal(updated.introStart, 3.5);
+  assert.equal('work' in updated, false);
+  validateBank([updated]);
+  // 선생님이 직접 바꾼 시작 시간은 지키고, 손대지 않은 장르만 바꾼다.
+  const saved = {...song, introStart: 7};
+  const migrated = migrateSavedSong(saved, edit);
+  assert.equal(migrated.genre, '야구');
+  assert.equal(migrated.introStart, 7);
+  assert.equal(migrateSavedSong({...song, genre: '내 장르'}, edit).genre, '내 장르');
+  // 반영된 수정 내역은 모두 기본 문제은행에 적용되어 있어야 한다.
+  for (const [id, fields] of Object.entries(BANK_EDITS)) {
+    const current = BANK.find(s => s.id === id);
+    assert.ok(current, id);
+    for (const [field, {to}] of Object.entries(fields)) assert.equal(current[field] ?? null, to, `${id}.${field}`);
+  }
 });
