@@ -143,5 +143,7 @@ test('shortform rounds contain five unique tracks per trend year without alterin
   const [saved] = validateBank([{...cake, introStart: 2, shortformStart: 15.5}]);
   assert.equal(clipStart(saved, 'release'), 2);
   assert.equal(clipStart(saved, 'shortform'), 15.5);
-  assert.equal(clipStart(cake, 'shortform'), cake.introStart);
+  assert.equal(clipStart(cake, 'shortform'), 46.4);
+  assert.equal(clipStart({...cake, introVideo: 'aaaaaaaaaaa'}, 'shortform'), cake.introStart);
+  assert.equal(clipStart(cake, 'release'), cake.introStart);
 });
