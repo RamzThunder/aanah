@@ -119,7 +119,7 @@ function render(){const s=song(),has=!!s&&phase!=='done';
  $('#progress').textContent=has?`${index+1} / ${playlist.length}`:phase==='done'?'게임 완료':'시작 전';
  $('#answerTitle').textContent=has?s.title:'아직 선택된 곡이 없어요';$('#answerArtist').textContent=has?`${songCredit(s)} · ${s.year}`:'새 플레이리스트를 시작해 주세요.';
  $('#stageTag').textContent=phase==='done'?'PLAYLIST COMPLETE':has?`QUESTION ${String(index+1).padStart(2,'0')} / ${playlist.length}`:'READY TO PLAY';
- $('#previewTitle').textContent=phase==='done'?'게임 종료':phase==='answer'?s.title:has?'이 노래의 제목은?':'전주 듣고 노래 맞히기';
+ $('#previewTitle').textContent=phase==='done'?'게임 종료':phase==='answer'?s.title:has?'이 노래의 제목과 가수는?':'전주 듣고 노래 맞히기';
  $('#previewText').textContent=phase==='done'?'다시 하려면 문제를 새로 섞어 주세요.':phase==='answer'?songCredit(s):phase==='loading'?'유튜브 재생 준비 중…':phase==='listening'?`${stage}단계 · ${duration}초 전주를 들어보세요`:has?(stage?`${stage}단계 · ${duration}초, 어떤 노래일까요?`:'1단계부터 전주를 들려주세요.'):'출제 범위를 고르고 시작하세요.';
  $('#preview').classList.toggle('playing',phase==='listening');
  document.querySelectorAll('[data-stage]').forEach(b=>{b.disabled=!has||phase==='answer'||!!active;b.classList.toggle('selected',+b.dataset.stage===stage);});
