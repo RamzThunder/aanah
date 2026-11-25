@@ -6,7 +6,7 @@
 <link rel="icon" href="../favicon.ico"><link rel="stylesheet" href="style.css">
 </head>
 <body>
-<header class="topbar"><a href="../index.html" class="brand">아나! <span>교실 플레이리스트</span></a><span class="badge">TEACHER MODE</span><button id="openTV" class="primary">▣ TV 화면 열기</button></header>
+<header class="topbar"><a href="../index.html" class="brand">아나! <span>교실 플레이리스트</span></a><span class="badge">TEACHER MODE</span><div class="theme-picker"><button id="themeToggle" class="theme-toggle" type="button" aria-label="색상 테마 선택" aria-expanded="false" aria-controls="themeMenu"><span aria-hidden="true"></span></button><div id="themeMenu" class="theme-menu" role="group" aria-label="색상 테마" hidden><button type="button" data-theme="default"><i></i>기본</button><button type="button" data-theme="dark"><i></i>다크</button><button type="button" data-theme="blue"><i></i>파랑</button><button type="button" data-theme="green"><i></i>초록</button><button type="button" data-theme="peach"><i></i>피치</button></div></div><button id="openTV" class="primary">▣ TV 화면 열기</button></header>
 <main>
 <section class="intro"><div><p class="eyebrow">LISTEN. GUESS. PLAY.</p><h1>전주 듣고 노래 맞히기</h1><p>3단계로 이루어진 음악 퀴즈</p></div></section>
 <div class="workspace">
@@ -59,5 +59,5 @@
 <label>정답용 유튜브 주소 · 교차편집 / 뮤비<input name="answerVideo" required placeholder="https://youtu.be/..."></label><label>정답 영상 시작 시간 (초)<input name="answerStart" type="number" min="0" max="86400" step="0.1" required></label>
 <div class="row"><a id="findAudio" target="_blank" rel="noopener noreferrer">YouTube Music에서 음원 찾기</a><a id="findStage" target="_blank" rel="noopener noreferrer">교차편집 찾기</a></div>
 <label class="check"><input name="checked" type="checkbox">전주와 정답 영상을 확인했어요 · 수업 준비 완료</label><p id="editError" role="alert"></p><button class="primary wide" type="submit">저장하기</button></form></dialog>
-<script type="module" src="app.mjs"></script>
+<script type="module" src="theme.mjs"></script><script type="module" src="app.mjs"></script>
 </body></html>
