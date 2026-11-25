@@ -21,6 +21,14 @@ export function db(env) {
       title TEXT NOT NULL DEFAULT '', body TEXT NOT NULL DEFAULT '', link TEXT NOT NULL DEFAULT '',
       contact TEXT NOT NULL DEFAULT '', status TEXT NOT NULL DEFAULT 'new',
       ip_hash TEXT NOT NULL DEFAULT '')`),
+    env.DB.prepare(`CREATE TABLE IF NOT EXISTS request_images (
+      id TEXT PRIMARY KEY, mime TEXT NOT NULL, byte_size INTEGER NOT NULL,
+      content_hash TEXT NOT NULL, data BLOB NOT NULL)`),
+    env.DB.prepare(`CREATE TABLE IF NOT EXISTS request_image_links (
+      request_id INTEGER NOT NULL REFERENCES requests(id) ON DELETE CASCADE,
+      image_id TEXT NOT NULL REFERENCES request_images(id) ON DELETE CASCADE,
+      PRIMARY KEY(request_id, image_id)) WITHOUT ROWID`),
+    env.DB.prepare('CREATE INDEX IF NOT EXISTS request_images_link ON request_image_links (image_id)'),
     env.DB.prepare('CREATE INDEX IF NOT EXISTS requests_ip_time ON requests (ip_hash, created_at)'),
     // 관리 페이지에서 고친 기본 문제은행 수정안. Claude가 코드(intro-quiz/bank-edits.mjs)에 반영하면 지운다.
     env.DB.prepare(`CREATE TABLE IF NOT EXISTS bank_audio_starts (
@@ -34,7 +42,7 @@ export function db(env) {
 
 const enc = new TextEncoder();
 const hex = buf => [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
-export const sha256 = async text => hex(await crypto.subtle.digest('SHA-256', enc.encode(text)));
+export const sha256 = async value => hex(await crypto.subtle.digest('SHA-256', typeof value === 'string' ? enc.encode(value) : value));
 
 // 길이가 같은 해시끼리 비교해서 비밀번호 길이·내용이 응답 시간으로 새지 않게 한다.
 export async function isAdmin(request, env) {

@@ -2,6 +2,7 @@
 //   GET  /api/requests  → { ready, turnstile }  요청함 사용 가능 여부와 로봇 확인 사이트 키
 //   POST /api/requests  → 요청 저장
 import { KINDS, json, db, sha256 } from './_lib.js';
+import {parseRequest, UploadError} from './_request-images.js';
 
 const SONG_TOOL = '전주 듣고 노래 맞히기';
 const LIMITS = { tool: 60, title: 200, body: 2000, link: 300, contact: 100 };
@@ -22,8 +23,10 @@ const text = (v, max) => String(v ?? '').replace(/\r\n?/g, '\n').trim().slice(0,
 
 export async function onRequestPost({ request, env }) {
   if (!ready(env)) return json({ error: '요청함이 아직 준비되지 않았어요.' }, 503);
-  let input;
-  try { input = await request.json(); } catch { return json({ error: '잘못된 요청이에요.' }, 400); }
+  let input, images;
+  try { ({input, images} = await parseRequest(request)); }
+  catch (error) { return json({error: error instanceof UploadError ? error.message : '잘못된 요청이에요.'}, error.status || 400); }
+  if (!input || typeof input !== 'object' || Array.isArray(input)) return json({error: '잘못된 요청이에요.'}, 400);
 
   // 사람에게는 보이지 않는 칸. 채워져 있으면 봇이므로 저장하지 않고 성공처럼 답한다.
   if (input.website) return json({ ok: true });
@@ -65,19 +68,43 @@ export async function onRequestPost({ request, env }) {
   const DB = await db(env);
   const now = Date.now();
   const ipHash = await sha256(`${env.ADMIN_PASSWORD}:${ip}`);
-  const { results: recent } = await DB.prepare('SELECT kind, title, body FROM requests WHERE ip_hash = ? AND created_at > ?')
+  const { results: recent } = await DB.prepare('SELECT id, kind, title, body FROM requests WHERE ip_hash = ? AND created_at > ?')
     .bind(ipHash, now - WINDOW).all();
   if (recent.length + rows.length > MAX_ROWS_PER_WINDOW) {
     return json({ error: '짧은 시간에 너무 많이 보냈어요. 10분쯤 뒤에 다시 보내 주세요.' }, 429);
   }
   // 두 번 누르기·새로고침으로 같은 내용이 다시 오면 저장하지 않고 성공으로 답한다.
-  const seen = new Set(recent.map(r => `${r.kind}\n${r.title}\n${r.body}`));
-  const fresh = rows.filter(r => !seen.has(`${kind}\n${r.title}\n${body}`));
+  const {results: recentImages} = await DB.prepare(`SELECT l.request_id, i.content_hash FROM request_image_links l
+    JOIN request_images i ON i.id = l.image_id JOIN requests r ON r.id = l.request_id
+    WHERE r.ip_hash = ? AND r.created_at > ?`).bind(ipHash, now - WINDOW).all();
+  const hashes = new Map();
+  for (const image of recentImages) { const list = hashes.get(image.request_id) || []; list.push(image.content_hash); hashes.set(image.request_id, list); }
+  const signature = images.map(image => image.hash).sort().join(',');
+  const seen = new Set(recent.map(r => `${r.kind}\n${r.title}\n${r.body}\n${(hashes.get(r.id) || []).sort().join(',')}`));
+  const fresh = rows.filter(r => !seen.has(`${kind}\n${r.title}\n${body}\n${signature}`));
   if (!fresh.length) return json({ ok: true });
 
+  if (images.length) {
+    const {results: uploads} = await DB.prepare(`SELECT DISTINCT r.id FROM requests r JOIN request_image_links l ON l.request_id = r.id WHERE r.ip_hash = ? AND r.created_at > ?`).bind(ipHash, now - WINDOW).all();
+    if (uploads.length + fresh.length > 30) return json({error: '짧은 시간에 사진을 너무 많이 보냈어요. 10분쯤 뒤에 다시 보내 주세요.'}, 429);
+    const stored = await DB.prepare('SELECT COALESCE(SUM(byte_size), 0) AS bytes FROM request_images').first();
+    if (stored.bytes + images.reduce((sum, image) => sum + image.bytes, 0) > 200 * 1024 * 1024) return json({error: '사진 첨부 공간이 가득 찼어요. 사진을 빼고 내용을 먼저 보내 주세요.'}, 503);
+  }
   const insert = DB.prepare(`INSERT INTO requests (created_at, kind, tool, title, body, link, contact, ip_hash)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`);
-  await DB.batch(fresh.map(r => insert.bind(now, kind, tool, r.title, body, r.link, contact, ipHash)));
+  const statements = images.map(image => DB.prepare('INSERT INTO request_images (id, mime, byte_size, content_hash, data) VALUES (?, ?, ?, ?, ?)')
+    .bind(image.id, image.mime, image.bytes, image.hash, image.data.buffer));
+  for (const row of fresh) {
+    statements.push(insert.bind(now, kind, tool, row.title, body, row.link, contact, ipHash));
+  }
+  if (images.length) {
+    // 같은 트랜잭션에서 막 삽입한 요청에 연결한다. 여러 곡 신청도 사진 원본은 한 번만 저장한다.
+    statements.push(DB.prepare(`INSERT INTO request_image_links (request_id, image_id)
+      SELECT r.id, i.id FROM (SELECT id FROM requests WHERE ip_hash = ? AND created_at = ? ORDER BY id DESC LIMIT ?) r
+      CROSS JOIN request_images i WHERE i.id IN (${images.map(() => '?').join(',')})`)
+      .bind(ipHash, now, fresh.length, ...images.map(image => image.id)));
+  }
+  await DB.batch(statements);
 
   return json({ ok: true });
 }
