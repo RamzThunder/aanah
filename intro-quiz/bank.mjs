@@ -222,7 +222,16 @@ export const BANK = [...defaultRows.map(song => {
 
 // Update older saved copies that still use the original defaults.
 export function updateLegacySong(song) {
-  return migrateSavedSong(updateLegacyDefaults(song), BANK_EDITS[song.id]);
+  const legacy = updateLegacyDefaults(song);
+  const edit = BANK_EDITS[song.id];
+  const current = BANK.find(current => current.id === song.id);
+  // 다른 영상으로 직접 바꾼 곡에는 기본 음원의 시작 시간을 옮기지 않는다.
+  if (edit?.introStart && current && legacy.introVideo !== current.introVideo &&
+      !edit.introVideo?.from.includes(legacy.introVideo)) {
+    const {introStart, ...otherFields} = edit;
+    return migrateSavedSong(legacy, otherFields);
+  }
+  return migrateSavedSong(legacy, edit);
 }
 function updateLegacyDefaults(song) {
   if (song.id === 'song-36' && song.title === '아무노래' &&

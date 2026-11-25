@@ -40,3 +40,9 @@ test('all shipped suggestions have valid song fingerprints and usable starts', (
   }
   assert.equal(AUDIO_REVIEW.results.length, 77);
 });
+
+test('review marks approved repository times and replaced recordings as reflected', () => {
+  assert.equal(reviewStatus({...song, introStart: 1.2}, result, null, null, {introStart: {to: 1.2}}), 'applied');
+  assert.equal(reviewStatus({...song, introVideo: 'new'}, result, null, null, {introVideo: {to: 'new'}}), 'applied');
+  assert.equal(reviewStatus({...song, introStart: 1.2}, result, {changes: {introStart: 2}}, null, {introStart: {to: 1.2}}), 'stale');
+});

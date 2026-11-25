@@ -1,3 +1,4 @@
+import {BANK_EDITS} from './bank-edits.mjs';
 import {AUDIO_REVIEW} from './audio-review-data.mjs';
 import {reviewStatus} from './audio-review.mjs';
 const labels = {silent: '무음 수준', quiet: '저음량·짧은 소리', error: '영상 확인 필요'};
@@ -7,7 +8,7 @@ const seconds = value => Number.isFinite(value) ? `${value}초` : '—';
 
 export function createAudioReview({getSong, getDraft, getPublished, openEditor, playAt, hasOtherChanges, refresh, closeEditor}) {
   let opened = null, currentStart = 0, expectedVideo = '', busy = false;
-  const statusOf = row => reviewStatus(getSong(row.id), row, getDraft(row.id), getPublished(row.id));
+  const statusOf = row => reviewStatus(getSong(row.id), row, getDraft(row.id), getPublished(row.id), BANK_EDITS[row.id]);
   function render() {
     const counts = Object.fromEntries(['silent', 'quiet', 'error'].map(key => [key, AUDIO_REVIEW.results.filter(row => row.status === key).length]));
     const applied = AUDIO_REVIEW.results.filter(row => statusOf(row) === 'applied').length;
@@ -43,9 +44,10 @@ export function createAudioReview({getSong, getDraft, getPublished, openEditor, 
     const song = getSong(id), status = statusOf(opened);
     currentStart = song.introStart; expectedVideo = song.introVideo;
     $('#audioReviewInfo').textContent = `${labels[opened.status]} · 검사 당시 ${seconds(opened.introStart)} · 현재 ${seconds(currentStart)} · 추천 ${seconds(opened.suggested_start)}. ` +
-      (status === 'stale' ? '검사 이후 영상이나 시작 시간이 바뀌었어요. 현재 수정안을 먼저 확인해 주세요.' : status === 'unavailable' ? '검사 당시 영상을 읽지 못했어요. 영상 주소를 확인해 주세요.' : status === 'applied' ? '반영한 시작 시간입니다. 다시 듣고 조정할 수 있어요.' : '현재와 추천 구간을 비교해 주세요.');
-    $('#audioListenSuggested').disabled = busy || !['available', 'applied'].includes(status);
-    $('#audioApply').disabled = busy || !['available', 'applied'].includes(status);
+      (status === 'stale' ? '검사 이후 영상이나 시작 시간이 바뀌었어요. 현재 수정안을 먼저 확인해 주세요.' : status === 'unavailable' ? '검사 당시 영상을 읽지 못했어요. 영상 주소를 확인해 주세요.' : status === 'applied' ? '확인한 수정안이 반영됐어요. 현재 구간을 다시 들을 수 있어요.' : '현재와 추천 구간을 비교해 주세요.');
+    const canCompare = Number.isFinite(opened.suggested_start) && song.introVideo === opened.introVideo && ['available', 'applied'].includes(status);
+    $('#audioListenSuggested').disabled = busy || !canCompare;
+    $('#audioApply').disabled = busy || !canCompare;
     $('#audioListenCurrent').disabled = busy;
   }
   $('#audioReviewFilter').onchange = render;

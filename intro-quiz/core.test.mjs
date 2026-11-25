@@ -105,7 +105,7 @@ test('RUDE uses the official audio and preserves customized intro settings', () 
   const rude = BANK.find(song => song.id === 'song-25');
   assert.equal(rude.introVideo, 'Q4AE3ub4nBM');
   assert.equal(rude.answerVideo, 'F7sGJVUrkjQ');
-  const oldDefault = {...rude, introVideo: rude.answerVideo};
+  const oldDefault = {...rude, introVideo: rude.answerVideo, introStart: 0};
   assert.deepEqual(updateLegacySong(oldDefault), rude);
   for (const edited of [{introStart: 2}, {introVideo: 'HttxcynVU48'}, {checked: true}]) {
     const saved = {...oldDefault, ...edited};
@@ -115,14 +115,14 @@ test('RUDE uses the official audio and preserves customized intro settings', () 
 
 test('reviewed audio replaces only unchanged intro settings in older banks', () => {
   const song = BANK.find(song => song.id === 'song-36');
-  const previous = {...song, genre: 'K-pop', introVideo: song.answerVideo};
+  const previous = {...song, genre: 'K-pop', introVideo: song.answerVideo, introStart: 0};
   assert.deepEqual(updateLegacySong(previous), song);
   assert.deepEqual(updateLegacySong({...previous, introStart: 5}), {
     ...song, introVideo: previous.introVideo, introStart: 5
   });
 
   const whiplash = BANK.find(song => song.id === 'song-7');
-  const saved = {...whiplash, introVideo: whiplash.answerVideo, answerStart: 12};
+  const saved = {...whiplash, introVideo: whiplash.answerVideo, introStart: 0, answerStart: 12};
   assert.deepEqual(updateLegacySong(saved), {...whiplash, answerStart: 12});
   assert.deepEqual(updateLegacySong({...saved, checked: true}), {...saved, checked: true});
 });

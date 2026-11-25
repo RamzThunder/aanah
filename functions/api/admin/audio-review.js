@@ -1,4 +1,5 @@
 import {json, db, isAdmin} from '../_lib.js';
+import {BANK_EDITS} from '../../../intro-quiz/bank-edits.mjs';
 import {BANK} from '../../../intro-quiz/bank.mjs';
 import {AUDIO_REVIEW} from '../../../intro-quiz/audio-review-data.mjs';
 import {reviewStatus} from '../../../intro-quiz/audio-review.mjs';
@@ -21,7 +22,7 @@ export async function onRequest({request, env}) {
   if (live?.intro_video === original.introVideo) current.introStart = live.intro_start;
   const draft = pending ? {changes: JSON.parse(pending.changes)} : null;
   if (draft) Object.assign(current, draft.changes);
-  const status = reviewStatus(current, result, draft, live);
+  const status = reviewStatus(current, result, draft, live, BANK_EDITS[body.id]);
   if (!['available', 'applied'].includes(status) || current.introVideo !== body.expectedVideo || current.introStart !== body.expectedStart) {
     return json({error: '영상이나 시작 시간이 바뀌었어요. 새로고침하고 현재 수정안을 확인해 주세요.'}, 409);
   }
