@@ -69,6 +69,7 @@
     .field{display:grid;gap:5px;font-size:13px;font-weight:700}
     .field.wide{grid-column:1/-1}
     .field input,.field select{width:100%;font-weight:500}
+    .field label.check input{width:auto}
     .field label.check{display:flex;gap:8px;align-items:center;font-weight:700}
     .listen{border:1px solid var(--line);border-radius:14px;padding:12px;margin:0 0 12px;background:#f8fbff}
     .listen-player{border-radius:10px;overflow:hidden;background:#101828;aspect-ratio:16/9;max-height:220px;margin:0 auto 10px}
@@ -102,6 +103,17 @@
   </nav>
 
   <section id="bankTab" hidden>
+    <section class="panel" aria-labelledby="audioReviewTitle">
+      <h2 id="audioReviewTitle">0.5초 무음 검사</h2>
+      <p class="muted" id="audioReviewSummary"></p>
+      <div class="toolbar">
+        <label>검사 결과 <select id="audioReviewFilter"><option value="todo">확인할 곡</option><option value="silent">무음 수준</option><option value="quiet">저음량·짧은 소리</option><option value="error">영상 확인 필요</option><option value="applied">반영한 곡</option><option value="all">전체 검사 후보</option></select></label>
+        <input type="search" id="audioReviewSearch" placeholder="검사 결과에서 제목·가수 검색" aria-label="검사 결과 검색">
+      </div>
+      <p class="muted">현재 구간과 추천 구간을 직접 듣고 시작 시간을 반영하세요. 추천 시간은 자동 분석한 후보입니다.</p>
+      <div class="table-wrap"><table class="bank-table"><thead><tr><th>노래 / 가수</th><th>검사 결과</th><th>현재 시작</th><th>추천 시작</th><th>상태</th><th></th></tr></thead><tbody id="audioReviewRows"></tbody></table></div>
+      <p id="audioReviewNotice" role="status"></p>
+    </section>
     <section class="panel pending" id="pendingPanel" hidden>
       <h2>반영 대기 <span id="pendingTitle"></span></h2>
       <ul id="pendingList"></ul>
@@ -135,12 +147,24 @@
       <label class="field">장르<input name="genre" list="genreList" maxlength="150" required></label>
       <label class="field wide">작품명 (선택)<input name="work" maxlength="150"></label>
       <label class="field wide">전주용 유튜브 주소<input name="introVideo" required></label>
-      <label class="field">전주 시작 (초)<input name="introStart" type="number" min="0" max="86400" step="0.1" required></label>
+      <label class="field">전주 시작 (초)<input name="introStart" type="number" min="0" max="86400" step="0.01" required></label>
       <label class="field">숏폼 시작 (초, 선택)<input name="shortformStart" type="number" min="0" max="86400" step="0.1"></label>
       <label class="field wide">정답용 유튜브 주소<input name="answerVideo" required></label>
       <label class="field">정답 시작 (초)<input name="answerStart" type="number" min="0" max="86400" step="0.1" required></label>
       <div class="field"><span>&nbsp;</span><label class="check"><input name="checked" type="checkbox"> 준비 완료</label></div>
     </div>
+    <section class="listen" id="audioReviewDetail" hidden aria-label="무음 검사 결과 확인">
+      <h2>0.5초 무음 검사 결과</h2>
+      <p id="audioReviewInfo"></p>
+      <div class="listen-row">
+        <button class="btn" type="button" id="audioListenCurrent">현재 구간 0.5초 듣기</button>
+        <button class="btn primary" type="button" id="audioListenSuggested">추천 구간 0.5초 듣기</button>
+      </div>
+      <p class="muted">추천 구간을 들으면 전주 시작 시간에 후보가 입력됩니다. 미세 조정 후 반영할 수 있어요.</p>
+      <button class="btn primary" type="button" id="audioApply">현재 입력한 시작 시간 반영</button>
+      <p class="muted">전주 시작 시간만 실제 퀴즈에 반영합니다. 교사용 화면을 새로고침하면 적용됩니다.</p>
+      <p class="err" id="audioApplyError" role="alert"></p>
+    </section>
     <section class="listen" aria-label="시작 지점 들어보기">
       <div class="listen-player"><div id="adminPlayer"></div></div>
       <div class="listen-row">
@@ -190,7 +214,10 @@
 </main>
 <script type="module">
 // 퀴즈가 쓰는 기본 문제은행과 검증 함수를 먼저 불러온 뒤 화면을 연결한다.
-import { BANK } from '/intro-quiz/bank.mjs';
+import { BANK as STATIC_BANK } from '/intro-quiz/bank.mjs';
+import {audioEdits, fetchAudioStarts, publishedBank} from '/intro-quiz/live-bank.mjs';
+import {createAudioReview} from '/intro-quiz/admin-audio-review.mjs';
+let BANK = STATIC_BANK, audioStarts = [];
 import { validateBank, videoId } from '/intro-quiz/core.mjs';
 import { createPlayer, playerError } from '/intro-quiz/player.mjs';
 const KINDS = { bug: '오류 신고', idea: '기능 제안', song: '곡 신청', etc: '기타' };
@@ -252,7 +279,10 @@ async function bankApi(method, body, query = '') {
   return out;
 }
 async function loadBank() {
-  const { edits } = await bankApi('GET');
+  const [pending, starts] = await Promise.all([bankApi('GET'), fetchAudioStarts()]);
+  audioStarts = starts;
+  BANK = publishedBank(STATIC_BANK, audioEdits(STATIC_BANK, starts));
+  const {edits} = pending;
   drafts = new Map(edits.map(e => [e.song_id, e]));
   renderBank();
 }
@@ -313,6 +343,7 @@ function renderBank() {
   $('#selectAll').checked = rows.length > 0 && rows.every(s => selected.has(s.id));
   $('#selectAll').onchange = () => { for (const s of rows) $('#selectAll').checked ? selected.add(s.id) : selected.delete(s.id); renderBank(); };
   updateSelection();
+  audioReview.render();
 }
 function updateSelection() {
   $('#selectedCount').textContent = `선택 ${selected.size}곡`;
@@ -364,6 +395,7 @@ function openEditor(id) {
   $('#editError').textContent = ''; $('#listenError').textContent = '';
   f.listenTarget.value = 'introStart';
   updateIntroLink();
+  audioReview.open(id);
   $('#editDialog').showModal();
 }
 function updateIntroLink() {
@@ -417,7 +449,7 @@ for (const b of document.querySelectorAll('[data-play]')) b.onclick = () => list
 $('#listenStop').onclick = stopListening;
 for (const b of document.querySelectorAll('[data-nudge]')) b.onclick = () => {
   const { field, start } = listenTarget();
-  form.elements[field].value = Math.max(0, Math.round((start + Number(b.dataset.nudge)) * 10) / 10);
+  form.elements[field].value = Math.max(0, Math.round((start + Number(b.dataset.nudge)) * 100) / 100);
   updateIntroLink();
   listen(lastSeconds);
 };
@@ -521,6 +553,24 @@ function render() {
   }
 }
 
+const audioReview = createAudioReview({
+  getSong: id => { const song = BANK.find(song => song.id === id); return song && effective(song); },
+  getDraft: id => drafts.get(id),
+  getPublished: id => audioStarts.find(row => row.song_id === id),
+  openEditor,
+  playAt: start => { form.elements.listenTarget.value = 'introStart'; form.elements.introStart.value = start; updateIntroLink(); listen(0.5); },
+  hasOtherChanges: id => {
+    const current = effective(BANK.find(song => song.id === id)), f = form.elements;
+    return Object.keys(FIELDS).some(key => {
+      if (key === 'introStart') return false;
+      const value = key === 'checked' ? f[key].checked : key.endsWith('Video') ? videoId(f[key].value) :
+        ['year', 'shortformStart', 'answerStart'].includes(key) ? (f[key].value === '' ? undefined : Number(f[key].value)) : f[key].value.trim();
+      return !same(value === '' ? undefined : value, current[key] === '' ? undefined : current[key]);
+    });
+  },
+  refresh: loadBank,
+  closeEditor: () => $('#editDialog').close(),
+});
 if (sessionStorage.getItem(KEY)) load(); else showLogin();
 </script>
 </body>

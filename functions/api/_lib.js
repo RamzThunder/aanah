@@ -23,6 +23,9 @@ export function db(env) {
       ip_hash TEXT NOT NULL DEFAULT '')`),
     env.DB.prepare('CREATE INDEX IF NOT EXISTS requests_ip_time ON requests (ip_hash, created_at)'),
     // 관리 페이지에서 고친 기본 문제은행 수정안. Claude가 코드(intro-quiz/bank-edits.mjs)에 반영하면 지운다.
+    env.DB.prepare(`CREATE TABLE IF NOT EXISTS bank_audio_starts (
+      song_id TEXT PRIMARY KEY, intro_video TEXT NOT NULL, intro_start REAL NOT NULL,
+      previous_starts TEXT NOT NULL, updated_at INTEGER NOT NULL)`),
     env.DB.prepare(`CREATE TABLE IF NOT EXISTS bank_edits (
       song_id TEXT PRIMARY KEY, changes TEXT NOT NULL, base TEXT NOT NULL, updated_at INTEGER NOT NULL)`),
   ]).catch(e => { ready = undefined; throw e; });

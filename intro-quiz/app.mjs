@@ -1,8 +1,13 @@
 import './theme.mjs';
-import {BANK, RETIRED_SONG_IDS, updateLegacySong} from './bank.mjs';
+import {BANK as STATIC_BANK, RETIRED_SONG_IDS, updateLegacySong} from './bank.mjs';
 import {validateBank,mergeSavedSongs,filterSongs,pickSongs,publicState} from './core.mjs';
 import {questionYear, clipStart, defaultShortformStart} from './shortform-bank.mjs';
 import {createPlayer,playerError} from './player.mjs';
+import {audioEdits, fetchAudioStarts, publishedBank, migrateAudioStart} from './live-bank.mjs';
+let liveEdits = new Map(), liveBankFailed = false;
+try { liveEdits = audioEdits(STATIC_BANK, await fetchAudioStarts()); } catch { liveBankFailed = true; }
+const BANK = publishedBank(STATIC_BANK, liveEdits);
+const updateSavedSong = song => migrateAudioStart(updateLegacySong(song), liveEdits, STATIC_BANK);
 const $=s=>document.querySelector(s), KEY='aanah-intro-bank-v1';
 // 선생님이 출제에서 빼 둔 곡 ID. 문제은행 수정 내용과 따로 저장해 기본 문제은행이 바뀌어도 유지된다.
 const EXCLUDED_KEY='aanah-intro-excluded-songs-v1';
@@ -12,7 +17,7 @@ function saveExcluded(){try{localStorage.setItem(EXCLUDED_KEY,JSON.stringify([..
 const playableBank=()=>bank.filter(song=>!excludedSongs.has(song.id));
 const defaultSongs = new Map(BANK.map(song => [song.id, song]));
 let bank=BANK.map(s=>({...s}));
-try{const saved=localStorage.getItem(KEY);if(saved)bank=mergeSavedSongs(BANK,validateBank(JSON.parse(saved)).map(updateLegacySong),RETIRED_SONG_IDS);}catch{$('#status').textContent='저장된 목록을 불러오지 못해 기본 목록을 열었어요.';}
+try{const saved=localStorage.getItem(KEY);if(saved)bank=mergeSavedSongs(BANK,validateBank(JSON.parse(saved)).map(updateSavedSong),RETIRED_SONG_IDS);}catch{$('#status').textContent='저장된 목록을 불러오지 못해 기본 목록을 열었어요.';}
 let playlist=[],index=-1,phase='idle',stage=0,duration=0,player,playerPromise,active=null,tv=null,lastSeen=0,editing=null;
 const room=crypto.randomUUID(), channel=typeof BroadcastChannel!=='undefined'?new BroadcastChannel(`intro-quiz-${room}`):null;
 const workLabel = song => song.work ? `〈${song.work}〉` : '';
@@ -247,7 +252,8 @@ $('#add').onclick=()=>edit({id:crypto.randomUUID(),title:'',artist:'',year:2026,
 function persist(next){const validated=validateBank(next);localStorage.setItem(KEY,JSON.stringify(validated));bank=validated;fillFilters();}
 $('#editForm').onsubmit=e=>{e.preventDefault();const f=e.target;try{const s=validateBank([{id:editing,title:f.elements.title.value,artist:f.elements.artist.value,genre:f.elements.genre.value,work:f.elements.work.value,year:+f.elements.year.value,introVideo:f.elements.introVideo.value,answerVideo:f.elements.answerVideo.value,introStart:+f.elements.introStart.value,shortformStart:f.elements.shortformStart.value === '' ? undefined : f.elements.shortformStart.valueAsNumber,answerStart:+f.elements.answerStart.value,checked:f.elements.checked.checked}])[0];const next=bank.some(x=>x.id===s.id)?bank.map(x=>x.id===s.id?s:x):[...bank,s];persist(next);playlist=playlist.map(x=>x.id===s.id?{...s}:x);if(phase==='answer')phase='question';render();$('#editor').close();status('저장했어요. 미리듣기로 시작 시간을 확인하세요.');}catch(err){$('#editError').textContent=`저장하지 못했어요. ${err.message}`;}};
 $('#export').onclick=()=>{const blob=new Blob([JSON.stringify({version:1,songs:bank,excludedSongIds:[...excludedSongs]},null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='aanah-intro-bank.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
-$('#import').onchange=async e=>{const file=e.target.files[0];if(!file)return;try{if(file.size>2e6)throw Error('2MB 이하 파일을 선택해 주세요.');const data=JSON.parse(await file.text());const incoming=validateBank(data.songs||data).map(updateLegacySong);const activeSongs=incoming.filter(song=>!RETIRED_SONG_IDS.has(song.id));persist(mergeSavedSongs(bank,activeSongs));const removedCount=incoming.length-activeSongs.length;if(Array.isArray(data.excludedSongIds)){for(const id of data.excludedSongIds)if(typeof id==='string')excludedSongs.add(id);saveExcluded();poolCount();}status(`${activeSongs.length}곡을 가져왔어요. ${removedCount ? `기본 문제은행에서 제외된 ${removedCount}곡은 건너뛰었어요. ` : ''} 같은 ID는 갱신되며, 진행 중 게임에는 다음 게임부터 적용돼요.`);}catch(err){status(`가져오지 못했어요. ${err.message}`);}e.target.value='';};
+$('#import').onchange=async e=>{const file=e.target.files[0];if(!file)return;try{if(file.size>2e6)throw Error('2MB 이하 파일을 선택해 주세요.');const data=JSON.parse(await file.text());const incoming=validateBank(data.songs||data).map(updateSavedSong);const activeSongs=incoming.filter(song=>!RETIRED_SONG_IDS.has(song.id));persist(mergeSavedSongs(bank,activeSongs));const removedCount=incoming.length-activeSongs.length;if(Array.isArray(data.excludedSongIds)){for(const id of data.excludedSongIds)if(typeof id==='string')excludedSongs.add(id);saveExcluded();poolCount();}status(`${activeSongs.length}곡을 가져왔어요. ${removedCount ? `기본 문제은행에서 제외된 ${removedCount}곡은 건너뛰었어요. ` : ''} 같은 ID는 갱신되며, 진행 중 게임에는 다음 게임부터 적용돼요.`);}catch(err){status(`가져오지 못했어요. ${err.message}`);}e.target.value='';};
 window.addEventListener('beforeunload',()=>{channel?.postMessage({type:'closed',room});stopPlayback();});
 fillFilters();render();
+if (liveBankFailed) status('관리자에서 반영한 시작 시간을 불러오지 못했어요. 기본 목록으로 열었어요. 새로고침해 주세요.');
 if(location.protocol==='file:')status('유튜브 재생을 위해 HTTP 서버로 열어 주세요. 사용 안내의 실행 방법을 확인하세요.');
