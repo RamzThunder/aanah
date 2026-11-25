@@ -1,3 +1,4 @@
+import {applyTheme} from './theme.mjs';
 import {createPlayer} from './player.mjs';
 const $=s=>document.querySelector(s),room=new URLSearchParams(location.search).get('room');
 const channel=room&&typeof BroadcastChannel!=='undefined'?new BroadcastChannel(`intro-quiz-${room}`):null;
@@ -28,7 +29,7 @@ async function showVideo(song) {
   if (version === loadVersion) fallback.hidden = false;
  }
 }
-function receive(data){if(data?.room!==room)return;if(data.type==='closed'){destroy();currentKey='';$('#tvFooter').textContent='교사용 창이 닫혔어요. 교사용 페이지에서 TV 화면을 다시 열어 주세요.';return;}if(data.type!=='state')return;lastContact=Date.now();const s=data.state;const key=JSON.stringify(s);if(key===currentKey)return;currentKey=key;render(s);}
+function receive(data){if(data?.room!==room)return;if(data.type==='closed'){destroy();currentKey='';$('#tvFooter').textContent='교사용 창이 닫혔어요. 교사용 페이지에서 TV 화면을 다시 열어 주세요.';return;}if(data.type!=='state')return;lastContact=Date.now();applyTheme(data.theme);const s=data.state;const key=JSON.stringify(s);if(key===currentKey)return;currentKey=key;render(s);}
 function render(s){
  const answer=s.phase==='answer'&&s.song,done=s.phase==='done',idle=s.phase==='idle';
  $('#screen').classList.toggle('answer',!!answer);$('#screen').classList.toggle('playing',s.phase==='listening');

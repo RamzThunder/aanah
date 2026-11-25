@@ -1,3 +1,4 @@
+import './theme.mjs';
 import {BANK, RETIRED_SONG_IDS, updateLegacySong} from './bank.mjs';
 import {validateBank,mergeSavedSongs,filterSongs,pickSongs,publicState} from './core.mjs';
 import {questionYear, clipStart, defaultShortformStart} from './shortform-bank.mjs';
@@ -19,7 +20,8 @@ const songCredit = song => [song.artist, workLabel(song)].filter(Boolean).join('
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const song=()=>playlist[index];
 function status(text){$('#status').textContent=text;}
-function send(){const data={type:'state',room,state:publicState({phase,index,stage,duration,total:playlist.length,song:song()})};channel?.postMessage(data);if(tv&&!tv.closed)tv.postMessage(data,location.origin);}
+function send(){const data={type:'state',room,theme:document.documentElement.dataset.theme,state:publicState({phase,index,stage,duration,total:playlist.length,song:song()})};channel?.postMessage(data);if(tv&&!tv.closed)tv.postMessage(data,location.origin);}
+window.addEventListener('themechange', send);
 function receive(data){if(data?.room!==room)return;if(data.type==='hello'){lastSeen=Date.now();send();}if(data.type==='heartbeat')lastSeen=Date.now();if(data.type==='video-error')status(`정답 영상: ${playerError(data.code)} TV 창의 ‘유튜브에서 열기’를 사용할 수 있어요.`);}
 channel?.addEventListener('message',e=>receive(e.data));
 window.addEventListener('message',e=>{if(e.origin===location.origin&&e.source===tv)receive(e.data);});
