@@ -45,5 +45,11 @@ function render(s){
 channel?.addEventListener('message',e=>receive(e.data));
 window.addEventListener('message',e=>{if(e.origin===location.origin&&e.source===window.opener)receive(e.data);});
 $('#fullscreen').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen();}catch{$('#tvFooter').textContent='브라우저의 전체 화면 메뉴를 사용해 주세요.';}};
+const SIZE_KEY='intro-quiz-tv-video-scale',SIZE_MIN=50,SIZE_MAX=100,SIZE_STEP=10;
+let videoSize=SIZE_MAX;try{videoSize=Number(localStorage.getItem(SIZE_KEY))||SIZE_MAX;}catch{}
+function setVideoSize(value){videoSize=Math.min(SIZE_MAX,Math.max(SIZE_MIN,Math.round(value/SIZE_STEP)*SIZE_STEP));$('#videoWrap').style.setProperty('--video-scale',videoSize/100);$('#sizeValue').textContent=`${videoSize}%`;$('#sizeDown').disabled=videoSize<=SIZE_MIN;$('#sizeUp').disabled=videoSize>=SIZE_MAX;try{localStorage.setItem(SIZE_KEY,videoSize);}catch{}}
+setVideoSize(videoSize);
+$('#sizeDown').onclick=()=>setVideoSize(videoSize-SIZE_STEP);$('#sizeUp').onclick=()=>setVideoSize(videoSize+SIZE_STEP);
+document.addEventListener('keydown',e=>{if(e.ctrlKey||e.metaKey||e.altKey)return;if(e.key==='+'||e.key==='=')setVideoSize(videoSize+SIZE_STEP);else if(e.key==='-'||e.key==='_')setVideoSize(videoSize-SIZE_STEP);});
 document.addEventListener('fullscreenchange',()=>{$('#fullscreen').textContent=document.fullscreenElement?'전체 화면 해제':'전체 화면';});
 if(room){send('hello');setInterval(()=>{send('heartbeat');send('hello');if(Date.now()-lastContact>8000){if(player)destroy();currentKey='';$('#tvFooter').textContent='교사용 화면과 연결을 기다리고 있어요.';}},2000);}else{$('#tvSub').textContent='교사용 페이지의 ‘TV 화면 열기’ 버튼으로 시작해 주세요.';}
