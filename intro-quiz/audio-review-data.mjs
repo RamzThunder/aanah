@@ -1,7 +1,8 @@
 // 2026-11-25: 일반 전주 시작부터 0.5초의 실제 음량 검사. 추천값은 청취 후 반영한다.
+// 2026-11-26: 새로 추가한 song-237~240을 같은 기준으로 추가 검사했다(song-240은 통과).
 export const AUDIO_REVIEW = {
   "date": "2026-11-25",
-  "total": 207,
+  "total": 211,
   "results": [
     {
       "id": "song-1",
@@ -906,6 +907,42 @@ export const AUDIO_REVIEW = {
       "introVideo": "Gih5JOFQ1YQ",
       "introStart": 0,
       "status": "error"
+    },
+    {
+      "id": "song-237",
+      "title": "森の小さなレストラン (숲속의 작은 레스토랑)",
+      "artist": "手嶌葵 (테시마 아오이)",
+      "introVideo": "EYGGd2NKwtI",
+      "introStart": 0,
+      "peak_db": -83.2,
+      "rms_db": -104.6,
+      "audible_ms": 0,
+      "status": "silent",
+      "suggested_start": 0.56
+    },
+    {
+      "id": "song-238",
+      "title": "문어의 꿈",
+      "artist": "안예은",
+      "introVideo": "bSvvb3KyPH8",
+      "introStart": 0,
+      "peak_db": -15.1,
+      "rms_db": -33.9,
+      "audible_ms": 260,
+      "status": "quiet",
+      "suggested_start": 0.24
+    },
+    {
+      "id": "song-239",
+      "title": "愛♡スクリ～ム！ (아이 스크림)",
+      "artist": "AiScReam",
+      "introVideo": "8Yy7Jzle338",
+      "introStart": 0,
+      "peak_db": -300,
+      "rms_db": -300,
+      "audible_ms": 0,
+      "status": "silent",
+      "suggested_start": 1.52
     }
   ]
 };

@@ -38,7 +38,7 @@ test('all shipped suggestions have valid song fingerprints and usable starts', (
     assert.match(row.introVideo, /^[\w-]{11}$/);
     if (row.status !== 'error') assert.ok(Number.isFinite(row.suggested_start) && row.suggested_start >= 0 && row.suggested_start <= 86400);
   }
-  assert.equal(AUDIO_REVIEW.results.length, 77);
+  assert.equal(AUDIO_REVIEW.results.length, 80);
 });
 
 test('review marks approved repository times and replaced recordings as reflected', () => {
