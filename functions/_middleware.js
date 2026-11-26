@@ -39,8 +39,14 @@ function bodyLinks(tool) {
 const PASS_REQUEST_HEADERS = ['accept', 'accept-language', 'if-none-match', 'if-modified-since', 'range'];
 const DROP_RESPONSE_HEADERS = ['set-cookie', 'via', 'x-github-request-id', 'x-fastly-request-id', 'x-served-by', 'x-cache', 'x-cache-hits', 'x-timer', 'x-proxy-cache'];
 
+// 저장소에만 두는 내부 문서. 사이트에서는 없는 페이지처럼 404로 답한다. 숨길 파일은 _routes.json include에도 추가한다.
+const HIDDEN_PATHS = ['/HANDOFF.md'];
+
 export async function onRequest({ request, next }) {
   const url = new URL(request.url);
+  if (HIDDEN_PATHS.some(path => url.pathname.toLowerCase() === path.toLowerCase())) {
+    return new Response('Not Found', { status: 404, headers: { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store' } });
+  }
   const matched = PREFIXES.some(p => url.pathname === p || url.pathname.startsWith(p + '/'));
   const localSticker = /^\/jjirashy\/jjirasi_sticker_maker(\.html)?$/.test(url.pathname);
   if (!matched && !localSticker) return next();

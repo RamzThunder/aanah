@@ -1,5 +1,5 @@
 {
   "version": 1,
-  "include": ["/forClass", "/forClass/*", "/jjirashy", "/jjirashy/*", "/dida-releases", "/dida-releases/*", "/download/*", "/api/*"],
+  "include": ["/forClass", "/forClass/*", "/jjirashy", "/jjirashy/*", "/dida-releases", "/dida-releases/*", "/download/*", "/api/*", "/HANDOFF.md"],
   "exclude": []
 }
