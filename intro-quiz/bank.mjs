@@ -208,6 +208,10 @@ const rows = [
   [234, 2006, "몽키매직", "이박사", "1GHp3GRt2BU", "", "트로트"],
   [235, 1980, "Eldorado", "Goombay Dance Band", "PCMA6KzQGZc", "", "팝"],
   [236, 2003, "달빛소년", "체리필터", "g4tJZSlIAYs", "", "밴드·인디"],
+  [237, 2023, "森の小さなレストラン (숲속의 작은 레스토랑)", "手嶌葵 (테시마 아오이)", "EYGGd2NKwtI", "", "J-pop"],
+  [238, 2020, "문어의 꿈", "안예은", "bSvvb3KyPH8", "", "밴드·인디"],
+  [239, 2025, "愛♡スクリ～ム！ (아이 스크림)", "AiScReam", "8Yy7Jzle338", "", "J-pop", "러브라이브!"],
+  [240, 1999, "검정고무신", "김국환", "CLkzE8Q5xXI", "", "어린이 애니 OST", "검정고무신"],
 ];
 const defaultRows = rows.map(([number,year,title,artist,answerVideo,introVideo,genre = 'K-pop',work])=>({
   id:`song-${number}`,year,title,artist,genre,introVideo:introVideo||answerVideo,
