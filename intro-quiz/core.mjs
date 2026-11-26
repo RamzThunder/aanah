@@ -87,10 +87,36 @@ export function filterSongs(bank, years, genres, excludedArtists = new Set(), ye
   );
 }
 
+const artistKey = artist => artist.normalize('NFKC').toLowerCase().replace(/\s+/g, ' ').trim();
+
+// 한 곡씩 뽑을 때마다
+// 1) 지금까지 가장 적게 나온 가수의 곡만 후보로 둔다. 모든 가수가 한 번씩 나오기 전에는 같은 가수가 다시 나오지 않는다.
+// 2) 장르는 (남은 곡 수)^0.7 비율로 고른다. 곡이 많은 장르(K-pop)가 여전히 가장 자주 나오지만 혼자 독차지하지는 않는다.
+//    전체 장르로 30곡을 뽑으면 K-pop이 약 절반이다(그냥 섞으면 약 4분의 3).
+const GENRE_WEIGHT_POWER = 0.7;
 export function pickSongs(bank,years,genres,count,random=Math.random,excludedArtists,yearOf) {
   const pool=filterSongs(bank, years, genres, excludedArtists, yearOf);
-  for(let i=pool.length-1;i>0;i--){const j=Math.floor(random()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]];}
-  return pool.slice(0,Math.max(0,Math.floor(count)));
+  const target=Math.min(pool.length, Math.max(0, Math.floor(count)));
+  const byGenre=new Map();
+  for (const song of pool) {
+    if (!byGenre.has(song.genre)) byGenre.set(song.genre, []);
+    byGenre.get(song.genre).push(song);
+  }
+  const used=new Map(), uses=song => used.get(artistKey(song.artist)) || 0;
+  const randomItem=list => list[Math.min(list.length - 1, Math.floor(random() * list.length))];
+  const picked=[];
+  while (picked.length < target) {
+    const groups=[...byGenre.values()].filter(group => group.length);
+    const least=Math.min(...groups.flatMap(group => group.map(uses)));
+    const ready=groups.filter(group => group.some(song => uses(song) === least));
+    let roll=random() * ready.reduce((sum, group) => sum + group.length ** GENRE_WEIGHT_POWER, 0);
+    const group=ready.find(group => (roll -= group.length ** GENRE_WEIGHT_POWER) < 0) || ready[ready.length - 1];
+    const song=randomItem(group.filter(song => uses(song) === least));
+    group.splice(group.indexOf(song), 1);
+    used.set(artistKey(song.artist), least + 1);
+    picked.push(song);
+  }
+  return picked;
 }
 // Send no answer data to the presentation window before reveal.
 export function publicState(state) {

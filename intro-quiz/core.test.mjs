@@ -171,3 +171,32 @@ test('admin bank edits update defaults and untouched saved copies only', () => {
     for (const [field, {to}] of Object.entries(fields)) assert.equal(current[field] ?? null, to, `${id}.${field}`);
   }
 });
+
+test('random playlists spread artists and genres instead of following the bank skew', () => {
+  const years = [...new Set(releaseBank.map(song => song.year))];
+  let seed = 7;
+  const random = () => (seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648;
+  let kpop = 0;
+  for (let run = 0; run < 200; run++) {
+    const songs = pickSongs(releaseBank, years, null, 30, random);
+    assert.equal(songs.length, 30);
+    assert.equal(new Set(songs.map(song => song.artist.toLowerCase())).size, 30);
+    kpop += songs.filter(song => song.genre === 'K-pop').length;
+  }
+  const average = kpop / 200;
+  assert.ok(average > 10 && average < 20, `K-pop 평균 ${average}곡`);
+});
+
+test('artists repeat only after every other artist in the pool has appeared', () => {
+  const bank = [
+    ...Array.from({length: 5}, (_, i) => ({id: `a${i}`, title: `A${i}`, artist: 'IVE', genre: 'K-pop', year: 2024})),
+    {id: 'b', title: 'B', artist: 'aespa', genre: 'K-pop', year: 2024},
+    {id: 'c', title: 'C', artist: '체리필터', genre: '밴드·인디', year: 2024},
+  ];
+  for (let run = 0; run < 50; run++) {
+    const songs = pickSongs(bank, [2024], null, 4);
+    assert.deepEqual(new Set(songs.slice(0, 3).map(song => song.artist)), new Set(['IVE', 'aespa', '체리필터']));
+    assert.equal(songs[3].artist, 'IVE');
+  }
+  assert.equal(pickSongs(bank, [2024], null, 99).length, bank.length);
+});
