@@ -104,7 +104,7 @@
 
     <label id="titleField"><span>제목 <small>선택</small></span><input type="text" name="title" maxlength="200" autocomplete="off"></label>
     <label><span id="bodyLabel">내용</span><textarea name="body" maxlength="2000"></textarea></label>
-    <fieldset>
+    <fieldset id="imageFields">
       <legend>문제 상황 캡처 <small>선택 · 최대 3장</small></legend>
       <div class="image-drop" id="imageDrop">
         <label for="images" class="hint">사진 선택 또는 여기에 끌어 놓기</label>
@@ -190,6 +190,7 @@ function sync() {
   $('#songFields').hidden = !song;
   $('#toolField').hidden = song;
   $('#titleField').hidden = song;
+  $('#imageFields').hidden = song;
   $('#bodyLabel').innerHTML = song ? '하고 싶은 말 <small>선택</small>' : '내용';
   form.elements.body.classList.toggle('short', song);
   form.elements.body.rows = song ? 2 : 6;
@@ -232,9 +233,10 @@ form.addEventListener('submit', async e => {
   }
   $('#error').textContent = '';
   submitting = true; imagePicker.lock(true);
-  $('#submit').disabled = true; $('#submit').textContent = '사진 준비 중…';
+  $('#submit').disabled = true; $('#submit').textContent = kind === 'song' ? '보내는 중…' : '사진 준비 중…';
   try {
-    const images = await imagePicker.files();
+    // 곡 신청에는 캡처 칸이 없으니, 다른 종류에서 넣어 둔 사진도 보내지 않는다.
+    const images = kind === 'song' ? [] : await imagePicker.files();
     const body = new FormData(); body.set('payload', JSON.stringify(data));
     images.forEach((blob, index) => body.append('images', blob, `capture-${index + 1}.${blob.type === 'image/webp' ? 'webp' : 'jpg'}`));
     $('#submit').textContent = '보내는 중…';

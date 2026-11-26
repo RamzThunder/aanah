@@ -66,6 +66,7 @@ export function createImagePicker(form) {
   }
   input.onchange = () => {add(input.files); input.value = '';};
   form.addEventListener('paste', event => {
+    if (drop.closest('[hidden]')) return;
     const files = [...(event.clipboardData?.items || [])].filter(item => item.kind === 'file' && item.type.startsWith('image/')).map(item => item.getAsFile()).filter(Boolean);
     if (files.length) {event.preventDefault(); add(files);}
   });

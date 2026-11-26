@@ -33,6 +33,8 @@ export async function onRequestPost({ request, env }) {
 
   const kind = Object.hasOwn(KINDS, input.kind) ? input.kind : null;
   if (!kind) return json({ error: '요청 종류를 골라 주세요.' }, 400);
+  // 곡 신청 화면에는 캡처 칸이 없다. 예전 화면이나 직접 보낸 요청에 사진이 섞여 와도 저장하지 않는다.
+  if (kind === 'song') images = [];
   const tool = kind === 'song' ? SONG_TOOL : text(input.tool, LIMITS.tool) || '아나! 전체';
   const contact = text(input.contact, LIMITS.contact);
   const body = text(input.body, LIMITS.body);
